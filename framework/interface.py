@@ -11,15 +11,14 @@ import subprocess
 class ModuleObjects(object):
     """ Class for Module Objects"""
 
-    def __init__(self, index, name, nes_modules):
-        self.index = index
+    def __init__(self, name, nes_modules):
         self.name = name
         self.nes_modules = nes_modules
 
 
-module_1 = ModuleObjects(1, "Responder", 1)
-module_2 = ModuleObjects(2, "NMap", 12)
-module_3 = ModuleObjects(3, "Enumeration", 23)
+module_1 = ModuleObjects("Responder", 1)
+module_2 = ModuleObjects("NMap", 12)
+module_3 = ModuleObjects("Enumeration", 23)
 
 
 class InterfaceObject(object):
@@ -47,17 +46,19 @@ class InterfaceObject(object):
 test_file = ["Responder", "NMap", "Enumeration"]
 intro = InterfaceObject(test_file, False)
 
-# Display title
-intro.display_title()
-# Display modules
-intro.display_modules()
-
 if intro.exit_flag == True:
     # Run end program
     pass
 else:
     valid = False
     while valid != True:
+
+        # clear the screen - os.system('clear')
+        # Display title
+        intro.display_title()
+        # Display modules
+        intro.display_modules()
+
         user_selection = int(raw_input("Please enter the module you would like to configure. (Based on index)"))
         if user_selection == str:
             print "Error 101: Invalid selection - string instead of integer."
@@ -68,3 +69,4 @@ else:
         else:
             valid = True
             pass
+    current_module = ModuleObjects()
