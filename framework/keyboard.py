@@ -3,6 +3,14 @@ import FwComponent
 
 
 class Keyboard(FwComponent):
+    def __init__(self, enable=False, other):
+
+        # to set the things of the parent class
+
+        super().__init__(driver_name="g_hid", enable=False)
+
+        self.other = other  # doesn't do shit just for demo
+
     # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt
     char_eqv = {
         " ": "space",
@@ -38,3 +46,27 @@ class Keyboard(FwComponent):
         "/": "slash",
         "?": "left-shift slash"
     }
+
+    def write(string):
+
+        for c in string:
+
+            if c.isalpha() & & c.isupper():
+
+                current_char = "left-shift %s" % (c.lower())
+
+            elif c.isalpha or c.isdigit:
+
+                curent_char = c
+
+            else:
+
+                # special characters need string equivalents
+
+                current_char = char_eqv[input()]()
+
+                if current_char is None:
+
+            # something went horribly wrong or I've missed a character
+
+            subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, dir_path), shell=True)
