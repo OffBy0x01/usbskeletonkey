@@ -16,7 +16,7 @@ class InterfaceObject(object):
         self.exit_flag = exit_flag
 
     def display_title(self):
-        print InterfaceObject.title()
+        print InterfaceObject.title
 
     def display_modules(self):
         if range(len(self.modules)) == 0:
@@ -28,7 +28,11 @@ class InterfaceObject(object):
 
 # Main Program
 # Load in Module file
-test_file = [ "Responder", "NMap", "Enumeration"]
+test_file = {
+    1, "Responder", [1],
+    2, "NMap", [1, 2],
+    3, "Enumeration", [2, 3]
+}
 intro = InterfaceObject(test_file, False)
 
 # Display title
