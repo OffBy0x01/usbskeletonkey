@@ -5,8 +5,7 @@ import time
 from framework import FwComponent
 
 # -*- coding: utf-8 -*-
-# Network Emulation - 17th January 2018
-# by Michaela Stewart and Jonathan Ross
+
 
 class fw_component_network(FwComponent):
     """ Class for the Network Object
@@ -32,10 +31,11 @@ class fw_component_network(FwComponent):
     gether_down = "ifdown usb0"
     gether_remove = "modprobe -r g_ether"
 
-
     def __init__(self, debug=False, state=""):
+        self.debug = debug
+        self.state = state
 
-    #Initialising and turning on USB Ethernet
+    # Initialising and turning on USB Ethernet
     def network_on(self):
         subprocess.call("%s" % fw_component_network.gether, shell=True)
         time.sleep(1)
@@ -56,9 +56,9 @@ class fw_component_network(FwComponent):
 
 
 
-#run=fw_component_network()
+# run=fw_component_network()
 
-#state=run.network_remove()
-#print()
+# state=run.network_remove()
+# print()
 
 
