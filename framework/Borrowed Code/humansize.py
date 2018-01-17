@@ -1,4 +1,4 @@
-'''Convert file sizes to human-readable form.
+"""Convert file sizes to human-readable form.
 
 Available functions:
 approximate_size(size, a_kilobyte_is_1024_bytes)
@@ -10,7 +10,7 @@ Examples:
 >>> approximate_size(1000, False)
 '1.0 KB'
 
-'''
+"""
 
 SUFFIXES = {1000: ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
             1024: ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']}
