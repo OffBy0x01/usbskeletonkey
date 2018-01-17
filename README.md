@@ -1,2 +1,2 @@
 # team
-Hello, this is team.
+Hello, this is team!
