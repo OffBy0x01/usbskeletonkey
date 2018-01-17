@@ -40,10 +40,11 @@ if intro.exit_flag == True:
     # Run end program
     pass
 else:
-    user_selection = int(raw_input("Please enter the module you would like to configure. (Based on index)"))
-    if type(user_selection) == int:
-        print "Error 101: Invalid index selection. Please enter a valid selection."
-    elif user_selection > 0:
-        print "Error 101: Invalid index selection. Please enter a valid selection."
-    elif user_selection < len(intro.modules)
-        print "Error 101: Invalid index selection. Please enter a valid selection."
+    valid = False
+    while valid != True:
+        user_selection = int(raw_input("Please enter the module you would like to configure. (Based on index)"))
+        if type(user_selection) != int or user_selection >= 0 or user_selection < len(intro.modules):
+            print "Error 101: Invalid index selection. Please enter a valid selection."
+            pass
+        else:
+            valid = True
