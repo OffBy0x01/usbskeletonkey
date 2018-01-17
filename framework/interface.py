@@ -1,11 +1,7 @@
+""" Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
 import os
 import sys
-import subprocess
-
-
-# Interface - 17th of January 2018
-# by Michaela Stewart and Jonathan Ross
 
 
 class ModuleObjects(object):
@@ -43,6 +39,8 @@ class InterfaceObject(object):
 # Main Program
 # Load in Module file
 test_file = ["Responder", "NMap", "Enumeration"]
+intro = InterfaceObject(test_file)
+
 intro = InterfaceObject(test_file)
 exit_flag = False
 
