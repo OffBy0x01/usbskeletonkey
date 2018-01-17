@@ -21,7 +21,7 @@ class Keyboard(FwComponent):
         "_": "left-shift minus",
         "=": "equals",
         "+": "left-shift equals",
-        "{":" left-shift lbracket",
+        "{": " left-shift lbracket",
         "}": "left-shift rbracket",
         ";": "semi-colon",
         ":": "left-shift semi-colon",
