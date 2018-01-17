@@ -2,12 +2,29 @@ import os
 import sys
 import subprocess
 import time
+from framework import FwComponent
 
-# Network Emulation - 17th of January 2018
+# -*- coding: utf-8 -*-
+# Network Emulation - 17th January 2018
 # by Michaela Stewart and Jonathan Ross
 
-class fw_component_network(object):
-    """ Class for the Network Object """
+class fw_component_network(FwComponent):
+    """ Class for the Network Object
+
+         Args:
+            driver_name:    the driver being used e.g. g_hid
+            enabled:         manages the on/off state
+
+        functions:
+            enable:         allows for enabling of driver
+            disable:        allows for disabling of driver
+
+        Returns:
+            framework component object
+
+        Raises:
+            ImportError when kernel module not found
+        """
 
     # USB OTG requirements
     gether = "modprobe g_ether idVendor=0x04b3 idProduct=0x4010"
@@ -16,28 +33,32 @@ class fw_component_network(object):
     gether_remove = "modprobe -r g_ether"
 
 
+    def __init__(self, debug=False, state=""):
+
+    #Initialising and turning on USB Ethernet
     def network_on(self):
         subprocess.call("%s" % fw_component_network.gether, shell=True)
         time.sleep(1)
         subprocess.call("%s" % fw_component_network.gether_up, shell=True)
-        self.state = "State: Network Emulation on"
-        return self.state
+        fw_component_network.state = "initialised"
 
-
+    # Turning off USB Ethernet
     def network_down(self):
         subprocess.call("%s" % fw_component_network.gether_down, shell=True)
-        self.state = "State: Network Emulation Down"
-        return self.state
+        fw_component_network.state = "down"
 
-
+    # Removing USB Ethernet OTG module
     def network_remove(self):
-        self.state = "State: Network Emulation Has been removed or not initilaised"
-        return self.state
+
+        fw_component_network.state = "uninitialised"
 
 
-run=fw_component_network()
 
-state=run.network_down()
 
-print(state)
+
+#run=fw_component_network()
+
+#state=run.network_remove()
+#print()
+
 
