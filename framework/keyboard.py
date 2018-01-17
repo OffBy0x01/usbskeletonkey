@@ -39,7 +39,7 @@ class Keyboard(FwComponent):
         "?": "left-shift slash"
     }
 
-    def __init__(self, enable=False, other):
+    def __init__(self, enabled=False, other):
 
         # to set the things of the parent class
 
