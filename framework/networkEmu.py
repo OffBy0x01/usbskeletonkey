@@ -6,24 +6,24 @@ from framework import FwComponent
 
 # -*- coding: utf-8 -*-
 
+
 class fw_component_network(FwComponent):
 
     """ Class for the Network Object
 
          Args:
-            state:          Determines what "state" g_ether is in i.e. initialised or disabled
-            debug:          Bool value to enable or disable debug mode
+            driver_name:    the driver being used e.g. g_hid
+            enabled:         manages the on/off state
 
         functions:
-            network_on:     allows for Ethernet driver to be added and initialised
-            network_down:   allows for Ethernet driver to be turned off
-            network_remove:  allows for Ethernet driver to be removed
+            enable:         allows for enabling of driver
+            disable:        allows for disabling of driver
 
         Returns:
-            To Do
+            framework component object
 
         Raises:
-            To Do
+            ImportError when kernel module not found
         """
 
     # USB OTG requirements
@@ -32,10 +32,11 @@ class fw_component_network(FwComponent):
     gether_down = "ifdown usb0"
     gether_remove = "modprobe -r g_ether"
 
-
     def __init__(self, debug=False, state=""):
+        self.debug = debug
+        self.state = state
 
-    #Initialising and turning on USB Ethernet
+    # Initialising and turning on USB Ethernet
     def network_on(self):
         subprocess.call("%s" % fw_component_network.gether, shell=True)
         time.sleep(1)
@@ -56,7 +57,10 @@ class fw_component_network(FwComponent):
 
 #run=fw_component_network()
 
-#state=run.network_remove()
-#print()
+
+# run=fw_component_network()
+
+# state=run.network_remove()
+# print()
 
 
