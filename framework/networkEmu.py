@@ -5,25 +5,25 @@ import time
 from framework import FwComponent
 
 # -*- coding: utf-8 -*-
-# Network Emulation - 17th January 2018
-# by Michaela Stewart and Jonathan Ross
 
 class fw_component_network(FwComponent):
+
     """ Class for the Network Object
 
          Args:
-            driver_name:    the driver being used e.g. g_hid
-            enabled:         manages the on/off state
+            state:          Determines what "state" g_ether is in i.e. initialised or disabled
+            debug:          Bool value to enable or disable debug mode
 
         functions:
-            enable:         allows for enabling of driver
-            disable:        allows for disabling of driver
+            network_on:     allows for Ethernet driver to be added and initialised
+            network_down:   allows for Ethernet driver to be turned off
+            network_remove:  allows for Ethernet driver to be removed
 
         Returns:
-            framework component object
+            To Do
 
         Raises:
-            ImportError when kernel module not found
+            To Do
         """
 
     # USB OTG requirements
@@ -47,12 +47,10 @@ class fw_component_network(FwComponent):
         subprocess.call("%s" % fw_component_network.gether_down, shell=True)
         fw_component_network.state = "down"
 
-    # Removing USB Ethernet OTG module
+    # Removing USB Ethernet
     def network_remove(self):
-
+        subprocess.call("%s" % fw_component_network.gether_remove, shell=True)
         fw_component_network.state = "uninitialised"
-
-
 
 
 
