@@ -7,7 +7,7 @@ class fw_component_dr(object):
 
     Args:
         driver_name:    the driver being used e.g. g_hid
-        enable:         manages the on/off state
+        enabled:         manages the on/off state
 
     functions:
         enable:         allows for enabling of driver
@@ -25,8 +25,8 @@ class fw_component_dr(object):
         self.driver_name = driver_name
         # If kernel module was not found then modprobe -n will return x not found in y - this can be used to detect if our stuff is there
         if "not found" in subprocess.run(["modprobe", "-n", driver_name], stdout=subprocess.PIPE).stdout.decode(
-                'utf-8'):
-        # THROW EXCEPTION HERE
+                'utf-8'):  # THROW EXCEPTION HERE
+            print("THROW EXCEPTION HERE")
 
         self.enabled = enabled
         self.vendor_id = vendor_id
