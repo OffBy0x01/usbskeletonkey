@@ -3,6 +3,14 @@ import FwComponent
 
 
 class Keyboard(FwComponent):
+    def __init__(self, enable=False, other):
+
+        # to set the things of the parent class
+
+        super().__init__(driver_name="g_hid", enable=False)
+
+        self.other = other  # doesn't do shit just for demo
+
     # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt
     char_eqv = {
         " ": "space",
@@ -38,14 +46,6 @@ class Keyboard(FwComponent):
         "/": "slash",
         "?": "left-shift slash"
     }
-
-    def __init__(self, enable=False, other):
-
-        # to set the things of the parent class
-
-        super().__init__(driver_name="g_hid", enable=False)
-
-        self.other = other  # doesn't do shit just for demo
 
     def write(string):
 
