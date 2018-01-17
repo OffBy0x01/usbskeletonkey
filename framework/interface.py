@@ -25,13 +25,25 @@ class InterfaceObject(object):
             for module in range(len(self.modules)):
                 print (module+1), " ", self.modules[module]
 
+
 # Main Program
 # Load in Module file
 test_file = [ "Responder", "NMap", "Enumeration"]
-intro = InterfaceObject(test_file, 0)
+intro = InterfaceObject(test_file, False)
 
 # Display title
 intro.display_title()
 # Display modules
 intro.display_modules()
 
+if intro.exit_flag == True:
+    # Run end program
+    pass
+else:
+    user_selection = int(raw_input("Please enter the module you would like to configure. (Based on index)"))
+    if type(user_selection) == int:
+        print "Error 101: Invalid index selection. Please enter a valid selection."
+    elif user_selection > 0:
+        print "Error 101: Invalid index selection. Please enter a valid selection."
+    elif user_selection < len(intro.modules)
+        print "Error 101: Invalid index selection. Please enter a valid selection."
