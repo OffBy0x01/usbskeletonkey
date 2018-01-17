@@ -8,6 +8,7 @@ from framework import FwComponent
 
 
 class fw_component_network(FwComponent):
+
     """ Class for the Network Object
 
          Args:
@@ -47,13 +48,14 @@ class fw_component_network(FwComponent):
         subprocess.call("%s" % fw_component_network.gether_down, shell=True)
         fw_component_network.state = "down"
 
-    # Removing USB Ethernet OTG module
+    # Removing USB Ethernet
     def network_remove(self):
-
+        subprocess.call("%s" % fw_component_network.gether_remove, shell=True)
         fw_component_network.state = "uninitialised"
 
 
 
+#run=fw_component_network()
 
 
 # run=fw_component_network()
