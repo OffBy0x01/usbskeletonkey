@@ -69,4 +69,3 @@ else:
         else:
             valid = True
             pass
-    current_module = ModuleObjects()
