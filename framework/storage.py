@@ -8,31 +8,64 @@ This file system could also be loaded via loop back to save the outputs of modul
 
 import sys
 
-
 from framework import FwComponent
 
-class storageAccess(FwComponent)
+temp = 'Later'
 
-    def __init__(self, __readable_size):
+class StorageAccess(FwComponent):
+
+    def __convertsize(self, _readable_size):
+        #Function that the class will use to check file sizes
+        true_size = temp # This conversion will be the opposite of Dive into pythons. Fun!
+        return true_size
+
+    def __init__(self, _readable_size):
         #Create device to store to
         #sudo dd if=/dev/zero of=Desktop/storageTemplate.bin bs=512 count=size/512
-        self._size = approximate_size(__readable_size)
+        self.loopback_device = temp #sudo losetup -f # To find the first available loop back
+        self._readable_size = _readable_size
+        self._size = self.__convertSize(_readable_size)
+        self.self_mounted = False
+        self.bus_mounted = False
 
     def __del__(self):
         # No matter what call umount?
         self.umount()
+        # Then unmount from loopback
+        # There is not a circumstance where it would be a good idea to allow the user to do this via umount
 
-    def __sizeof__(self):
-        return self._size
+    def __sizeof__(self): return self._size # machine readable sizeof is default defined
 
-    def mountLocal(self, directory):
+    def sizeof(self): return self._readable_size # human readable sizeof is human defined
+
+
+    def mountLocal(self, _directory, _read_only):
         #Mount the file system locally for amending
+        '''
+        #Figure out the commands for this
+        >>>if _readonly: #mount RO
+        >>>else: #mount norm
+        >>>return 0
+        '''
 
-    def mountBus(self):
+    def mountBus(self, _write_block):
         #Mount over USB
+        '''
+        #If writeblock is possible
+        >>>if _write_block: #mount RO
+        >>>else: #mount norm
+        >>>return 0
+        '''
 
     def umount(self):
-        #unmount all -- this should be called on class destruction
-
-    def _convertSize(self):
-        #Function that the class will use to check file sizes
+        """
+        Void function that will unmount from whatever the class is currently mounted to
+        """
+        if not self.self_mounted:
+             if not self.bus_mounted:
+                 return
+             else:
+                 #unmount from bus
+        else:
+            #unmount from self
+        return
