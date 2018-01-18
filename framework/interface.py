@@ -1,6 +1,5 @@
 """ Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
-import os
 import sys
 
 
@@ -43,7 +42,7 @@ class InterfaceObject(object):
             print("There are no modules to display.")
         else:
             for module in range(len(self.modules)):
-                print(module + 1), " ", self.modules[module]
+                print(module + 1, " ", self.modules[module])
 
 
 # Main Program
@@ -81,5 +80,3 @@ while not exit_flag:
         else:
             print("Thank you for using 'Skeleton Key'.")
             sys.exit(0)
-
-
