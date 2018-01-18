@@ -1,9 +1,12 @@
-import  os, re, configparser
+import configparser
+import os
+import re
+
 
 class skeleton-key():
 
     #This hasn't been updated yet so ignore the init for now.
-    def __init__():
+    def __init__(self):
         #initialize framework components
         interface = framework.ui()
         keyboard = framework.keyboard()

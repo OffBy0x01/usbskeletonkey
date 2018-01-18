@@ -1,7 +1,7 @@
 import subprocess
 
 
-class fw_component_dr(object):
+class FwComponent(object):
     """ This defines the construction of framework components.
         Use with inheritance, do not use on its own.
 
@@ -20,22 +20,24 @@ class fw_component_dr(object):
         ImportError when kernel module not found
     """
 
-    def __init__(self, driver_name, enabled=False, vendor_id="", product_id=""):
+    def __init__(self, driver_name, enabled=False, vendor_id="", product_id="", debug=False):
         """Return a new framework component"""
         self.driver_name = driver_name
-        # If kernel module was not found then modprobe -n will return x not found in y - this can be used to detect if our stuff is there
+        # If kernel module was not found then modprobe -n will return x not found in y
         if "not found" in subprocess.run(["modprobe", "-n", driver_name], stdout=subprocess.PIPE).stdout.decode(
                 'utf-8'):  # THROW EXCEPTION HERE
             print("THROW EXCEPTION HERE")
 
+        self.driver_name = driver_name
         self.enabled = enabled
         self.vendor_id = vendor_id
         self.product_id = product_id
+        self.debug = debug
 
     def enable(self):
         """Enable a disabled framework object"""
         if not self.enable:
-            subprocess.call("modprobe %s %s %s" % (driver_name, vendor_id, product_id), shell=True)
+            subprocess.call("modprobe %s %s %s" % (self.driver_name, self.vendor_id, self.product_id), shell=True)
             self.enabled = True
         else:
             print('Driver already enabled!')
@@ -43,7 +45,7 @@ class fw_component_dr(object):
     def disable(self):
         """Disable an enabled framework object"""
         if self.enabled:
-            subprocess.call("modprobe -r %s" % driver_name, shell=True)
+            subprocess.call("modprobe -r %s" % self.driver_name, shell=True)
             self.enabled = False
         else:
             print('Driver already disabled!')
