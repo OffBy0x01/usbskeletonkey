@@ -11,10 +11,10 @@ class Keyboard(FwComponent):
 
         self.other = other  # doesn't do shit just for demo
 
-    # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt
+    # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt, tab
     char_eqv = {
         " ": "space",
-        "   ": "tab",
+        # "   ": "tab", ## This isnt actually a Tab, its the IDE's interpretation
         "!": "left-shift 1",
         "\"": "left-shift 2",
         "£": "left-shift  3",
