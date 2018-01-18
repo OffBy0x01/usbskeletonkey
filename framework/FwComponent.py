@@ -1,7 +1,7 @@
 import subprocess
 
 
-class fw_component_dr(object):
+class FwComponent(object):
     """ This defines the construction of framework components.
         Use with inheritance, do not use on its own.
 
