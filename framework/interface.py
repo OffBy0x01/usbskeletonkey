@@ -1,11 +1,7 @@
+""" Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
 import os
 import sys
-import subprocess
-
-
-# Interface - 17th of January 2018
-# by Michaela Stewart and Jonathan Ross
 
 
 class ModuleObjects(object):
@@ -26,9 +22,8 @@ class InterfaceObject(object):
 
     title = "'Skeleton Key Project'"
 
-    def __init__(self, modules, exit_flag):
+    def __init__(self, modules):
         self.modules = modules
-        self.exit_flag = exit_flag
 
     def display_title(self):
         print InterfaceObject.title
@@ -44,28 +39,37 @@ class InterfaceObject(object):
 # Main Program
 # Load in Module file
 test_file = ["Responder", "NMap", "Enumeration"]
-intro = InterfaceObject(test_file, False)
+intro = InterfaceObject(test_file)
 
-if intro.exit_flag == True:
-    # Run end program
-    pass
-else:
-    valid = False
-    while valid != True:
+intro = InterfaceObject(test_file)
+exit_flag = False
 
-        # clear the screen - os.system('clear')
-        # Display title
-        intro.display_title()
-        # Display modules
-        intro.display_modules()
+while exit_flag != True:
+    # clear the screen - os.system('clear')
+    # Display title
+    intro.display_title()
+    # Display modules
+    intro.display_modules()
 
-        user_selection = int(raw_input("Please enter the module you would like to configure. (Based on index)"))
-        if user_selection == str:
-            print "Error 101: Invalid selection - string instead of integer."
-            pass
-        elif user_selection <= 0 or user_selection > len(intro.modules):
-            print "Error 102: Invalid index selection. Please enter a valid selection."
+    print " "
+    print "Enter 0 to exit"
+    user_selection = int(raw_input("Please enter the module you would like to configure. (Based on index)"))
+    if user_selection == 0:
+        print "Exiting Program..."
+        exit_flag = True
+        pass
+    if user_selection == str:
+        print "Error 101: Invalid selection - string instead of integer."
+        pass
+    elif user_selection < 0 or user_selection > len(intro.modules):
+        print "Error 102: Invalid index selection. Please enter a valid selection."
+        pass
+    else:
+        if exit_flag != True:
+            current_module = test_file[(user_selection - 1)]
+            # mainly for debug
+            print "Running ", current_module, "..."
             pass
         else:
-            valid = True
-            pass
+            print "Thank you for using 'Skeleton Key'."
+            sys.exit(0)
