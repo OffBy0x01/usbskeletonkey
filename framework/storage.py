@@ -14,17 +14,17 @@ temp = 'Later'
 
 class StorageAccess(FwComponent):
 
-    def __convertsize(self, _readable_size):
+    def __convertsize(self, readable_size):
         #Function that the class will use to check file sizes
         true_size = temp # This conversion will be the opposite of Dive into pythons. Fun!
         return true_size
 
-    def __init__(self, _readable_size):
+    def __init__(self, readable_size, debug=False):
         #Create device to store to
         #sudo dd if=/dev/zero of=Desktop/storageTemplate.bin bs=512 count=size/512
         self.loopback_device = temp #sudo losetup -f # To find the first available loop back
-        self._readable_size = _readable_size
-        self._size = self.__convertSize(_readable_size)
+        self._readable_size = readable_size
+        self._size = self.__convertSize(readable_size)
         self.self_mounted = False
         self.bus_mounted = False
 
@@ -39,11 +39,11 @@ class StorageAccess(FwComponent):
     def sizeof(self): return self._readable_size # human readable sizeof is human defined
 
 
-    def mountLocal(self, _directory, _read_only):
+    def mountLocal(self, directory, read_only=False):
         #Mount the file system locally for amending
         '''
         #Figure out the commands for this
-        >>>if _readonly: #mount RO
+        >>>if readonly: #mount RO
         >>>else: #mount norm
         >>>return 0
         '''
