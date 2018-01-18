@@ -3,9 +3,9 @@ import os
 import re
 
 
-class skeleton-key():
+class SkeletonKey:
 
-    #This hasn't been updated yet so ignore the init for now.
+    # This hasn't been updated yet so ignore the init for now.
     def __init__(self):
         """This is the docstring you fuck"""
 
@@ -31,7 +31,7 @@ class skeleton-key():
         py = re.compile("\.py", re.IGNORECASE)
         module_paths = filter(py.search, module_paths)
 
-        #identify module name from file path
+        # identify module name from file path
         identify_module = lambda m: os.path.splitext(m)[0]
         return [identify_module(m) for m in module_paths]
 
@@ -40,13 +40,12 @@ class skeleton-key():
         return module_list
 
     def init_config(self):
-
         if not (os.path.exists(self.module_path)):
             #doesn't exist - user can fix themselves
             print("Error: ", self.module_path, " directory does not exist!")
             exit()
 
-        #if no modules present exit
+        # if no modules present exit
         if not self.module_list:
             print("Error: No modules found!")
             exit()
@@ -54,7 +53,7 @@ class skeleton-key():
             print('Configuring modules:')
             print(*self.module_list, sep=',\n')
 
-        #generate configuration file and add the required sections
+        # generate configuration file and add the required sections
         config = configparser.ConfigParser()
         config.read(self.main_path + '/config.ini')
         config.add_section('components')
