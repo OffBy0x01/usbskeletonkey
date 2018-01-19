@@ -1,20 +1,22 @@
-import FwComponent
+import subprocess
+
+from framework import FwComponentGadget
+
+
 # -*- coding: utf-8 -*-
 
 
-class Keyboard(FwComponent):
-    def __init__(self, enable=False, other):
-
+class Keyboard(FwComponentGadget):
+    def __init__(self, enabled=False, other=False, debug=False):
         # to set the things of the parent class
-
-        super().__init__(driver_name="g_hid", enable=False)
-
+        super().__init__(driver_name="g_hid", enabled=False, debug=False)
         self.other = other  # doesn't do shit just for demo
+        self.debug = debug
 
     # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt, tab
     char_eqv = {
         " ": "space",
-        # "   ": "tab", ## This isnt actually a Tab, its the IDE's interpretation
+        # "   ": "tab", ## This isn't actually a Tab, its the IDE's interpretation
         "!": "left-shift 1",
         "\"": "left-shift 2",
         "£": "left-shift  3",
@@ -47,26 +49,17 @@ class Keyboard(FwComponent):
         "?": "left-shift slash"
     }
 
-    def write(string):
+    def write(self, string):
+        current_char = ''
 
         for c in string:
-
-            if c.isalpha() & & c.isupper():
-
+            if c.isalpha() and c.isupper():
                 current_char = "left-shift %s" % (c.lower())
-
             elif c.isalpha or c.isdigit:
-
                 curent_char = c
-
             else:
-
                 # special characters need string equivalents
-
-                current_char = char_eqv[input()]()
-
+                current_char = self.char_eqv.get(c, 0)
                 if current_char is None:
-
             # something went horribly wrong or I've missed a character
-
             subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, dir_path), shell=True)

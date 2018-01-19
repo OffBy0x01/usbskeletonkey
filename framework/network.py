@@ -1,14 +1,13 @@
-import os
-import sys
 import subprocess
 import time
-from framework import FwComponent
+
+from framework import FwComponentGadget
+
 
 # -*- coding: utf-8 -*-
 
 
-class fw_component_network(FwComponent):
-
+class fw_component_network(FwComponentGadget):
     """ Class for the Network Object
 
          Args:
@@ -24,7 +23,7 @@ class fw_component_network(FwComponent):
 
         Raises:
             ImportError when kernel module not found
-        """
+    """
 
     # USB OTG requirements
     gether = "modprobe g_ether idVendor=0x04b3 idProduct=0x4010"
@@ -33,6 +32,7 @@ class fw_component_network(FwComponent):
     gether_remove = "modprobe -r g_ether"
 
     def __init__(self, debug=False, state=""):
+        super().__init__()
         self.debug = debug
         self.state = state
 
