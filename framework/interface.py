@@ -48,13 +48,12 @@ class InterfaceObject(object):
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
-    title = "'Skeleton Key Project'"
-
     def __init__(self, modules={2, 3, 4}):
         self.modules = modules
+        self.title = "'Skeleton Key Project'"
 
     def display_title(self):
-        print(InterfaceObject.title)
+        print(self.title)
 
     def display_modules(self):
         if not self.modules:
