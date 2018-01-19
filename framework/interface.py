@@ -65,7 +65,7 @@ class InterfaceObject(object):
 
     def bool_ask_question(self, question):
         """ Desc:
-                Enables asking of y/n questions
+                Enables asking of y/n questions"""
 
     def input_choice(self):
         exit_flag = False
@@ -104,25 +104,3 @@ class InterfaceObject(object):
 # Load in Module file
 test_file = ["Responder", "NMap", "Enumeration"]
 intro = InterfaceObject(test_file)
-    print("\n")
-    print("Enter 0 to exit")
-    user_selection = int(input("Please enter the module you would like to configure. (Based on index)"))
-    if user_selection == 0:
-        print("Exiting Program...")
-        exit_flag = True
-        pass
-    if user_selection == str:
-        print("Invalid selection - string instead of integer.")
-        pass
-    elif user_selection < 0 or user_selection > len(intro.modules):
-        print("Invalid index selection. Please enter a valid selection.")
-        pass
-    else:
-        if not exit_flag:
-            current_module = test_file[(user_selection - 1)]
-            # mainly for debug
-            print("Running ", current_module, "...")
-            pass
-        else:
-            print("Thank you for using 'Skeleton Key'.")
-            exit(0)
