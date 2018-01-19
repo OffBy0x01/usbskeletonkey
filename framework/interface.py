@@ -49,6 +49,7 @@ class InterfaceObject(object):
     """
 
     title = "'Skeleton Key Project'"
+    input_choice()
 
     def __init__(self, modules={2, 3, 4}):
         self.modules = modules
@@ -92,6 +93,7 @@ class InterfaceObject(object):
                 if not exit_flag:
                     current_module = test_file[(user_selection - 1)]
                     # mainly for debug
+                    # RETURN current_module (move to current_module file)
                     print("Running ", current_module, "...")
                     pass
                 else:
@@ -103,3 +105,4 @@ class InterfaceObject(object):
 if __name__ == '__main__':
     test_file = ["Responder", "NMap", "Enumeration"]
     intro = InterfaceObject(test_file)
+
