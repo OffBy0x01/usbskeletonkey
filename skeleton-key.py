@@ -6,11 +6,9 @@ from framework import interface
 
 
 class SkeletonKey:
-    # This hasn't been updated yet so ignore the init for now.
+    # done for tonight boiz
     def __init__(self):
-        """This is the docstring you fuck"""
-
-        ui = interface.ModuleObjects()
+        ui = interface.InterfaceObject()
         '''
         #initialize framework components
        
