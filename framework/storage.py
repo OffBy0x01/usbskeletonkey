@@ -6,13 +6,12 @@ This file will have an accompanying file system to clone for each run.
 This file system could also be loaded via loop back to save the outputs of modules
 '''
 
-import sys
-
-from framework import FwComponent
+from framework import FwComponentGadget
 
 temp = 'Later'
 
-class StorageAccess(FwComponent):
+
+class StorageAccess(FwComponentGadget):
 
     def __convertsize(self, readable_size):
         #Function that the class will use to check file sizes

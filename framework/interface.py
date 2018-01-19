@@ -1,9 +1,10 @@
 """ Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
-import sys
+
+from framework import FwComponent
 
 
-class ModuleObjects(object):
+class ModuleObjects(FwComponent):
     """
      Class for the Module Object
 
@@ -31,7 +32,7 @@ class InterfaceObject(object):
 
     title = "'Skeleton Key Project'"
 
-    def __init__(self, modules):
+    def __init__(self, modules={2, 3, 4}):
         self.modules = modules
 
     def display_title(self):
@@ -44,6 +45,24 @@ class InterfaceObject(object):
             for module in range(len(self.modules)):
                 print(module + 1, " ", self.modules[module])
 
+    def bool_ask_question(self, question):
+        """ Desc:
+                Enables asking of y/n questions
+
+            Args:
+                question:    string ending with '?'
+
+            Returns:
+                Boolean indicating response (y = True, n = False)
+        """
+        while True:
+            ans = input("%s (y/n) - " % question)[0].lower()
+            if ans == 'y':
+                return True
+            elif ans == 'n':
+                return False
+
+            print("Invalid Input")
 
 # Main Program
 # Load in Module file
@@ -79,4 +98,4 @@ while not exit_flag:
             pass
         else:
             print("Thank you for using 'Skeleton Key'.")
-            sys.exit(0)
+            exit(0)
