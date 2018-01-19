@@ -48,20 +48,23 @@ class InterfaceObject(object):
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
+    def __init__(self, modules={2, 3, 4}):  # If you remove this default it may fix the problem in display modules if
+                                            # the problem persists
     title = "'Skeleton Key Project'"
     input_choice()
 
     def __init__(self, modules={2, 3, 4}):
         self.modules = modules
+        self.title = "'Skeleton Key Project'"
 
     def display_title(self):
-        print(InterfaceObject.title)
+        print(self.title)
 
     def display_modules(self):
         if not self.modules:
             print("There are no modules to display.")
         else:
-            for module in range(len(self.modules)):
+            for module in self.modules:
                 print(module + 1, " ", self.modules[module])
 
     def bool_ask_question(self, question):
@@ -72,9 +75,9 @@ class InterfaceObject(object):
         exit_flag = False
         while not exit_flag:
             # Display title
-            intro.display_title()
+            intro.display_title()  # Should this not be self. Since intro is the debug name but not necesarily the name
             # Display modules
-            intro.display_modules()
+            intro.display_modules()  # Should this not be self
 
             print("\n")
             print("Enter 0 to exit")
@@ -105,4 +108,3 @@ class InterfaceObject(object):
 if __name__ == '__main__':
     test_file = ["Responder", "NMap", "Enumeration"]
     intro = InterfaceObject(test_file)
-
