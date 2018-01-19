@@ -26,6 +26,25 @@ class ModuleObjects(FwComponent):
         self.name = name
         self.nes_modules = nes_modules
 
+
+class InterfaceObject(object):
+    """ Class for the Interface Object """
+
+    title = "'Skeleton Key Project'"
+
+    def __init__(self, modules={2, 3, 4}):
+        self.modules = modules
+
+    def display_title(self):
+        print(InterfaceObject.title)
+
+    def display_modules(self):
+        if not self.modules:
+            print("There are no modules to display.")
+        else:
+            for module in range(len(self.modules)):
+                print(module + 1, " ", self.modules[module])
+
     def bool_ask_question(self, question):
         """ Desc:
                 Enables asking of y/n questions
@@ -44,26 +63,6 @@ class ModuleObjects(FwComponent):
                 return False
 
             print("Invalid Input")
-
-
-class InterfaceObject(object):
-    """ Class for the Interface Object """
-
-    title = "'Skeleton Key Project'"
-
-    def __init__(self, modules):
-        self.modules = modules
-
-    def display_title(self):
-        print(InterfaceObject.title)
-
-    def display_modules(self):
-        if not self.modules:
-            print("There are no modules to display.")
-        else:
-            for module in range(len(self.modules)):
-                print(module + 1, " ", self.modules[module])
-
 
 # Main Program
 # Load in Module file
