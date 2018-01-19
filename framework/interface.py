@@ -28,7 +28,25 @@ class ModuleObjects(object):
 
 
 class InterfaceObject(object):
-    """ Class for the Interface Object """
+    """
+     Class for the Interface Object
+
+         Args:
+            module:             list of the modules
+            title:              title of the application "Skeleton Key"
+
+        functions:
+            display_title:      displays the title of the application on screen.
+            display_modules:    displays all the modules on screen - loaded from the list of modules
+
+        Returns:
+            the UI
+
+        Raises:
+            No modules found in list - empty list
+            Invalid user input - string
+            Invalid user input - index of module not listed (e.g. <0 or >list)
+    """
 
     title = "'Skeleton Key Project'"
 
@@ -45,41 +63,40 @@ class InterfaceObject(object):
             for module in range(len(self.modules)):
                 print(module + 1), " ", self.modules[module]
 
+    def input_choice(self):
+        exit_flag = False
+        while not exit_flag:
+            # clear the screen - os.system('clear')
+            # Display title
+            intro.display_title()
+            # Display modules
+            intro.display_modules()
+
+            print("\n")
+            print("Enter 0 to exit")
+            user_selection = int(input("Please enter the module you would like to configure. (Based on index)"))
+            if user_selection == 0:
+                print("Exiting Program...")
+                exit_flag = True
+                pass
+            if user_selection == str:
+                print("Invalid selection - string instead of integer.")
+                pass
+            elif user_selection < 0 or user_selection > len(intro.modules):
+                print("Invalid index selection. Please enter a valid selection.")
+                pass
+            else:
+                if not exit_flag:
+                    current_module = test_file[(user_selection - 1)]
+                    # mainly for debug
+                    print("Running ", current_module, "...")
+                    pass
+                else:
+                    print("Thank you for using 'Skeleton Key'.")
+                    sys.exit(0)
+
 
 # Main Program
 # Load in Module file
 test_file = ["Responder", "NMap", "Enumeration"]
 intro = InterfaceObject(test_file)
-exit_flag = False
-
-while not exit_flag:
-    # clear the screen - os.system('clear')
-    # Display title
-    intro.display_title()
-    # Display modules
-    intro.display_modules()
-
-    print("\n")
-    print("Enter 0 to exit")
-    user_selection = int(input("Please enter the module you would like to configure. (Based on index)"))
-    if user_selection == 0:
-        print("Exiting Program...")
-        exit_flag = True
-        pass
-    if user_selection == str:
-        print("Invalid selection - string instead of integer.")
-        pass
-    elif user_selection < 0 or user_selection > len(intro.modules):
-        print("Invalid index selection. Please enter a valid selection.")
-        pass
-    else:
-        if not exit_flag:
-            current_module = test_file[(user_selection - 1)]
-            # mainly for debug
-            print("Running ", current_module, "...")
-            pass
-        else:
-            print("Thank you for using 'Skeleton Key'.")
-            sys.exit(0)
-
-
