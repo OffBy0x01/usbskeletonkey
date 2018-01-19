@@ -48,7 +48,8 @@ class InterfaceObject(object):
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
-    def __init__(self, modules={2, 3, 4}):
+    def __init__(self, modules={2, 3, 4}):  # If you remove this default it may fix the problem in display modules if
+                                            # the problem persists
         self.modules = modules
         self.title = "'Skeleton Key Project'"
 
@@ -70,9 +71,9 @@ class InterfaceObject(object):
         exit_flag = False
         while not exit_flag:
             # Display title
-            intro.display_title()
+            intro.display_title()  # Should this not be self. Since intro is the debug name but not necesarily the name
             # Display modules
-            intro.display_modules()
+            intro.display_modules()  # Should this not be self
 
             print("\n")
             print("Enter 0 to exit")
