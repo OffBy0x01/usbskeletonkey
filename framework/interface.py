@@ -59,7 +59,7 @@ class InterfaceObject(object):
         if not self.modules:
             print("There are no modules to display.")
         else:
-            for module in range(len(self.modules)):
+            for module in self.modules:
                 print(module + 1, " ", self.modules[module])
 
     def bool_ask_question(self, question):
