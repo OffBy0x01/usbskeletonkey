@@ -70,7 +70,6 @@ class InterfaceObject(object):
     def input_choice(self):
         exit_flag = False
         while not exit_flag:
-            # clear the screen - os.system('clear')
             # Display title
             intro.display_title()
             # Display modules
@@ -97,10 +96,10 @@ class InterfaceObject(object):
                     pass
                 else:
                     print("Thank you for using 'Skeleton Key'.")
-                    sys.exit(0)
+                    exit(0)
 
 
-# Main Program
-# Load in Module file
-test_file = ["Responder", "NMap", "Enumeration"]
-intro = InterfaceObject(test_file)
+# debugging
+if __name__ == '__main__':
+    test_file = ["Responder", "NMap", "Enumeration"]
+    intro = InterfaceObject(test_file)
