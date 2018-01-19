@@ -2,47 +2,27 @@ import configparser
 import os
 import re
 
+from framework import interface
+
 
 class SkeletonKey:
-
     # This hasn't been updated yet so ignore the init for now.
     def __init__(self):
         """This is the docstring you fuck"""
 
+        ui = interface.ModuleObjects()
         '''
         #initialize framework components
-        interface = framework.ui()
+       
         keyboard = framework.keyboard()
         network = framework.network()
         storage = framework.storage()
         io = framework.io()
         '''
-
-        self.module_list = self.discover_modules()
-        self.main_path = os.path.dirname(os.path.realpath(__file__))
-        self.module_path = self.main_path + "/modules/"
-
-    def discover_modules(self):
-        #get the module paths from modules directory
-        print("Looking for modules...")
-        module_paths = os.listdir(self.module_path)
-
-        #regex to look for .py files
-        py = re.compile("\.py", re.IGNORECASE)
-        module_paths = filter(py.search, module_paths)
-
-        # identify module name from file path
-        identify_module = lambda m: os.path.splitext(m)[0]
-        return [identify_module(m) for m in module_paths]
-
-    def get_modules(self):
-        module_list = self.discover_modules()
-        return module_list
-
-    def init_config(self):
+        # init config
         if not (os.path.exists(self.module_path)):
-            #doesn't exist - user can fix themselves
-            print("Error: ", self.module_path, " directory does not exist!")
+            # doesn't exist - user can fix themselves
+            print("Error: " + self.module_path + " directory does not exist!")
             exit()
 
         # if no modules present exit
@@ -61,12 +41,30 @@ class SkeletonKey:
         config.add_section('interface')
         config.add_section('general')
 
-        #add to modules to config.ini:active_modules
+        # add to modules to config.ini:active_modules
         for mod in self.module_list:
             config.set('modules', mod, "True")
 
         with open(self.main_path + '/config.ini', 'w') as f:
             config.write(f)
 
-        print('Done!')
+        self.module_list = self.discover_modules()
+        self.main_path = os.path.dirname(os.path.realpath(__file__))
+        self.module_path = self.main_path + "/modules/"
 
+    def discover_modules(self):
+        # get the module paths from modules directory
+        print("Looking for modules...")
+        module_paths = os.listdir(self.module_path)
+
+        # regex to look for .py files
+        py = re.compile("\.py", re.IGNORECASE)
+        module_paths = filter(py.search, module_paths)
+
+        # identify module name from file path
+        identify_module = lambda m: os.path.splitext(m)[0]
+        return [identify_module(m) for m in module_paths]
+
+    def get_modules(self):
+        module_list = self.discover_modules()
+        return module_list
