@@ -4,7 +4,7 @@
 from framework import FwComponent
 
 
-class ModuleObjects(FwComponent):
+class ModuleObjects:
     """
      Class for the Module Object
 
@@ -48,12 +48,8 @@ class InterfaceObject(object):
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
-    def __init__(self, modules={2, 3, 4}):  # If you remove this default it may fix the problem in display modules if
-                                            # the problem persists
-    title = "'Skeleton Key Project'"
-    input_choice()
-
-    def __init__(self, modules={2, 3, 4}):
+    # def __init__(self, modules={2, 3, 4}):
+    def __init__(self, modules):
         self.modules = modules
         self.title = "'Skeleton Key Project'"
 
@@ -64,8 +60,10 @@ class InterfaceObject(object):
         if not self.modules:
             print("There are no modules to display.")
         else:
+            x = 1
             for module in self.modules:
-                print(module + 1, " ", self.modules[module])
+                print (x, " ", module)
+                x += 1
 
     def bool_ask_question(self, question):
         """ Desc:
@@ -75,9 +73,9 @@ class InterfaceObject(object):
         exit_flag = False
         while not exit_flag:
             # Display title
-            intro.display_title()  # Should this not be self. Since intro is the debug name but not necesarily the name
+            self.display_title()  # Should this not be self. Since intro is the debug name but not necesarily the name
             # Display modules
-            intro.display_modules()  # Should this not be self
+            self.display_modules()  # Should this not be self
 
             print("\n")
             print("Enter 0 to exit")
@@ -89,7 +87,7 @@ class InterfaceObject(object):
             if user_selection == str:
                 print("Invalid selection - string instead of integer.")
                 pass
-            elif user_selection < 0 or user_selection > len(intro.modules):
+            elif user_selection < 0 or user_selection > len(self.modules):
                 print("Invalid index selection. Please enter a valid selection.")
                 pass
             else:
@@ -108,3 +106,6 @@ class InterfaceObject(object):
 if __name__ == '__main__':
     test_file = ["Responder", "NMap", "Enumeration"]
     intro = InterfaceObject(test_file)
+    print(InterfaceObject.display_title(intro))
+    print(InterfaceObject.display_modules(intro))
+    InterfaceObject.input_choice(intro)
