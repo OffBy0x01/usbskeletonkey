@@ -27,7 +27,7 @@ class ModuleObjects:
         self.nes_modules = nes_modules
 
 
-class InterfaceObject(object):
+class InterfaceObject(FwComponent):
     """
      Class for the Interface Object
 
@@ -48,8 +48,8 @@ class InterfaceObject(object):
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
-    # def __init__(self, modules={2, 3, 4}):
-    def __init__(self, modules):
+    def __init__(self, modules, debug=False):
+        super().debug = debug
         self.modules = modules
         self.title = "'Skeleton Key Project'"
 
