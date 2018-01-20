@@ -28,6 +28,7 @@ class StorageAccess(FwComponentGadget):
         return true_size
 
     def __init__(self, readable_size, debug=False):
+        super().__init__(driver_name="", enabled=False, debug=False)
         # Translate the provided size
         self._size = self.__convertSize(readable_size)
 
