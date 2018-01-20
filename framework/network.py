@@ -31,8 +31,8 @@ class fw_component_network(FwComponentGadget):
     gether_down = "ifdown usb0"
     gether_remove = "modprobe -r g_ether"
 
-    def __init__(self, debug=False, state=""):
-        super().__init__()
+    def __init__(self, debug=False, state="uninitialised"):
+        super().__init__(driver_name="g_ether", enabled=False, debug=False)
         self.debug = debug
         self.state = state
 
