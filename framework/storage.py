@@ -23,6 +23,15 @@ class StorageAccess(FwComponentGadget):
         tbd
     """
 
+    def __convertsize(self, readable_size):
+        # Function that the class will use to check file sizes
+        true_size = readable_size  # This conversion will be the opposite of Dive into pythons. Fun!
+        return true_size
+
+    def __init__(self, readable_size, debug=False):
+        super().__init__(driver_name="", enabled=False, debug=False)
+        # Translate the provided size
+        self._size = self.__convertSize(readable_size)
     def __init__(self, readable_size, filesystem="FAT", debug=False):
         # There might be an alternative I'll look into
         self.readable_size = readable_size
