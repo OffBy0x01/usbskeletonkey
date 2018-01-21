@@ -1,8 +1,7 @@
 import subprocess
 
+from datetime import datetime
 from framework import FwComponentGadget
-
-temp = 'Later'
 
 
 class StorageAccess(FwComponentGadget):
@@ -11,6 +10,7 @@ class StorageAccess(FwComponentGadget):
 
     Args:
         readable_size:  Input the size of the file system intended e.g 1M or 512K
+
         debug:          Boolean value for the state of Debug prints
 
     functions:
@@ -18,22 +18,26 @@ class StorageAccess(FwComponentGadget):
 
     Returns:
         tbd
+
     Raises:
         tbd
     """
 
-    def __convertsize(self, readable_size):
-        # Function that the class will use to check file sizes
-        true_size = readable_size  # This conversion will be the opposite of Dive into pythons. Fun!
-        return true_size
-
-    def __init__(self, readable_size, debug=False):
-        # Translate the provided size
-        self._size = self.__convertSize(readable_size)
+    def __init__(self, readable_size, filesystem="FAT", debug=False):
+        # There might be an alternative I'll look into
+        self.readable_size = readable_size
 
         # Create device to store to
-        self.__readable_size = readable_size
-        # dd if=/dev/zero of=Desktop/storageTemplate.bin bs=512 count=size/512
+        self.file_name = datetime.now().strftime('%Y-%m-%d--%H:%M.img')
+
+        # Makes a file system.
+        # These don't have output of note (I should look for the error messages and check the Pi is ok with this)
+        subprocess.run(["fallocate", "-l", self.readable_size, self.file_name])
+
+        # Format file system to FAT ... for now
+        subprocess.run(["mkfs.fat", self.file_name])
+        # compgen -c | grep "mkfs\." # Lists all file systems
+
 
         # To find the first available loop back
         self.loopback_device = subprocess.run(["losetup", "-f"],stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -50,9 +54,7 @@ class StorageAccess(FwComponentGadget):
         # There is not a circumstance where it would be a good idea to allow the user to do this via umount
         return
 
-    def __sizeof__(self): return self._size  # machine readable sizeof is default defined
-
-    def sizeof(self): return self._readable_size  # human readable sizeof is human defined
+    def __sizeof__(self):  return self.readable_size  # machine readable sizeof is default defined
 
     def mountlocal(self, directory, read_only=False):
         # Mount the file system locally for amending
