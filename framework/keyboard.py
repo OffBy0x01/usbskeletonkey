@@ -1,6 +1,6 @@
 import subprocess
 
-from framework import FwComponentGadget
+from framework.FwComponentGadget import FwComponentGadget
 
 
 class Keyboard(FwComponentGadget):

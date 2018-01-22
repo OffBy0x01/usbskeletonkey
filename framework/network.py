@@ -1,8 +1,6 @@
 import subprocess
-import time
-import os
 
-from framework import FwComponentGadget
+from framework.FwComponentGadget import FwComponentGadget
 
 
 class FwComponentNetwork(FwComponentGadget):

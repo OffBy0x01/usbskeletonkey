@@ -1,7 +1,7 @@
 import subprocess
-
 from datetime import datetime
-from framework import FwComponentGadget
+
+from framework.FwComponentGadget import FwComponentGadget
 
 
 class StorageAccess(FwComponentGadget):
@@ -36,6 +36,8 @@ class StorageAccess(FwComponentGadget):
     '''
 
     def __init__(self, readable_size, filesystem="FAT", debug=False):
+        super().__init__(debug=debug, enabled=False)
+
         # There might be an alternative I'll look into
         self.readable_size = readable_size
 

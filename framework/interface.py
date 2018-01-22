@@ -1,7 +1,7 @@
 """ Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
 
-from framework import FwComponent
+from framework.FwComponent import FwComponent
 
 
 class ModuleObjects:
@@ -48,20 +48,21 @@ class InterfaceObject(FwComponent):
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
-    def __init__(self, modules, debug=False):
+    def __init__(self, module_list, debug=False):
+        # super().__init__()
         super().debug = debug
-        self.modules = modules
+        self.module_list = module_list
         self.title = "'Skeleton Key Project'"
 
     def display_title(self):
         print(self.title)
 
     def display_modules(self):
-        if not self.modules:
+        if not self.module_list:
             print("There are no modules to display.")
         else:
             x = 1
-            for module in self.modules:
+            for module in self.module_list:
                 print (x, " ", module)
                 x += 1
 
@@ -87,7 +88,7 @@ class InterfaceObject(FwComponent):
             if user_selection == str:
                 print("Invalid selection - string instead of integer.")
                 pass
-            elif user_selection < 0 or user_selection > len(self.modules):
+            elif user_selection < 0 or user_selection > len(self.module_list):
                 print("Invalid index selection. Please enter a valid selection.")
                 pass
             else:
@@ -105,7 +106,7 @@ class InterfaceObject(FwComponent):
 # debugging
 if __name__ == '__main__':
     test_file = ["Responder", "NMap", "Enumeration"]
-    intro = InterfaceObject(test_file)
+    intro = InterfaceObject(module_list=test_file)
     print(InterfaceObject.display_title(intro))
     print(InterfaceObject.display_modules(intro))
     InterfaceObject.input_choice(intro)

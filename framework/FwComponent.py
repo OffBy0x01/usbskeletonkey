@@ -1,6 +1,9 @@
 class FwComponent(object):
     """The base class for all components"""
 
+    def __init(self, debug=""):
+        self._debug = debug
+
     def debug(self, txt=""):
-        if self.debug:
+        if self._debug:
             print(txt)
