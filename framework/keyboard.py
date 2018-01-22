@@ -3,9 +3,6 @@ import subprocess
 from framework import FwComponentGadget
 
 
-# -*- coding: utf-8 -*-
-
-
 class Keyboard(FwComponentGadget):
     def __init__(self, enabled=False, other=False, debug=False):
         # to set the things of the parent class

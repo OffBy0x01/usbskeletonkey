@@ -1,13 +1,11 @@
 import subprocess
 import time
+import os
 
 from framework import FwComponentGadget
 
 
-# -*- coding: utf-8 -*-
-
-
-class fw_component_network(FwComponentGadget):
+class FwComponentNetwork(FwComponentGadget):
     """ Class for the Network Object
 
          Args:
@@ -17,6 +15,9 @@ class fw_component_network(FwComponentGadget):
         functions:
             enable:         allows for enabling of driver
             disable:        allows for disabling of driver
+            network_on:     allows for the ethernet adapter to be turned on
+            network_off:    allows for the ethernet adapter to be turned off
+            network_remove: allows for disable() to be called to disable and remove the driver
 
         Returns:
             framework component object
@@ -24,43 +25,49 @@ class fw_component_network(FwComponentGadget):
         Raises:
             ImportError when kernel module not found
     """
-
-    # USB OTG requirements
-    gether = "modprobe g_ether idVendor=0x04b3 idProduct=0x4010"
-    gether_up = "ifup usb0"
-    gether_down = "ifdown usb0"
-    gether_remove = "modprobe -r g_ether"
-
     def __init__(self, debug=False, state="uninitialised"):
-        super().__init__(driver_name="g_ether", enabled=False, debug=False)
+        super().__init__(driver_name="g_ether", enabled=False, vendor_id ="0x04b3", product_id ="0x4010", debug=False)
         self.debug = debug
         self.state = state
+        self.ether_up = "ifup usb0"
+        self.ether_down = "ifdown usb0"
+        super().enable()  # Initialising Ethernet
+        self.state = "initialised"
+        self.ping_address = "8.8.8.8"
+        self.ping_response = ""
 
-    # Initialising and turning on USB Ethernet
+    def __del__(self):
+        self.network_remove()
+
+    # Turning on USB Ethernet adapter
     def network_on(self):
-        subprocess.call("%s" % fw_component_network.gether, shell=True)
-        time.sleep(1)
-        subprocess.call("%s" % fw_component_network.gether_up, shell=True)
-        fw_component_network.state = "initialised"
+        subprocess.call("%s" % self.ether_up, shell=True)
+        self.state = "Ethernet adapter up"
+        self.ping_test()
 
-    # Turning off USB Ethernet
-    def network_down(self):
-        subprocess.call("%s" % fw_component_network.gether_down, shell=True)
-        fw_component_network.state = "down"
+    # Turning off USB Ethernet adapter
+    def network_off(self):
+        subprocess.call("%s" % self.ether_down, shell=True)
+        self.state = "Ethernet adapter down"
 
     # Removing USB Ethernet
     def network_remove(self):
-        subprocess.call("%s" % fw_component_network.gether_remove, shell=True)
-        fw_component_network.state = "uninitialised"
+        super().disable()
+        self.state = "uninitialised"
+
+    def ping_test(self):
+        self.ping_response = subprocess.call("ping -c 1 " + self.ping_address)
+        if self.ping_response == 0:
+            super().debug("ping successful!")
+            return
+        else:
+            super().debug("Ping unsuccessful!")
 
 
 
-#run=fw_component_network()
 
 
-# run=fw_component_network()
 
-# state=run.network_remove()
-# print()
+
 
 
