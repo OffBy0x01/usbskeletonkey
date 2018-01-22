@@ -42,15 +42,15 @@ class InterfaceObject(FwComponent):
         Returns:
             the UI
 
-        Raises:
+        Raises:1
             No modules found in list - empty list
             Invalid user input - string
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
     def __init__(self, module_list, debug=False):
-        # super().__init__()
-        super().debug = debug
+        super().__init__(debug=debug)
+
         self.module_list = module_list
         self.title = "'Skeleton Key Project'"
 
@@ -63,7 +63,7 @@ class InterfaceObject(FwComponent):
         else:
             x = 1
             for module in self.module_list:
-                print (x, " ", module)
+                print(x, " ", module)
                 x += 1
 
     def bool_ask_question(self, question):

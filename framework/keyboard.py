@@ -6,9 +6,8 @@ from framework.FwComponentGadget import FwComponentGadget
 class Keyboard(FwComponentGadget):
     def __init__(self, enabled=False, other=False, debug=False):
         # to set the things of the parent class
-        super().__init__(driver_name="g_hid", enabled=False, debug=False)
+        super().__init__(driver_name="g_hid", enabled=enabled, debug=debug)
         self.other = other  # doesn't do shit just for demo
-        self.debug = debug
 
     # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt, tab
     char_eqv = {

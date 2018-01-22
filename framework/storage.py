@@ -35,8 +35,8 @@ class StorageAccess(FwComponentGadget):
         self._size = self.__convertSize(readable_size)
     '''
 
-    def __init__(self, readable_size, filesystem="FAT", debug=False):
-        super().__init__(debug=debug, enabled=False)
+    def __init__(self, readable_size, filesystem="FAT", debug=False, enabled=False):
+        super().__init__(debug=debug, enabled=enabled)
 
         # There might be an alternative I'll look into
         self.readable_size = readable_size
@@ -54,8 +54,9 @@ class StorageAccess(FwComponentGadget):
 
 
         # To find the first available loop back
-        self.loopback_device = subprocess.run(["losetup", "-f"],stdout=subprocess.PIPE).stdout.decode('utf-8')
-        if debug: print("Temp")  # Debug out what device is intended of use
+        self.loopback_device = subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8')
+        if debug:
+            print("Temp")  # Debug out what device is intended of use
 
         self.local_mounted = False
         self.bus_mounted = False
@@ -74,7 +75,8 @@ class StorageAccess(FwComponentGadget):
         # Mount the file system locally for amending
         # The commands are needed for this
         if read_only: # mount RO
-        else: #mount norm
+            super().debug("Mount RO")
+        else:  # mount norm
             return
     '''
     def mountbus(self, _write_block):
