@@ -58,7 +58,8 @@ class StorageAccess(FwComponentGadget):
 
         # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],stdout=subprocess.PIPE).stdout.decode('utf-8')
-        if debug: print("Temp")  # Debug out what device is intended of use
+        if debug:
+            print("Temp")  # Debug out what device is intended of use
 
         self.local_mount = False
         self.bus_mounted = False
@@ -100,8 +101,10 @@ class StorageAccess(FwComponentGadget):
             os.mkdir("fs")
             self.directory = "./fs/"
 
-        if read_only: subprocess.run(["mount", "-o", "ro", "/dev/"+self.loopback_device, self.directory])  # mount RO
-        else: subprocess.run(["mount", "/dev/"+self.loopback_device, self.directory])  # mount norm
+        if read_only:
+            subprocess.run(["mount", "-o", "ro", "/dev/"+self.loopback_device, self.directory])  # mount RO
+        else:
+            subprocess.run(["mount", "/dev/"+self.loopback_device, self.directory])  # mount norm
         return
     '''
     def mountbus(self, _write_block):

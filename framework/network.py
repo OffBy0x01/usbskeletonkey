@@ -23,13 +23,13 @@ class FwComponentNetwork(FwComponentGadget):
         Raises:
             ImportError when kernel module not found
     """
-    def __init__(self, debug=False, state="uninitialised"):
-        super().__init__(driver_name="g_ether", enabled=False, vendor_id ="0x04b3", product_id ="0x4010", debug=False)
+
+    def __init__(self, enabled=False, debug=False, state="uninitialised"):
+        super().__init__(driver_name="g_ether", enabled=enabled, vendor_id="0x04b3", product_id="0x4010", debug=debug)
         self.debug = debug
         self.state = state
         self.ether_up = "ifup usb0"
         self.ether_down = "ifdown usb0"
-        super().enable()  # Initialising Ethernet
         self.state = "initialised"
         self.ping_address = "8.8.8.8"
         self.ping_response = ""

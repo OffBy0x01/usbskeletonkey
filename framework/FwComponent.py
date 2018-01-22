@@ -1,7 +1,7 @@
 class FwComponent(object):
     """The base class for all components"""
 
-    def __init(self, debug=""):
+    def __init__(self, debug=""):
         self._debug = debug
 
     def debug(self, txt=""):

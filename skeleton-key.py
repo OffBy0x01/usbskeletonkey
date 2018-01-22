@@ -60,9 +60,4 @@ class SkeletonKey:
         module_paths = filter(py.search, module_paths)
 
         # identify module name from file path
-        identify_module = lambda m: os.path.splitext(m)[0]
-        return [identify_module(m) for m in module_paths]
-
-    def get_modules(self):
-        module_list = self.discover_modules()
-        return module_list
+        return [os.path.splitext(m)[0] for m in module_paths]

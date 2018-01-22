@@ -6,9 +6,8 @@ from framework.FwComponentGadget import FwComponentGadget
 class Keyboard(FwComponentGadget):
     def __init__(self, enabled=False, other=False, debug=False):
         # to set the things of the parent class
-        super().__init__(driver_name="g_hid", enabled=False, debug=False)
+        super().__init__(driver_name="g_hid", enabled=enabled, debug=debug)
         self.other = other  # doesn't do shit just for demo
-        self.debug = debug
 
     # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt, tab
     char_eqv = {
@@ -46,7 +45,8 @@ class Keyboard(FwComponentGadget):
         "?": "left-shift slash"
     }
 
-    def write(self, string):
+    # Handles string write to target
+    def write_to_target(self, string):
         current_char = ''
 
         for c in string:
@@ -58,8 +58,24 @@ class Keyboard(FwComponentGadget):
                 # special characters need string equivalents
                 current_char = self.char_eqv.get(c, 0)
                 if current_char is None:
-                    # something went horribly wrong or I've missed a character
-                    print(0)  # Filler for edge case
+                    super().debug("something went horribly wrong or I've missed a character")
 
             subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, "DEFAULT_PATH"),
                             shell=True)
+
+    # Might not need this but just theorizing
+    def get_script(self, path):
+        print(0)
+
+    def execute(self, script):
+        if not self.enabled:
+            print(0)
+        # Needs:
+        #   read scripts line by line
+        #   interpret command and args sep
+        #   have a queue of scripts to run?
+        #       remove method for once each item has completed
+        #       repeat item if needed to run multiple times
+        #
+        #   clean-up method
+        #   use enable and disable as per FwComponentGadget
