@@ -21,6 +21,15 @@ class StorageAccess(FwComponentGadget):
 
     Raises:
         tbd
+
+    TODO:
+        Add functionality to copy specific files from SkelKey to the target via OTG
+
+        Put disclaimers on scary bits of code
+
+        If NULL: filesystem make one
+
+        Make a graceful kill method
     """
 
     def __convertsize(self, readable_size):
