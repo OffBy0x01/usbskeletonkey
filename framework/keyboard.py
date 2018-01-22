@@ -58,5 +58,8 @@ class Keyboard(FwComponentGadget):
                 # special characters need string equivalents
                 current_char = self.char_eqv.get(c, 0)
                 if current_char is None:
-            # something went horribly wrong or I've missed a character
-            subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, dir_path), shell=True)
+                    # something went horribly wrong or I've missed a character
+                    print(0)  # Filler for edge case
+
+            subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, "DEFAULT_PATH"),
+                            shell=True)
