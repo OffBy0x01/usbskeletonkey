@@ -1,6 +1,8 @@
 import subprocess
 from datetime import datetime
 
+import os
+
 from framework.FwComponentGadget import FwComponentGadget
 
 
@@ -9,8 +11,10 @@ class StorageAccess(FwComponentGadget):
     If this is closed early it will fuck up pretty bad and will require a restart of the device
 
     Args:
-        readable_size:  Input the size of the file system intended e.g 1M or 512K
-
+        readable_size:  Input the size of the file system intended e.g 4M or 512K
+        filesystem:     For new filesystems this will be the format to create with e.g fat, msdos
+                        For old filesystems this will be the name of the .img file e.g payloadfs.img, memes.dd
+        old_fs:         Boolean value to dictate wither the class is to create a new filesystem
         debug:          Boolean value for the state of Debug prints
 
     functions:
@@ -22,42 +26,41 @@ class StorageAccess(FwComponentGadget):
     Raises:
         tbd
     """
+    # Command that needs to be run for a list of available filesystems
+    # compgen -c | grep "mkfs\." # Lists all file systems
 
-    def __convertsize(self, readable_size):
-        # Function that the class will use to check file sizes
-        true_size = readable_size  # This conversion will be the opposite of Dive into pythons. Fun!
-        return true_size
-
-    '''
-    def __init__(self, readable_size, debug=False):
-        super().__init__(driver_name="", enabled=False, debug=False)
-        # Translate the provided size
-        self._size = self.__convertSize(readable_size)
-    '''
-
-    def __init__(self, readable_size, filesystem="FAT", debug=False):
+    def __init__(self, readable_size, filesystem="fat", old_fs=False, debug=False):
         super().__init__(debug=debug, enabled=False)
+
+        # Variable init for the use of an old fs
+        self.old_fs = old_fs
 
         # There might be an alternative I'll look into
         self.readable_size = readable_size
 
-        # Create device to store to
-        self.file_name = datetime.now().strftime('%Y-%m-%d--%H:%M.img')
+        # Variable init for local mounting directory
+        self.directory = None
 
-        # Makes a file system.
-        # These don't have output of note (I should look for the error messages and check the Pi is ok with this)
-        subprocess.run(["fallocate", "-l", self.readable_size, self.file_name])
+        if not old_fs:
+            # Create device to store to
+            self.file_name = datetime.now().strftime('%Y-%m-%d--%H:%M.img')
 
-        # Format file system to FAT ... for now
-        subprocess.run(["mkfs.fat", self.file_name])
-        # compgen -c | grep "mkfs\." # Lists all file systems
+            # Makes a file system.
+            # These don't have output of note (I should look for the error messages and check the Pi is ok with this)
+            subprocess.run(["fallocate", "-l", self.readable_size, self.file_name])
 
+            # Format file system to FAT ... for now
+            subprocess.run(["mkfs."+filesystem.lower(), self.file_name])
+        else:
+            self.file_name = filesystem
+            try:  # Check the file exists
+            except: super().debug("No file that user specified.\nAttempting graceful fail")
 
-        # To find the first available loop back
+        # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],stdout=subprocess.PIPE).stdout.decode('utf-8')
         if debug: print("Temp")  # Debug out what device is intended of use
 
-        self.local_mounted = False
+        self.local_mount = False
         self.bus_mounted = False
         return
 
@@ -68,14 +71,38 @@ class StorageAccess(FwComponentGadget):
         # There is not a circumstance where it would be a good idea to allow the user to do this via umount
         return
 
-    def __sizeof__(self):  return self.readable_size  # machine readable sizeof is default defined
+    # This code is derived from code from dive into python. Thanks Mark <3
+    def convertsize(self):
+        # Copyright (c) 2009, Mark Pilgrim, All rights reserved.
+        suffixes = {1024: ['K', 'M', 'G', 'T']}
+        multiple = 1024
+        fs_size = int(os.path.getsize(self.directory+self.file_name))
+        for suffix in suffixes[multiple]:
+            fs_size /= multiple
+            if fs_size < multiple:
+                return '{0:.1f} {1}'.format(fs_size, suffix)
+        raise ValueError('Filesystem out of bounds')
+
+    def __sizeof__(self):
+        if self.old_fs:
+            self.convertsize() # size of old fs
+
+        return self.readable_size  # size of current file system
 
     def mountlocal(self, directory, read_only=False):
         # Mount the file system locally for amending
         # The commands are needed for this
-        if read_only: # mount RO
-        else: #mount norm
-            return
+        self.directory = directory
+
+        # When the user tries to mount us on a non existent directory
+        if not os.path.exists(self.directory):
+            super().debug("No file system exists at "+directory+"\nCreating folder")
+            os.mkdir("fs")
+            self.directory = "./fs/"
+
+        if read_only: subprocess.run(["mount", "-o", "ro", "/dev/"+self.loopback_device, self.directory])  # mount RO
+        else: subprocess.run(["mount", "/dev/"+self.loopback_device, self.directory])  # mount norm
+        return
     '''
     def mountbus(self, _write_block):
         # Mount over USB
@@ -83,20 +110,23 @@ class StorageAccess(FwComponentGadget):
         if _write_block:  # mount RO
         else:  # mount norm
             return
-
+    '''
+    def unmountlocal(self):
+        subprocess.run(["umount", self.directory])  # un-mount
+        if self.directory == "./fs/":
+            os.removedirs("fs")
+        self.local_mount = False
+        return
+    '''
     def unmountbus(self):
         self.bus_mounted = False
         return
-    '''
-    def unmountlocal(self):
-        self.local_mounted = False
-        return
-    '''
+    
     def unmount(self):
         """
         Void function that will unmount from whatever the class is currently mounted to
         """
-        if not self.local_mounted:
+        if not self.local_mount:
             if not self.bus_mounted:
                 return
             else:
