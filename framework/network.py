@@ -24,43 +24,33 @@ class fw_component_network(FwComponentGadget):
         Raises:
             ImportError when kernel module not found
     """
-
-    # USB OTG requirements
-    gether = "modprobe g_ether idVendor=0x04b3 idProduct=0x4010"
-    gether_up = "ifup usb0"
-    gether_down = "ifdown usb0"
-    gether_remove = "modprobe -r g_ether"
-
     def __init__(self, debug=False, state="uninitialised"):
-        super().__init__(driver_name="g_ether", enabled=False, debug=False)
+        super().__init__(driver_name="g_ether", enabled=False, vendor_id ="0x04b3", product_id ="0x4010", debug=False)
         self.debug = debug
         self.state = state
+        self.ether_up = "ifup usb0"
+        self.ether_down = "ifdown usb0"
+        super().enable()  # Initialising Ethernet
+        self.state = "initialised"
 
-    # Initialising and turning on USB Ethernet
+    # Turning on USB Ethernet adapter
     def network_on(self):
-        subprocess.call("%s" % fw_component_network.gether, shell=True)
-        time.sleep(1)
-        subprocess.call("%s" % fw_component_network.gether_up, shell=True)
-        fw_component_network.state = "initialised"
+        subprocess.call("%s" % self.ether_up, shell=True)
+        self.state = "Ethernet adapter up"
 
-    # Turning off USB Ethernet
+    # Turning off USB Ethernet adapter
     def network_down(self):
-        subprocess.call("%s" % fw_component_network.gether_down, shell=True)
-        fw_component_network.state = "down"
+        subprocess.call("%s" % self.ether_down, shell=True)
+        self.state = "Ethernet adapter down"
+
+    # Deconstructor
+    def __del__(self):
+        self.network_remove()
 
     # Removing USB Ethernet
     def network_remove(self):
-        subprocess.call("%s" % fw_component_network.gether_remove, shell=True)
-        fw_component_network.state = "uninitialised"
+        super().disable()
+        self.state = "uninitialised"
 
-
-
-#run=fw_component_network()
-
-
-# run=fw_component_network()
-
-# state=run.network_remove()
-# print()
 
 
