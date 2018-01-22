@@ -61,7 +61,3 @@ class SkeletonKey:
 
         # identify module name from file path
         return [os.path.splitext(m)[0] for m in module_paths]
-
-    def get_modules(self):
-        module_list = self.discover_modules()
-        return module_list
