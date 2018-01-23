@@ -12,7 +12,7 @@ class Keyboard(FwComponentGadget):
     # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt, tab
     char_eqv = {
         " ": "space",
-        # "   ": "tab", ## This isn't actually a Tab, its the IDE's interpretation
+        "	": "tab",  # Took from notepad should work
         "!": "left-shift 1",
         "\"": "left-shift 2",
         "£": "left-shift  3",
@@ -61,7 +61,9 @@ class Keyboard(FwComponentGadget):
                     super().debug("something went horribly wrong or I've missed a character")
 
             subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, "DEFAULT_PATH"),
-                            shell=True)
+                            shell=True)  # Documentation says use .run() unless Py < 3.5 - is this intentional?
+
+            # Do we need an enter at the end of the command or is that covered?
 
     # Might not need this but just theorizing
     def get_script(self, path):
