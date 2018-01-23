@@ -1,6 +1,10 @@
 """ Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
-import configparser
+try:
+    import configparser
+except ImportError:
+    configparser = None
+import os
 from framework.FwComponent import FwComponent
 from framework.helper.ModuleManager import ModuleManager
 
@@ -57,7 +61,7 @@ class InterfaceObject(FwComponent, ModuleManager):
         Returns:
             the UI
 
-        Raises:1
+        Raises:
             No modules found in list - empty list
             Invalid user input - string
             Invalid user input - index of module not listed (e.g. <0 or >list)
@@ -80,7 +84,7 @@ class InterfaceObject(FwComponent, ModuleManager):
 
     def display_modules(self):
         if not self.module_list:
-            print("There are no modules to display.")
+            raise ValueError("There are no modules to display.")
         else:
             x = 1
             for module in self.module_list:
@@ -107,10 +111,10 @@ class InterfaceObject(FwComponent, ModuleManager):
                 exit_flag = True
                 pass
             if user_selection == str:
-                print("Invalid selection - string instead of integer.")
+                raise ValueError("Invalid selection - string instead of integer.")
                 pass
             elif user_selection < 0 or user_selection > len(self.module_list):
-                print("Invalid index selection. Please enter a valid selection.")
+                raise ValueError("Invalid index selection. Please enter a valid selection.")
                 pass
             else:
                 if not exit_flag:
