@@ -11,7 +11,7 @@ class StorageAccess(FwComponentGadget):
 
     Args:
         readable_size:  Input the size of the file system intended e.g 4M, 512K. This defaults to 2M
-        filesystem:     For new filesystems this will be the format to create with e.g fat, msdos
+        fs:             For new filesystems this will be the format to create with e.g fat, msdos
                         For old filesystems this will be the name of the .img file e.g payloadfs.img, memes.dd
         old_fs:         Boolean value to dictate wither the class is to create a new filesystem
         debug:          Boolean value for the state of Debug prints
@@ -27,27 +27,27 @@ class StorageAccess(FwComponentGadget):
     """
 
     def __createfs(self):
-        super().debug("Creating a filesystem")
+        super().debug("    Creating a filesystem")
 
         # Create device to store to
         self.file_name = datetime.now().strftime('%Y-%m-%d--%H:%M.img')
-        super().debug("Naming file system " + self.file_name)
+        super().debug("    Naming file system " + self.file_name)
 
         # Makes a file system.
         # These don't have output of note (I should look for error messages when you try to do stupid shit)
         subprocess.run(["fallocate", "-l", self.readable_size, self.file_name])  # This command accepts 1M and such
-        super().debug("Running command - 'fallocate -l " + self.readable_size + " " + self.file_name + "'")
+        super().debug("    Running command - 'fallocate -l " + self.readable_size + " " + self.file_name + "'")
 
         # Format file system to FAT ... for now
         subprocess.run(["mkfs."+self.fs.lower(), self.file_name])
-        super().debug("Running command - 'mkfs." + self.fs.lower() + " " + self.file_name + "'")
+        super().debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.file_name + "'")
 
     def __init__(self, readable_size=None, fs="fat", old_fs=False, debug=False):
         # Starting the super class first
-        super().__init__(debug=debug, enabled=False)  # TODO
+        super().__init__("g_mass_storage", enabled=False, debug=debug)
 
         # Inform the user on debug what module has started
-        super().debug("Starting Module: Storage Access under alias "+self.__name__)
+        super().debug("Starting Module: Storage Access under alias  " + self.__name__)
 
         # Variable init
         self.fs = fs
@@ -72,29 +72,32 @@ class StorageAccess(FwComponentGadget):
             if os.path.isfile(self.file_name):
                 super().debug("File discovered")
             else:
-                super().debug("File that user specified does not exist.\nWill Create a new filesystem.")
+                super().debug("File that user specified does not exist\nWill Create a new filesystem")
                 self.__createfs()
 
         # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],
                                               stdout=subprocess.PIPE).stdout.decode('utf-8')
-        if "Permission denied" in self.loopback_device:
-            super().debug("Permissions are required.\nThis should be running as root or at least some sort of admin.\n" +
-                          "Now attempting to fail gracefully")
 
-        super().debug("Attempting to mount on " + self.loopback_device)
+        if "Permission denied" in self.loopback_device:
+            super().debug("Permissions are required\nThis should be running as root or at least some sort of admin\n" +
+                          "Now attempting to fail gracefully")
+            # TODO Try to find an alternative method of storage and drop the ability to mount on bus
+
+        super().debug("Attempting to mount on " + self.loopback_device +
+                      "\nRunning Command - losetup " + self.loopback_device + " " + self.file_name)
         loop_output = subprocess.run(["losetup", self.loopback_device, self.file_name],
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
-            super().debug("The file attempted to load onto the loopback device cannot be mounted\n"+
-                          "Attempting to recover by mounting a fresh file system")
+            super().debug("The file attempted to load onto the loopback device cannot be mounted\n" +
+                          "Attempting to recover...")
             self.__createfs()
 
         # If the first loopback device available is still the one we should be mounted to
         if self.loopback_device == subprocess.run(["losetup", "-f"],
                                                   stdout=subprocess.PIPE).stdout.decode('utf-8'):
-            super().debug("Something went wrong here")
+            super().debug("Something went wrong here\nThe next available loopback is the loopback we should be on, IDK")
             # TODO Insert method of graceful fail here
 
         self.local_mount = False
@@ -102,7 +105,7 @@ class StorageAccess(FwComponentGadget):
         return
 
     def __del__(self):
-        super().debug("A storage class called " + self.__name__ + " is being deleted.")
+        super().debug("Storage class," + self.__name__ + ", is being deleted")
         # No matter what call unmount?
         super().debug("Running unmount to ensure the file system is not being left active")
         self.unmount()
@@ -151,14 +154,13 @@ class StorageAccess(FwComponentGadget):
             subprocess.run(["mount", "/dev/" + self.loopback_device, self.directory])  # mount norm
         return
 
-    def mountbus(self, _write_block):
+    def mountbus(self, write_block=False):
         # Mount over USB
-        # If write block is possible
-        if _write_block:
-            # TODO INSERT COMMAND HERE
+        if write_block:
+            # TODO INSERT COMMANDS HERE
             super().debug("Mounted over bus (RO)")  # mount RO
         else:
-            # TODO INSERT COMMAND HERE
+            # TODO INSERT COMMANDS HERE
             super().debug("Mounted over bus")  # mount norm
 
         self.bus_mounted = True
@@ -166,20 +168,21 @@ class StorageAccess(FwComponentGadget):
 
     def unmountlocal(self):
         subprocess.run(["umount", self.directory])  # un-mount
-        super().debug("The filesystem was unmounted with command umount "+self.directory)
+        super().debug("The filesystem was unmounted with command umount " + self.directory)
         if self.directory == "./fs/":
-            super().debug("As the default directory was used it will now be removed")
+            super().debug("    Default directory was used; it will now be removed")
             os.removedirs("fs")
         self.local_mount = False
         return
 
     def unmountbus(self):
-        # TODO INSERT COMMAND HERE
+        # TODO INSERT COMMANDS HERE
         super().debug("The bus was unmounted")
         self.bus_mounted = False
         return
 
     def unmount(self):
+        super().debug("Starting unmount")
         if not self.local_mount:
             if not self.bus_mounted:
                 super().debug("Nothing was mounted")
