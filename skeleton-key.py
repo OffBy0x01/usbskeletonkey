@@ -1,6 +1,5 @@
 import configparser
 import os
-import re
 
 from framework import interface
 
@@ -20,13 +19,11 @@ class SkeletonKey:
         # init config
         if not (os.path.exists(self.module_path)):
             # doesn't exist - user can fix themselves
-            print("Error: " + self.module_path + " directory does not exist!")
-            exit()
+            ui.debug("Error: " + self.module_path + " directory does not exist!")
 
         # if no modules present exit
         if not self.module_list:
-            print("Error: No modules found!")
-            exit()
+            ui.debug("Error: No modules found!")
         else:
             print('Configuring modules:')
             print(*self.module_list, sep=',\n')
@@ -46,18 +43,6 @@ class SkeletonKey:
         with open(self.main_path + '/config.ini', 'w') as f:
             config.write(f)
 
-        self.module_list = self.discover_modules()
         self.main_path = os.path.dirname(os.path.realpath(__file__))
         self.module_path = self.main_path + "/modules/"
 
-    def discover_modules(self):
-        # get the module paths from modules directory
-        print("Looking for modules...")
-        module_paths = os.listdir(self.module_path)
-
-        # regex to look for .py files
-        py = re.compile("\.py", re.IGNORECASE)
-        module_paths = filter(py.search, module_paths)
-
-        # identify module name from file path
-        return [os.path.splitext(m)[0] for m in module_paths]

@@ -50,8 +50,9 @@ class InterfaceObject(FwComponent, ModuleManager):
     """
 
     def module_manager_demo(self):
-        module_manager = ModuleManager()
-        print(*module_manager.module_list, sep=", ")
+        # Andrew needs to fix this but this basically it
+        self.module_manager = ModuleManager()
+        print(*self.module_manager.module_list, sep=", ")
 
     def __init__(self, module_list, debug=False):
         super().__init__(debug=debug)

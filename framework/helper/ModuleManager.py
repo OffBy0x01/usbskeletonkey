@@ -1,7 +1,9 @@
 
-from framework.helper.singleton import Singleton
-import re
 import os
+import re
+
+from framework.helper.singleton import Singleton
+
 
 @Singleton
 class ModuleManager:
