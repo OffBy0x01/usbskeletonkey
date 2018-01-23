@@ -1,7 +1,8 @@
 """ Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
 
-from framework import FwComponent
+from framework.FwComponent import FwComponent
+from framework.helper.ModuleManager import ModuleManager
 
 
 class ModuleObjects:
@@ -27,7 +28,7 @@ class ModuleObjects:
         self.nes_modules = nes_modules
 
 
-class InterfaceObject(FwComponent):
+class InterfaceObject(FwComponent, ModuleManager):
     """
      Class for the Interface Object
 
@@ -42,27 +43,34 @@ class InterfaceObject(FwComponent):
         Returns:
             the UI
 
-        Raises:
+        Raises:1
             No modules found in list - empty list
             Invalid user input - string
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
-    def __init__(self, modules, debug=False):
-        super().debug = debug
-        self.modules = modules
+    def module_manager_demo(self):
+        # Andrew needs to fix this but this basically it
+        self.module_manager = ModuleManager()
+        print(*self.module_manager.module_list, sep=", ")
+
+    def __init__(self, module_list, debug=False):
+        super().__init__(debug=debug)
+
+        self.module_list = module_list
+
         self.title = "'Skeleton Key Project'"
 
     def display_title(self):
         print(self.title)
 
     def display_modules(self):
-        if not self.modules:
+        if not self.module_list:
             print("There are no modules to display.")
         else:
             x = 1
-            for module in self.modules:
-                print (x, " ", module)
+            for module in self.module_list:
+                print(x, " ", module)
                 x += 1
 
     def bool_ask_question(self, question):
@@ -87,7 +95,7 @@ class InterfaceObject(FwComponent):
             if user_selection == str:
                 print("Invalid selection - string instead of integer.")
                 pass
-            elif user_selection < 0 or user_selection > len(self.modules):
+            elif user_selection < 0 or user_selection > len(self.module_list):
                 print("Invalid index selection. Please enter a valid selection.")
                 pass
             else:
@@ -105,7 +113,7 @@ class InterfaceObject(FwComponent):
 # debugging
 if __name__ == '__main__':
     test_file = ["Responder", "NMap", "Enumeration"]
-    intro = InterfaceObject(test_file)
+    intro = InterfaceObject(module_list=test_file)
     print(InterfaceObject.display_title(intro))
     print(InterfaceObject.display_modules(intro))
     InterfaceObject.input_choice(intro)

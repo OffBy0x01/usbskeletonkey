@@ -1,6 +1,6 @@
 import subprocess
 
-from framework import FwComponent
+from framework.FwComponent import FwComponent
 
 
 class FwComponentGadget(FwComponent):
@@ -23,6 +23,7 @@ class FwComponentGadget(FwComponent):
 
     def __init__(self, driver_name, enabled=False, vendor_id="", product_id="", debug=False):
         """Return a new framework component"""
+
         self.driver_name = driver_name
         # If kernel module was not found then modprobe -n will return x not found in y
         if "not found" in subprocess.run(["modprobe", "-n", driver_name], stdout=subprocess.PIPE).stdout.decode(
@@ -33,7 +34,9 @@ class FwComponentGadget(FwComponent):
         self.enabled = enabled
         self.vendor_id = vendor_id
         self.product_id = product_id
-        self.debug = debug
+
+        # set debug state
+        super().__init__(debug=debug)
 
     def enable(self):
         """Enable a disabled framework object"""
@@ -41,7 +44,7 @@ class FwComponentGadget(FwComponent):
             subprocess.call("modprobe %s %s %s" % (self.driver_name, self.vendor_id, self.product_id), shell=True)
             self.enabled = True
         else:
-            print('Driver already enabled!')
+            super().debug('Driver already enabled!')
 
     def disable(self):
         """Disable an enabled framework object"""
@@ -49,4 +52,12 @@ class FwComponentGadget(FwComponent):
             subprocess.call("modprobe -r %s" % self.driver_name, shell=True)
             self.enabled = False
         else:
-            print('Driver already disabled!')
+            super().debug('Driver already disabled!')
+
+    def status(self):
+        """Return the driver status"""
+        if self.enabled:
+            super().debug("Driver enabled")
+        else:
+            super().debug("Driver disabled")
+        return self.enabled
