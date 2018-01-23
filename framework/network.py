@@ -7,7 +7,7 @@ class FwComponentNetwork(FwComponentGadget):
     """ Class for the Network Object
 
          Args:
-            driver_name:    the driver being used e.g. g_hid
+            state:          state of driver
             enabled:        manages the on/off state
             debug:          for enabling debug text
 
@@ -48,21 +48,16 @@ class FwComponentNetwork(FwComponentGadget):
         counter = 0
         flag_success = False  # Flag set when connection successful
         while counter < 3:  # Only attempt ping 3 times
-            if not self.ping_on:  # If not already pinging
-                self.ping_on = True
-                self.ping_response = subprocess.call("ping -c 1 -w 3 " + self.ping_address, shell=True)  # Ping to test connection
-                self.ping_on = False
-                if self.ping_response == 0:  # If ping successful
-                    super().debug("Ping successful!")
-                    flag_success = True
-                    counter = 3  # Exit loop
-                else:  # If ping not successful
-                    super().debug("Ping unsuccessful!")
-                    counter += 1  # Try again
-            else:
-                super().debug("Ping already in use")
+
+            if subprocess.call("ping -c 1 -w 3 " + self.ping_address, shell=True) == 0:  # Ping to test connection
+                super().debug("Ping successful!")
+                counter = 3  # Exit loop
+                flag_success = True
+            else:  # If ping not successful
+                super().debug("Ping unsuccessful!")
+                counter += 1  # Try again
         if not flag_success:  # If 3 ping attempts fail
-            self.kill("Connection failed!")  # Kill process
+            super().debug("Connection failed!")
         return
 
     # Turning on USB Ethernet adapter
@@ -92,12 +87,10 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Emergency Kill
     def kill(self, error_message):
-        while True:  # Wait till active ping tests are done
-            if not self.ping_on:  # If no active ping tests
-                super().debug(error_message)  # Debug text
-                self.network_remove()  # Detach from bus
-                return
+        super().debug(error_message)  # Debug text
+        self.network_remove()  # Detach from bus
+        return
 
 # For testing
-# test = FwComponentNetwork()
-# test.network_on()
+test = FwComponentNetwork()
+test.network_on()
