@@ -8,7 +8,8 @@ class FwComponentNetwork(FwComponentGadget):
 
          Args:
             driver_name:    the driver being used e.g. g_hid
-            enabled:         manages the on/off state
+            enabled:        manages the on/off state
+            debug:          for enabling debug text
 
         functions:
             enable:         allows for enabling of driver
@@ -18,11 +19,13 @@ class FwComponentNetwork(FwComponentGadget):
             network_remove: allows for disable() to be called to disable and remove the driver
             network_kill:   allows for the Ethernet Adapter to be disabled and removed if
                             a ping fails
+
         Returns:
             framework component object
 
         Raises:
-            ImportError when kernel module not found
+            Critical error if connection is not established
+            Error thrown if ping is already in progress
     """
 
     # Constructor
@@ -32,7 +35,6 @@ class FwComponentNetwork(FwComponentGadget):
         self.state = state
         self.ether_up = "ifup usb0"
         self.ether_down = "ifdown usb0"
-        self.state = "initialised"
         self.ping_address = "8.8.8.8"
         self.ping_on = False
         self.ping_response = ""
@@ -96,6 +98,6 @@ class FwComponentNetwork(FwComponentGadget):
                 self.network_remove()  # Detach from bus
                 return
 
-
-test = FwComponentNetwork()
-test.network_on()
+# For testing
+# test = FwComponentNetwork()
+# test.network_on()
