@@ -21,7 +21,7 @@ class FwComponentGadget(FwComponent):
         ImportError when kernel module not found
     """
 
-    def __init__(self, driver_name, enabled=False, vendor_id="", product_id="", debug=False):  # enabled=True or enabled=enabled?
+    def __init__(self, driver_name, enabled=False, vendor_id="", product_id="", debug=False):
         """Return a new framework component"""
 
         self.driver_name = driver_name
