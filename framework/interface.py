@@ -2,6 +2,7 @@
 # imports
 
 from framework.FwComponent import FwComponent
+from framework.helper.ModuleManager import ModuleManager
 
 
 class ModuleObjects:
@@ -27,7 +28,7 @@ class ModuleObjects:
         self.nes_modules = nes_modules
 
 
-class InterfaceObject(FwComponent):
+class InterfaceObject(FwComponent, ModuleManager):
     """
      Class for the Interface Object
 
@@ -48,10 +49,15 @@ class InterfaceObject(FwComponent):
             Invalid user input - index of module not listed (e.g. <0 or >list)
     """
 
+    def module_manager_demo(self):
+        module_manager = ModuleManager()
+        print(*module_manager.module_list, sep=", ")
+
     def __init__(self, module_list, debug=False):
         super().__init__(debug=debug)
 
         self.module_list = module_list
+
         self.title = "'Skeleton Key Project'"
 
     def display_title(self):
