@@ -41,7 +41,7 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Destructor
     def __del__(self):
-        self.network_remove()  # Disable eth driver
+        self.disable()  # Disable eth driver
 
     # Check for internet connectivity
     def ping_test(self):
@@ -61,7 +61,7 @@ class FwComponentNetwork(FwComponentGadget):
         return
 
     # Turning on USB Ethernet adapter
-    def network_on(self):
+    def up(self):
         subprocess.call("%s" % self.ether_up, shell=True)  # Up adapter
         self.state = "Ethernet adapter up"
         if self.debug:  # Debug text
@@ -70,7 +70,7 @@ class FwComponentNetwork(FwComponentGadget):
         return
 
     # Turning off USB Ethernet adapter
-    def network_off(self):
+    def down(self):
         subprocess.call("%s" % self.ether_down, shell=True)  # Down adapter
         self.state = "Ethernet adapter down"
         if self.debug:  # Debug text
@@ -78,18 +78,18 @@ class FwComponentNetwork(FwComponentGadget):
         return
 
     # Removing USB Ethernet
-    def network_remove(self):
+    def disable(self):
         super().disable()  # Call parent class to remove the driver
         self.state = "uninitialised"
-        if self.debug:  # Debug text
-            super().debug(self.state)
+        super().debug(self.state)
         return
 
     # Emergency Kill
     def kill(self, error_message):
         super().debug(error_message)  # Debug text
-        self.network_remove()  # Detach from bus
+        self.disable()  # Detach from bus
         return
+
 
 # For testing
 test = FwComponentNetwork()
