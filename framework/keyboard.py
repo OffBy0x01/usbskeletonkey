@@ -6,10 +6,10 @@ from framework.FwComponentGadget import FwComponentGadget
 class Keyboard(FwComponentGadget):
     def __init__(self, enabled=False, other=False, debug=False):
         # to set the things of the parent class
-        super().__init__(driver_name="g_hid", enabled=enabled, debug=debug)
+        # super().__init__(driver_name="g_hid", enabled=enabled, debug=debug)
         self.other = other  # doesn't do shit just for demo
 
-    # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt, tab
+    # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt (Like ducky)
     char_eqv = {
         " ": "space",
         "	": "tab",  # Took from notepad should work
@@ -63,15 +63,14 @@ class Keyboard(FwComponentGadget):
             subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, "DEFAULT_PATH"),
                             shell=True)  # Documentation says use .run() unless Py < 3.5 - is this intentional?
 
-            # Do we need an enter at the end of the command or is that covered?
-
     # Might not need this but just theorizing
     def get_script(self, path):
         print(0)
 
-    def execute(self, script):
-        if not self.enabled:
-            print(0)
+    def exec(self, script):
+        file = open(script, "r")
+        for line in file:
+            print(line, end="")
         # Needs:
         #   read scripts line by line
         #   interpret command and args sep
@@ -81,3 +80,9 @@ class Keyboard(FwComponentGadget):
         #
         #   clean-up method
         #   use enable and disable as per FwComponentGadget
+
+
+# debugging
+if __name__ == '__main__':
+    test = Keyboard()
+    test.exec("test.txt")
