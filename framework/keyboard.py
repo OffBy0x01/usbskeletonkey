@@ -46,7 +46,7 @@ class Keyboard(FwComponentGadget):
     }
 
     # Handles string write to target
-    def write_to_target(self, string):
+    def write(self, string):
         current_char = ''
 
         for c in string:
@@ -67,10 +67,28 @@ class Keyboard(FwComponentGadget):
     def get_script(self, path):
         print(0)
 
+    commands = {"REM": ignore,
+                "DEFAULTDELAY": set_delay,
+                "DELAY": delay
+                "STRING": write,
+                "GUI": super_key,
+                "WINDOWS": super_key,
+                "MENU": "",  # TODO Work out how the fuck to do this
+                "SHIFT": mod_key,
+                "ALT": mod_key,
+                "CONTROL": mod_key
+                "CTRL": mod_key,
+                # TODO look at arrow keys and 'Extended Commands'
+                "REPEAT": last_command
+                }
+
     def exec(self, script):
         file = open(script, "r")
         for line in file:
             print(line, end="")
+            instruction = line.split()
+
+
         # Needs:
         #   read scripts line by line
         #   interpret command and args sep
