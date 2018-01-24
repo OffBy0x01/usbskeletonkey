@@ -44,21 +44,21 @@ class FwComponentNetwork(FwComponentGadget):
         self.network_remove()  # Disable eth driver
 
     # Check for internet connectivity
-    def ping_test(self):
-        counter = 0
+    def test(self):
         flag_success = False  # Flag set when connection successful
-        while counter < 3:  # Only attempt ping 3 times
-
+        for i in range(1, 3):  # Only attempt ping 3 times
             if subprocess.call("ping -c 1 -w 3 " + self.ping_address, shell=True) == 0:  # Ping to test connection
                 super().debug("Ping successful!")
-                counter = 3  # Exit loop
+                # Exit loop
                 flag_success = True
+                break
             else:  # If ping not successful
                 super().debug("Ping unsuccessful!")
-                counter += 1  # Try again
+                # Try again
         if not flag_success:  # If 3 ping attempts fail
             super().debug("Connection failed!")
-        return
+            return False
+        return True
 
     # Turning on USB Ethernet adapter
     def network_on(self):
@@ -92,5 +92,6 @@ class FwComponentNetwork(FwComponentGadget):
         return
 
 # For testing
-test = FwComponentNetwork()
-test.network_on()
+if __name__ == "__main__"
+    test = FwComponentNetwork()
+    test.network_on()
