@@ -47,7 +47,7 @@ class StorageAccess(FwComponentGadget):
         super().__init__("g_mass_storage", enabled=False, debug=debug)
 
         # Inform the user on debug what module has started
-        super().debug("Starting Module: Storage Access under alias  " + self.__name__)
+        super().debug("Starting Module: Storage Access")
 
         # Variable init
         self.fs = fs
@@ -109,10 +109,13 @@ class StorageAccess(FwComponentGadget):
         # No matter what call unmount?
         super().debug("Running unmount to ensure the file system is not being left active")
         self.unmount()
-        # Then unmount from loopback
 
+        super().debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
+        subprocess.run(["losetup", "-d", self.loopback_device])
         # There is not a circumstance where it would be a good idea to allow the user to do this via umount so only on
         # __del__ should it be called to remove from loopback
+
+        super().debug("Storage class," + self.__name__ + "has been successfully removed")
         return
 
     # This code is derived from code from dive into python. Thanks Mark <3
@@ -145,8 +148,7 @@ class StorageAccess(FwComponentGadget):
         # When the user tries to mount us on a non existent directory
         if not os.path.exists(self.directory):
             super().debug("No file system exists at "+directory+"\nCreating folder")
-            os.mkdir("fs")
-            self.directory = "./fs/"
+            os.mkdir(self.directory)
 
         if read_only:
             subprocess.run(["mount", "-o", "ro", "/dev/" + self.loopback_device, self.directory])  # mount RO
@@ -197,3 +199,62 @@ class StorageAccess(FwComponentGadget):
             super().debug("Filesystem is mounted on "+self.directory)
             self.unmountlocal()
         return
+
+
+# debugging
+if __name__ == '__main__':
+    bp = "\u2022"
+
+    print("This is an example run of specifically the storage class\n" +
+          "The intent is to:\n" +
+          bp + " Open a new file system\n" +
+          bp + " Mount locally\n" +
+          bp + " Add a file\n" +
+          bp + " Close the file system\n" +
+          bp + " Confirm the closure\n" +
+          bp + " Reopen the file system\n" +
+          bp + " Read from it\n" +
+          bp + " Close it again\n\n" +
+          "This will be done with two classes in debug mode")
+
+    print("Starting Test One")
+    TestOne = StorageAccess(debug=True)
+    TestOne.mountlocal()
+
+    if not os.path.exists(TestOne.directory):
+        print("TEST ONE: The file system did not mount correctly")
+        exit(1)
+
+    subprocess.run(["touch", TestOne.directory+"Test\ File"])
+    print("Should've created a file there")
+
+    if not os.path.isfile(TestOne.directory+"Test\ File"):
+        print("Did not create a file")
+        exit(1)
+
+    test_one_file = TestOne.file_name
+    test_one_directory = TestOne.directory
+    print("Attributes of TestOne are saved")
+
+    TestOne.unmount()
+    del TestOne
+
+    if os.path.exists(test_one_directory):
+        if os.path.isfile("./" + test_one_directory + "/" + test_one_file):
+            print("The file system did not unmount correctly")
+            exit(1)
+
+    print("Starting Test Two")
+    TestTwo = StorageAccess(fs=test_one_file, old_fs=True, debug=True)
+    TestTwo.mountlocal("./TestTwo/", True)
+
+    if not os.path.exists(TestTwo.directory):
+        print("TEST TWO: The file system did not mount correctly")
+        exit(1)
+
+    if not os.path.isfile(TestTwo.directory+"Test\ File"):
+        print("TEST TWO: Could not see file")
+        exit(1)
+
+    del TestTwo
+    exit(0)
