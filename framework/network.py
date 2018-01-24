@@ -63,16 +63,15 @@ class FwComponentNetwork(FwComponentGadget):
     # Turning on USB Ethernet adapter
     def network_on(self):
         subprocess.call("%s" % self.ether_up, shell=True)  # Up adapter
-        self.state = "Ethernet adapter up"
+        self.state = "eth up"
         if self.debug:  # Debug text
             super().debug(self.state)
-        self.ping_test()  # Test connection
-        return
+        return self.test()  # Test connection
 
     # Turning off USB Ethernet adapter
     def network_off(self):
         subprocess.call("%s" % self.ether_down, shell=True)  # Down adapter
-        self.state = "Ethernet adapter down"
+        self.state = "eth down"
         if self.debug:  # Debug text
             super().debug(self.state)
         return
@@ -92,6 +91,6 @@ class FwComponentNetwork(FwComponentGadget):
         return
 
 # For testing
-if __name__ == "__main__"
+if __name__ == "__main__":
     test = FwComponentNetwork()
     test.network_on()
