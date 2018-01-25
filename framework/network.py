@@ -82,6 +82,7 @@ class FwComponentNetwork(FwComponentGadget):
     #def kill_switch(self):
 # if time > 5 mins:
     # do kill switch
+    #test
 
 
 
