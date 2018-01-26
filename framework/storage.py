@@ -85,8 +85,8 @@ class StorageAccess(FwComponentGadget):
             # TODO Try to find an alternative method of storage and drop the ability to mount on bus
 
         super().debug("Attempting to mount on " + self.loopback_device +
-                      "\nRunning Command - losetup " + self.loopback_device + " " + self.file_name)
-        loop_output = subprocess.run(["losetup", self.loopback_device, self.file_name],
+                      "Running Command - losetup " + self.loopback_device + " " + self.directory + self.file_name)
+        loop_output = subprocess.run(["losetup", self.loopback_device, self.directory + self.file_name],
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
@@ -105,7 +105,7 @@ class StorageAccess(FwComponentGadget):
         return
 
     def __del__(self):
-        super().debug("Storage class," + self.__name__ + ", is being deleted")
+        super().debug("Storage class is being deleted")
         # No matter what call unmount?
         super().debug("Running unmount to ensure the file system is not being left active")
         self.unmount()
@@ -115,7 +115,7 @@ class StorageAccess(FwComponentGadget):
         # There is not a circumstance where it would be a good idea to allow the user to do this via umount so only on
         # __del__ should it be called to remove from loopback
 
-        super().debug("Storage class," + self.__name__ + "has been successfully removed")
+        super().debug("Storage class has been successfully removed")
         return
 
     # This code is derived from code from dive into python. Thanks Mark <3
@@ -219,10 +219,13 @@ if __name__ == '__main__':
 
     print("Starting Test One")
     TestOne = StorageAccess(debug=True)
+
+    print("Size "+TestOne.__sizeof__())
+
     TestOne.mountlocal()
 
     if not os.path.exists(TestOne.directory):
-        print("TEST ONE: The file system did not mount correctly")
+        print("TEST ONE: The file system did not make a directory correctly")
         exit(1)
 
     subprocess.run(["touch", TestOne.directory+"Test\ File"])
@@ -246,6 +249,9 @@ if __name__ == '__main__':
 
     print("Starting Test Two")
     TestTwo = StorageAccess(fs=test_one_file, old_fs=True, debug=True)
+
+    print("Size "+TestTwo.__sizeof__())
+
     TestTwo.mountlocal("./TestTwo/", True)
 
     if not os.path.exists(TestTwo.directory):
