@@ -32,9 +32,9 @@ class SkeletonKey(object):
       """
 
     def __init__(self, debug=False):
-        # Hack for network config
-        subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
-        subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/network/interfaces", shell=True)
+        # Hack for network config (something ellis has placed in - its causing errors just now) TODO: Fix this code
+        # subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
+        # subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/network/interfaces", shell=True)
 
         self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
@@ -166,31 +166,41 @@ class SkeletonKey(object):
                 print(x, " ", module.module_name)
                 x += 1
 
+    def display_information_current_module(self, user_selection):
+        module = self.module_list[user_selection - 1]
+        print("Module Name: ", module.module_name)
+        print("Module Description: ", module.module_desc)
+        print("Framework Requirements: ", module.fw_requirements)
+        print("Options: ", module.options)
+        print("Module Help: ", module.module_help)
+        print("Output Format: ", module.output_format)
+
     # TODO review if need this
     def bool_ask_question(self, question):
         """ Desc:
                 Enables asking of y/n questions"""
 
     # TODO 1: Review how to fix this
-    def show_with_att(self, config_selection, user_selection, module_list):
+    def show_with_att(self, config_selection, user_selection):
+        module = self.module_list[user_selection-1]
         if "name" in config_selection[1]:
-            print("Module Name: ", module_list[user_selection-1].module_name)
+            print("Module Name: ", module.module_name)
         elif "desc" in config_selection[1]:
-            print("Module Description: ", module_list[user_selection-1].module_desc)
+            print("Module Description: ", module.module_desc)
         elif "req" in config_selection[1]:
-            print("Framework Requirements: ", module_list[user_selection-1].fw_reqs)
+            print("Framework Requirements: ", module.fw_requirements)
         elif "opt" in config_selection[1]:
-            print("Options: ", module_list[user_selection-1].options)
+            print("Options: ", module.options)
         elif "help" in config_selection[1]:
-            print("Module Help: ", module_list[user_selection-1].module_help)
+            print("Module Help: ", module.module_help)
         elif "format" in config_selection[1]:
-            print("Output Format: ", module_list[user_selection-1].output_format)
+            print("Output Format: ", module.output_format)
         else:
             print("Please enter a valid attribute")
 
-    # TODO 2: test this method for bugs - issues on lines 49??
+    # TODO 2: test this method for bugs
     def set_with_att(self, config_selection):
-        #set flag to display error message if option is invalid
+        # set flag to display error message if option is invalid
         set = False
 
         # loop through all options
@@ -209,15 +219,12 @@ class SkeletonKey(object):
             print("Please enter a valid attribute to set")
         pass
 
-    def module_configuration(self, user_choice, module_list):
-        current_module = module_list[(user_choice - 1)]
-
+    def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
         print("Entering Configuration mode")
         config_mode = True
         while config_mode:
-            print("Configuring current module: ", current_module)
             print("Enter 'exit' to finish.")
             print("\n")
 
@@ -232,7 +239,7 @@ class SkeletonKey(object):
                     pass
                 elif config_selection[0] == "show":
                     # display all information to do with current module.
-                    module_list[user_choice - 1].display_info()
+                    self.display_information_current_module(user_choice)
                     pass
                 elif config_selection[0] == "set":
                     print("Please select an attribute to set in the format 'set [attribute]'")
@@ -241,10 +248,8 @@ class SkeletonKey(object):
             # If the users enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
             elif len(config_selection) == 2:
                 if config_selection[0] == "show":
-                    print("2 and show")
-                    # TODO #1
                     # run method to show selected attribute
-                    self.show_with_att(config_selection)
+                    self.show_with_att(config_selection, user_choice)
                     pass
                 elif config_selection[0] == "set":
                     print("2 and set")
@@ -295,6 +300,7 @@ class SkeletonKey(object):
         for file in self.files:
             os.unlink(file)
 
+
 # TODO #ATSOMEPOINT implement new testing methods
 
 
@@ -303,3 +309,5 @@ if __name__ == '__main__':
     begin = SkeletonKey(debug=False)
     begin.display_title()
     begin.display_modules()
+    selection = begin.input_choice()
+    begin.module_configuration(selection)
