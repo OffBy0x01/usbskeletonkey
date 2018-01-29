@@ -1,8 +1,8 @@
-import subprocess
 import os
+import subprocess
+from datetime import datetime
 
 from framework.FwComponentGadget import FwComponentGadget
-from datetime import datetime
 
 
 class StorageAccess(FwComponentGadget):
@@ -109,9 +109,8 @@ class StorageAccess(FwComponentGadget):
             if os.path.isfile(self.file_name):
                 super().debug("File discovered")
             else:
-                super().debug("File that user specified does not exist. "
-                              "Will Create a new filesystem")
-                self.__createfs()
+        # TODO Die
+
 
         # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],
@@ -132,14 +131,14 @@ class StorageAccess(FwComponentGadget):
         if "failed to set up loop device" in loop_output:
             super().debug("The file attempted to load onto the loopback device cannot be mounted\n" +
                           "Attempting to recover...")
-            self.__createfs()
+            # TODO Die
 
         # If the first loopback device available is still the one we should be mounted to
         if self.loopback_device == subprocess.run(["losetup", "-f"],
                                                   stdout=subprocess.PIPE).stdout.decode('utf-8'):
             super().debug("Something went wrong here"
                           "The next available loopback is the loopback we should be on, IDK")
-            # TODO Insert method of graceful fail here
+            # TODO Die
 
         self.local_mount = False
         self.bus_mounted = False
@@ -180,7 +179,7 @@ class StorageAccess(FwComponentGadget):
 
         return self.readable_size  # size of current file system
 
-    def mountlocal(self, directory="./fs/", read_only=False):
+    def mountlocal(self, directory="./fs/", read_only=False):  # make this more unique for a default folder
         # Mount the file system locally for amending of any desc (unless RO)
 
         # The directory we intend to mount to

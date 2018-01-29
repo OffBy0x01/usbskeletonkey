@@ -1,6 +1,7 @@
 import configparser
 import os
 import re
+import subprocess
 
 from framework.FwComponent import FwComponent
 from framework.helper.ModuleDescriptor import ModuleDescriptor
@@ -30,6 +31,10 @@ class SkeletonKey(object):
       """
 
     def __init__(self, debug=False):
+        # Hack for network config
+        subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
+        subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/networkinterfaces", shell=True)
+
         self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
                          "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
@@ -65,11 +70,12 @@ class SkeletonKey(object):
 
             # Interface options
             self.config.add_section('interface')
-            self.config.set('interface', 'debug' 'False')
+            self.config.set('interface', 'debug', 'False')
 
             # General options
             self.config.add_section('general')
-            self.config.set('general', 'config_mode' 'True')
+            self.config.set('general', 'config_mode', 'True')
+            self.config_mode = True
         else:
             # Config file exists, start importing
             self.config.read_file(self.config_file)
@@ -85,8 +91,8 @@ class SkeletonKey(object):
                 self.config_mode = True
             else:
                 self.config_mode = False
-
-        self.config.write(self.config_file)
+        with open('config.ini', 'w') as self.config_file:
+            self.config.write(self.config_file)
 
         # (Import | Freak out over) module configs
         for module in self.raw_module_list:
@@ -135,9 +141,11 @@ class SkeletonKey(object):
         return [os.path.splitext(m)[0] for m in module_paths]
 
     def display_title(self):
+        # displays title3
         print(self.SK_title)
 
     def display_modules(self):
+        # displays all module information.
         if not self.module_list:
             raise ValueError("There are no modules to display.")
         else:
@@ -152,33 +160,45 @@ class SkeletonKey(object):
                 Enables asking of y/n questions"""
 
     # TODO 1: Review how to fix this
-    """
-    def show_with_att(self, config_selection):
+    def show_with_att(self, config_selection, user_selection, module_list):
         if "name" in config_selection[1]:
-            print("Module Name: ", self.module_name)
+            print("Module Name: ", module_list[user_selection-1].module_name)
         elif "desc" in config_selection[1]:
-            print("Module Description: ", self.module_desc)
+            print("Module Description: ", module_list[user_selection-1].module_desc)
         elif "req" in config_selection[1]:
-            print("Framework Requirements: ", self.fw_reqs)
+            print("Framework Requirements: ", module_list[user_selection-1].fw_reqs)
         elif "opt" in config_selection[1]:
-            print("Options: ", self.options)
+            print("Options: ", module_list[user_selection-1].options)
         elif "help" in config_selection[1]:
-            print("Module Help: ", self.module_help)
+            print("Module Help: ", module_list[user_selection-1].module_help)
         elif "format" in config_selection[1]:
-            print("Output Format: ", self.output_format)
+            print("Output Format: ", module_list[user_selection-1].output_format)
         else:
             print("Please enter a valid attribute")
-    """
 
+    # TODO 2: test this method for bugs - issues on lines 49??
     def set_with_att(self, config_selection):
-        # need to check the specified attribute is settable
-        # ask for value to set it to
-        # check its valid
-        # set it
+        #set flag to display error message if option is invalid
+        set = False
+
+        # loop through all options
+        for option in self.options:
+            # if option[key] is equal to the second word
+            if self.options[option] == config_selection[1]:
+                # set new value
+                new_value = input("Enter the value you would like to set this to")
+                self.options[option] = new_value
+                set = True
+            else:
+                print("Please enter a valid value to set this attribute to")
+        if set:
+            pass
+        else:
+            print("Please enter a valid attribute to set")
         pass
 
-    def module_configuration(self, user_choice, modules):
-        current_module = test_file[(user_choice - 1)]
+    def module_configuration(self, user_choice, module_list):
+        current_module = module_list[(user_choice - 1)]
 
         # mainly for debug
         # RETURN current_module (move to current_module file)
@@ -189,35 +209,43 @@ class SkeletonKey(object):
             print("Enter 'exit' to finish.")
             print("\n")
 
+            # Whatever the user enters - convert it to lowercase and place each word in an array.
             config_selection = str(input(">")).lower().split()
 
+            # If the users enters one word - i.e. a keyword such as 'show', 'set' or 'exit' run
             if len(config_selection) == 1:
                 if config_selection[0] == "exit":
                     print("Exiting Configuration mode...")
                     config_mode = False
                     pass
                 elif config_selection[0] == "show":
-                    modules[user_choice - 1].display_info()
+                    # display all information to do with current module.
+                    module_list[user_choice - 1].display_info()
                     pass
                 elif config_selection[0] == "set":
                     print("Please select an attribute to set in the format 'set [attribute]'")
                     # provide options on what is available to set
                     pass
+            # If the users enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
             elif len(config_selection) == 2:
                 if config_selection[0] == "show":
                     print("2 and show")
                     # TODO #1
+                    # run method to show selected attribute
                     self.show_with_att(config_selection)
                     pass
                 elif config_selection[0] == "set":
                     print("2 and set")
+                    # run method to set selected attribute
                     self.set_with_att(config_selection)
                     pass
             else:
                 print("wtf")
                 pass
 
+    # Main menu for Interface, takes user input of which module they would like to use
     def input_choice(self):
+        # exit flag for ending the program
         exit_flag = False
         while not exit_flag:
             # Display title
@@ -225,9 +253,12 @@ class SkeletonKey(object):
             # Display modules
             self.display_modules()
 
+            # Communicating to user how to use the Interface.
             print("\n")
             print("Enter 0 to exit")
             user_selection = int(input("Please enter the module you would like to configure. (Based on index)"))
+
+            # Based on user input - moves to respective method
             if user_selection == 0:
                 print("Exiting Program...")
                 exit_flag = True
@@ -242,6 +273,7 @@ class SkeletonKey(object):
                 if not exit_flag:
                     return user_selection
                 else:
+                    # Ending program
                     print("Thank you for using 'Skeleton Key'.")
                     exit(0)
 
@@ -252,3 +284,10 @@ class SkeletonKey(object):
             os.unlink(file)
 
 # TODO #ATSOMEPOINT implement new testing methods
+
+
+# debugging
+if __name__ == '__main__':
+    begin = SkeletonKey()
+    begin.display_title()
+    begin.display_modules()
