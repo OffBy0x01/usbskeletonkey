@@ -65,11 +65,11 @@ class SkeletonKey(object):
 
             # Interface options
             self.config.add_section('interface')
-            self.config.set('interface', 'debug' 'False')
+            self.config.set('interface', 'debug', 'False')
 
             # General options
             self.config.add_section('general')
-            self.config.set('general', 'config_mode' 'True')
+            self.config.set('general', 'config_mode', 'True')
             self.config_mode = True
         else:
             # Config file exists, start importing
@@ -86,8 +86,8 @@ class SkeletonKey(object):
                 self.config_mode = True
             else:
                 self.config_mode = False
-
-        self.config.write(self.config_file)
+        with open('config.ini', 'w') as self.config_file:
+            self.config.write(self.config_file)
 
         # (Import | Freak out over) module configs
         for module in self.raw_module_list:
@@ -136,7 +136,7 @@ class SkeletonKey(object):
         return [os.path.splitext(m)[0] for m in module_paths]
 
     def display_title(self):
-        # displays title
+        # displays title3
         print(self.SK_title)
 
     def display_modules(self):
@@ -284,5 +284,5 @@ class SkeletonKey(object):
 # debugging
 if __name__ == '__main__':
     begin = SkeletonKey()
-    print(SkeletonKey.display_title(begin))
-    print(SkeletonKey.display_modules(begin))
+    begin.display_title()
+    begin.display_modules()
