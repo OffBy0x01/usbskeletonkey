@@ -9,7 +9,7 @@ class Keyboard(FwComponentGadget):
         super().__init__(driver_name="g_hid", enabled=enabled, debug=debug)
         self.other = other  # doesn't do shit just for demo
 
-    # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt, tab
+    # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt (Like ducky)
     char_eqv = {
         " ": "space",
         "	": "tab",  # Took from notepad should work
@@ -45,8 +45,9 @@ class Keyboard(FwComponentGadget):
         "?": "left-shift slash"
     }
 
+    # TODO #3 improve comments
     # Handles string write to target
-    def write_to_target(self, string):
+    def write(self, string):
         current_char = ''
 
         for c in string:
@@ -63,15 +64,34 @@ class Keyboard(FwComponentGadget):
             subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, "DEFAULT_PATH"),
                             shell=True)  # Documentation says use .run() unless Py < 3.5 - is this intentional?
 
-            # Do we need an enter at the end of the command or is that covered?
-
     # Might not need this but just theorizing
     def get_script(self, path):
         print(0)
 
-    def execute(self, script):
-        if not self.enabled:
-            print(0)
+    # TODO #1.1 write the default case for this
+    commands = {"REM": ignore,
+                "DEFAULTDELAY": set_delay,
+                "DELAY": delay
+                "STRING": write,
+                "GUI": super_key,
+                "WINDOWS": super_key,
+                "MENU": "",  # TODO #ATSOMEPOINT Work out how the fuck to do this
+                "SHIFT": mod_key,
+                "ALT": mod_key,
+                "CONTROL": mod_key
+                "CTRL": mod_key,
+                # TODO #2 look at arrow keys and 'Extended Commands'
+                "REPEAT": last_command
+                }
+
+    # TODO #1 finish command interpreter
+    def exec(self, script):
+        file = open(script, "r")
+        for line in file:
+            print(line, end="")
+            instruction = line.split()
+
+
         # Needs:
         #   read scripts line by line
         #   interpret command and args sep
@@ -81,3 +101,9 @@ class Keyboard(FwComponentGadget):
         #
         #   clean-up method
         #   use enable and disable as per FwComponentGadget
+
+
+# debugging
+if __name__ == '__main__':
+    test = Keyboard()
+    test.exec("test.txt")

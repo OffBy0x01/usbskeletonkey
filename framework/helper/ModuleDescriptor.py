@@ -16,12 +16,26 @@ class ModuleDescriptor(object):
 
     """
 
-    def __init__(self, module_name, version, module_desc, fw_requirements, options, module_help, output_format):
+    def __init__(self, module_name, module_desc, options, fw_requirements, output_format, version=1, module_help ="You're on your own buddy!"):
         self.module_name = module_name
-        self.version = version
         self.module_desc = module_desc
-        self.fw_requirements = fw_requirements
-        self.options = options
+
+        self.options = {
+            "enabled": False
+        }.update(options)
+
+        self.fw_requirements = {
+            "keyboard": False,
+            "network": False,
+            "storage": False
+            }.update(fw_requirements)
+
+        self.output_format = {
+            "success": bool
+        }.update(output_format)
+
+        self.version = version
         self.module_help = module_help
-        self.output_format = output_format
+
+
 

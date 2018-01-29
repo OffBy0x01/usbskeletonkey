@@ -1,6 +1,10 @@
 """ Interface v1.0 (first draft) for 'Skeleton Key' """
 # imports
-
+try:
+    import configparser
+except ImportError:
+    configparser = None
+import os
 from framework.FwComponent import FwComponent
 from framework.helper.ModuleManager import ModuleManager
 
@@ -10,8 +14,12 @@ class ModuleObjects:
      Class for the Module Object
 
          Args:
-            name:           name of the modules
-            nes_modules:    list of module indexes needed to run the current module
+            module_name:           name of module
+            module_desc:           description of module function
+            fw_reqs:               list of framework module requirements
+            options:               module specific arguments needed to run
+            module_help:           module specific help output
+            output_format:         list of definable output formats e.g. XML, plaintext
 
         functions:
             none:           currently
@@ -23,9 +31,19 @@ class ModuleObjects:
             none currently.
     """
 
-    def __init__(self, name, nes_modules):
-        self.name = name
-        self.nes_modules = nes_modules
+    def __init__(self, module_name, module_desc, fw_reqs, options,module_help, output_format):
+        self.module_name = module_name
+        self.module_desc = module_desc
+        self.fw_reqs = fw_reqs
+        self.options = options
+        self.module_help = module_help
+        self.output_format = output_format
+
+    def __exit__(self):
+        print("Killing Module object...")
+        # if component module object is unresponsive this method provides a kill switch
+        for file in self.files:
+            os.unlink(file)
 
 
 class InterfaceObject(FwComponent, ModuleManager):
@@ -33,8 +51,8 @@ class InterfaceObject(FwComponent, ModuleManager):
      Class for the Interface Object
 
          Args:
-            module:             list of the modules
-            title:              title of the application "Skeleton Key"
+            module_list:        list of the modules
+            SK_title:           title of the application "Skeleton Key"
 
         functions:
             display_title:      displays the title of the application on screen.
@@ -43,7 +61,7 @@ class InterfaceObject(FwComponent, ModuleManager):
         Returns:
             the UI
 
-        Raises:1
+        Raises:
             No modules found in list - empty list
             Invalid user input - string
             Invalid user input - index of module not listed (e.g. <0 or >list)
@@ -59,14 +77,14 @@ class InterfaceObject(FwComponent, ModuleManager):
 
         self.module_list = module_list
 
-        self.title = "'Skeleton Key Project'"
+        self.SK_title = "'Skeleton Key Project'"
 
     def display_title(self):
-        print(self.title)
+        print(self.SK_title)
 
     def display_modules(self):
         if not self.module_list:
-            print("There are no modules to display.")
+            raise ValueError("There are no modules to display.")
         else:
             x = 1
             for module in self.module_list:
@@ -93,10 +111,10 @@ class InterfaceObject(FwComponent, ModuleManager):
                 exit_flag = True
                 pass
             if user_selection == str:
-                print("Invalid selection - string instead of integer.")
+                raise ValueError("Invalid selection - string instead of integer.")
                 pass
             elif user_selection < 0 or user_selection > len(self.module_list):
-                print("Invalid index selection. Please enter a valid selection.")
+                raise ValueError("Invalid index selection. Please enter a valid selection.")
                 pass
             else:
                 if not exit_flag:
@@ -109,11 +127,25 @@ class InterfaceObject(FwComponent, ModuleManager):
                     print("Thank you for using 'Skeleton Key'.")
                     exit(0)
 
+    def __exit__(self):
+        print("Killing Interface...")
+        # if component interface is unresponsive this method provides a kill switch
+        for file in self.files:
+            os.unlink(file)
+
 
 # debugging
 if __name__ == '__main__':
     test_file = ["Responder", "NMap", "Enumeration"]
-    intro = InterfaceObject(module_list=test_file)
-    print(InterfaceObject.display_title(intro))
-    print(InterfaceObject.display_modules(intro))
-    InterfaceObject.input_choice(intro)
+    # intro = InterfaceObject(module_list=test_file)
+    with InterfaceObject(module_list=test_file) as intro:
+        print(InterfaceObject.display_title(intro))
+        print(InterfaceObject.display_modules(intro))
+        InterfaceObject.input_choice(intro)
+
+
+    test_config = configparser.Configparser()
+    test_config.sections()
+    test_config.read('test_config.ini')
+    # not sure yet what config file we're pulling here
+
