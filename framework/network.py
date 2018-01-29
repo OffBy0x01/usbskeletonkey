@@ -90,6 +90,9 @@ class FwComponentNetwork(FwComponentGadget):
         return
 
 
+# TODO #1 network over USB handler
+# TODO #2 offline connection status check (must be able to test for physical connection not just internet)
+# TODO #3 Read through PiKey, poisontap Source, do some general g_ether research - see what others are using it for
 # For testing
 if __name__ == "__main__":
     test = FwComponentNetwork()
