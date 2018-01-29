@@ -134,18 +134,5 @@ class InterfaceObject(FwComponent, ModuleManager):
             os.unlink(file)
 
 
-# debugging
-if __name__ == '__main__':
-    test_file = ["Responder", "NMap", "Enumeration"]
-    # intro = InterfaceObject(module_list=test_file)
-    with InterfaceObject(module_list=test_file) as intro:
-        print(InterfaceObject.display_title(intro))
-        print(InterfaceObject.display_modules(intro))
-        InterfaceObject.input_choice(intro)
 
-
-    test_config = configparser.Configparser()
-    test_config.sections()
-    test_config.read('test_config.ini')
-    # not sure yet what config file we're pulling here
 
