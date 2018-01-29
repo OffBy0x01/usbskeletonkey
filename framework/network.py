@@ -76,7 +76,7 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Turning off USB Ethernet adapter
     def down(self):
-        subprocess.call("%s" % self.ether_down, shell=True)  # Down adapter
+        subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
         self.state = "eth down"
         if self.debug:  # Debug text
             super().debug(self.state)
