@@ -43,12 +43,6 @@ class FwComponentNetwork(FwComponentGadget):
     def __del__(self):
         self.disable()  # Disable eth driver
 
-    # Give pi static IP so SSH is possible
-    def ssh(self):
-        #  subprocess.call("echo -e 'interface usb0 \nstatic ip_address=" + self.ssh_IP + "' >> /etc/dhcpcd.conf")
-        super().debug("SSH enabled: username = root    password = root")
-        return
-
     # Check for internet connectivity
     def test_internet(self):
         flag_success = False  # Flag set when connection successful
@@ -71,18 +65,18 @@ class FwComponentNetwork(FwComponentGadget):
         output = str(subprocess.run(["ifconfig"], stdout=subprocess.PIPE).stdout.decode())
         if (output.count("usb0")) > 0:
             super().debug("usb0 detected")
+            return True
         else:
             super().debug("usb0 not detected")
-            return True
+            return False
 
     # Turning on USB Ethernet adapter
     def up(self):
         subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
         self.state = "eth up"
-        self.ssh()
         if self.debug:  # Debug text
             super().debug(self.state)
-        return self.test()  # Test connection
+        return self.test_internet()  # Test connection
 
     # Turning off USB Ethernet adapter
     def down(self):
