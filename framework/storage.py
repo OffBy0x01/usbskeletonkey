@@ -10,10 +10,15 @@ class StorageAccess(FwComponentGadget):
     If this is closed early it will fuck up pretty bad and will require a restart of the device
 
     Args:
-        readable_size:  Input the size of the file system intended e.g 4M, 512K. This defaults to 2M
-        fs:             For new filesystems this will be the format to create with e.g fat, msdos
-                        For old filesystems this will be the name of the .img file e.g payloadfs.img, memes.dd
+        readable_size:  Input the size of the file system intended
+                            e.g 4M, 512K. This defaults to 2M
+        fs:             For new filesystems this will be the format to create with
+                            e.g fat, msdos
+                        For old filesystems this will be the name of the .img file
+                            e.g payloads.img, memes.dd
         old_fs:         Boolean value to dictate wither the class is to create a new filesystem
+        directory:      String dictating the file system will exist within
+                            e.g "./", "/mnt/", "../fs/"
         debug:          Boolean value for the state of Debug prints
 
     functions:
@@ -24,16 +29,26 @@ class StorageAccess(FwComponentGadget):
 
     Raises:
         tbd
-
-    TODO:
-        Add functionality to copy specific files from SkelKey to the target via OTG
-
-        Put disclaimers on scary bits of code
-
-        If NULL: filesystem make one
-
-        Make a graceful kill method
     """
+    '''
+    Notes:
+        Found a cool thing with g_mass_storage. It is capable of mounting multiple volumes but because of the time of 
+        discovery this feature will be ignored/left for now. A second version of storage could be created to bring the 
+        use of this discovery but it doesn't seem worth it for now.
+        Documentation -- http://www.linux-usb.org/gadget/file_storage.html
+
+        This classes intended use was to have the possibility of multiple instances. This is now open to change via
+        progression with the information above as instead of having multiple instances of storage devices that can
+        be mounted we could alternatively have a stripped back class and have it called by a handler. This would allow 
+        for less control from other modules directly however. This will be left open to later changes and classed as
+        'Gold Plating'
+
+        TODO I dont think the pi will be able to recognise when the file system is done with one the bus
+        This could pose a serious issue in regard to ensuring the Skeleton keys ability to run corruption free
+        This should be looked into further in testing
+        Documentation -- http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/mass-storage.txt
+                         http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/usbmon.txt
+    '''
 
     def __createfs(self):
         super().debug("    Creating a filesystem")
@@ -42,16 +57,18 @@ class StorageAccess(FwComponentGadget):
         self.file_name = datetime.now().strftime('%Y-%m-%d--%H:%M.img')
         super().debug("    Naming file system " + self.file_name)
 
-        # Makes a file system.
+        # Makes a file system. (This command accepts 1M and such)
         # These don't have output of note (I should look for error messages when you try to do stupid shit)
-        subprocess.run(["fallocate", "-l", self.readable_size, self.file_name])  # This command accepts 1M and such
-        super().debug("    Running command - 'fallocate -l " + self.readable_size + " " + self.file_name + "'")
+        subprocess.run(["fallocate", "-l", self.readable_size, self.directory + self.file_name])
+        super().debug("    Running command - 'fallocate -l " + self.readable_size
+                      + " " + self.directory + self.file_name + "'")
 
         # Format file system to FAT ... for now
-        subprocess.run(["mkfs."+self.fs.lower(), self.file_name])
-        super().debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.file_name + "'")
+        subprocess.run(["mkfs." + self.fs.lower(), self.directory + self.file_name])
+        super().debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.directory + self.file_name + "'")
+        # Done
 
-    def __init__(self, readable_size=None, fs="fat", old_fs=False, debug=False):
+    def __init__(self, readable_size=None, fs="fat", old_fs=False, directory="./", debug=False):
         # Starting the super class first
         super().__init__("g_mass_storage", enabled=False, debug=debug)
 
@@ -61,7 +78,7 @@ class StorageAccess(FwComponentGadget):
         # Variable init
         self.fs = fs
         self.old_fs = old_fs
-        self.directory = None
+        self.directory = directory
 
         # In the event the user wants a default value
         if readable_size is None:
@@ -81,7 +98,8 @@ class StorageAccess(FwComponentGadget):
             if os.path.isfile(self.file_name):
                 super().debug("File discovered")
             else:
-                super().debug("File that user specified does not exist\nWill Create a new filesystem")
+                super().debug("File that user specified does not exist. "
+                              "Will Create a new filesystem")
                 self.__createfs()
 
         # To find the first available loop back device and claim it
@@ -89,12 +107,14 @@ class StorageAccess(FwComponentGadget):
                                               stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "Permission denied" in self.loopback_device:
-            super().debug("Permissions are required\nThis should be running as root or at least some sort of admin\n" +
+            super().debug("Permissions are required"
+                          "This should be running as root or at least some sort of admin"
                           "Now attempting to fail gracefully")
             # TODO Try to find an alternative method of storage and drop the ability to mount on bus
 
         super().debug("Attempting to mount on " + self.loopback_device +
                       "Running Command - losetup " + self.loopback_device + " " + self.directory + self.file_name)
+        # When using 'losetup' offset should not be required in our use case as we will be using a single partition
         loop_output = subprocess.run(["losetup", self.loopback_device, self.directory + self.file_name],
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')
 
@@ -106,7 +126,8 @@ class StorageAccess(FwComponentGadget):
         # If the first loopback device available is still the one we should be mounted to
         if self.loopback_device == subprocess.run(["losetup", "-f"],
                                                   stdout=subprocess.PIPE).stdout.decode('utf-8'):
-            super().debug("Something went wrong here\nThe next available loopback is the loopback we should be on, IDK")
+            super().debug("Something went wrong here"
+                          "The next available loopback is the loopback we should be on, IDK")
             # TODO Insert method of graceful fail here
 
         self.local_mount = False
@@ -156,7 +177,7 @@ class StorageAccess(FwComponentGadget):
 
         # When the user tries to mount us on a non existent directory
         if not os.path.exists(self.directory):
-            super().debug("No file system exists at "+directory+"\nCreating folder")
+            super().debug("No file system exists at " + directory + "\nCreating folder")
             os.mkdir(self.directory)
 
         if read_only:
@@ -167,13 +188,17 @@ class StorageAccess(FwComponentGadget):
 
     def mountbus(self, write_block=False):
         # Mount over USB
+        #
         if write_block:
-            # TODO INSERT COMMANDS HERE
+            # modprobe g_mass_storage ro=1 file=foo.bar
+            super().vendor_id = "ro=1"  # This only accepts y or 1 for true
+            super().product_id = "file=" + self.directory + self.file_name
+            super().enable()
             super().debug("Mounted over bus (RO)")  # mount RO
         else:
-            # TODO INSERT COMMANDS HERE
+            # modprobe g_mass_storage file=foo.bar
+            super().vendor_id = "file=" + self.directory + self.file_name
             super().debug("Mounted over bus")  # mount norm
-
         self.bus_mounted = True
         return
 
@@ -187,7 +212,7 @@ class StorageAccess(FwComponentGadget):
         return
 
     def unmountbus(self):
-        # TODO INSERT COMMANDS HERE
+        super().disable()
         super().debug("The bus was unmounted")
         self.bus_mounted = False
         return
@@ -205,7 +230,7 @@ class StorageAccess(FwComponentGadget):
                 return
 
         else:
-            super().debug("Filesystem is mounted on "+self.directory)
+            super().debug("Filesystem is mounted on " + self.directory)
             self.unmountlocal()
         return
 
@@ -214,7 +239,7 @@ class StorageAccess(FwComponentGadget):
 if __name__ == '__main__':
     bp = "\u2022"
 
-    print("This is an example run of specifically the storage class\n" +
+    print("This is an example run of specifically the storage class"
           "The intent is to:\n" +
           bp + " Open a new file system\n" +
           bp + " Mount locally\n" +
@@ -223,13 +248,13 @@ if __name__ == '__main__':
           bp + " Confirm the closure\n" +
           bp + " Reopen the file system\n" +
           bp + " Read from it\n" +
-          bp + " Close it again\n\n" +
-          "This will be done with two classes in debug mode")
+          bp + " Close it again\n"
+               "This will be done with two classes in debug mode")
 
     print("Starting Test One")
     TestOne = StorageAccess(debug=True)
 
-    print("Size "+TestOne.__sizeof__())
+    print("Size " + TestOne.__sizeof__())
 
     TestOne.mountlocal()
 
@@ -237,10 +262,10 @@ if __name__ == '__main__':
         print("TEST ONE: The file system did not make a directory correctly")
         exit(1)
 
-    subprocess.run(["touch", TestOne.directory+"Test\ File"])
+    subprocess.run(["touch", TestOne.directory + "Test\ File"])
     print("Should've created a file there")
 
-    if not os.path.isfile(TestOne.directory+"Test\ File"):
+    if not os.path.isfile(TestOne.directory + "Test\ File"):
         print("Did not create a file")
         exit(1)
 
@@ -259,7 +284,7 @@ if __name__ == '__main__':
     print("Starting Test Two")
     TestTwo = StorageAccess(fs=test_one_file, old_fs=True, debug=True)
 
-    print("Size "+TestTwo.__sizeof__())
+    print("Size " + TestTwo.__sizeof__())
 
     TestTwo.mountlocal("./TestTwo/", True)
 
@@ -267,7 +292,7 @@ if __name__ == '__main__':
         print("TEST TWO: The file system did not mount correctly")
         exit(1)
 
-    if not os.path.isfile(TestTwo.directory+"Test\ File"):
+    if not os.path.isfile(TestTwo.directory + "Test\ File"):
         print("TEST TWO: Could not see file")
         exit(1)
 
