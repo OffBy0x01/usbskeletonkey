@@ -37,6 +37,7 @@ class FwComponentNetwork(FwComponentGadget):
         self.ether_down = "ifdown usb0"
         self.ping_address = "8.8.8.8"
         self.ping_response = ""
+        self.ssh_IP = "10.10.10.10"
 
     # Destructor
     def __del__(self):
@@ -59,9 +60,15 @@ class FwComponentNetwork(FwComponentGadget):
             return False
         return True
 
+    # Give pi static IP so SSH is possible
+    def ssh(self):
+        subprocess.call("echo -e 'interface usb0 \nstatic ip_address=" + self.ssh_IP + "' >> /etc/dhcpcd.conf")
+        super().debug("SSH enabled: username = root    password = root ")
+        return
+
     # Turning on USB Ethernet adapter
     def up(self):
-        subprocess.call("%s" % self.ether_up, shell=True)  # Up adapter
+        subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
         self.state = "eth up"
         if self.debug:  # Debug text
             super().debug(self.state)
@@ -91,6 +98,8 @@ class FwComponentNetwork(FwComponentGadget):
 # TODO #1 network over USB handler
 # TODO #2 offline connection status check (must be able to test for physical connection not just internet)
 # TODO #3 Read through PiKey, poisontap Source, do some general g_ether research - see what others are using it for
+
+
 # For testing
 if __name__ == "__main__":
     test = FwComponentNetwork()
