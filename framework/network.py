@@ -50,7 +50,7 @@ class FwComponentNetwork(FwComponentGadget):
         return
 
     # Check for internet connectivity
-    def test(self):
+    def test_internet(self):
         flag_success = False  # Flag set when connection successful
         for i in range(1, 3):  # Only attempt ping 3 times
             if subprocess.call("ping -c 1 -w 3 " + self.ping_address, shell=True) == 0:  # Ping to test connection
@@ -65,6 +65,15 @@ class FwComponentNetwork(FwComponentGadget):
             super().debug("Connection failed!")
             return False
         return True
+
+    # Find instance of "USB" in ifconfig to show that usb0 is connected
+    def test_local(self):
+        output = str(subprocess.run(["ifconfig"], stdout=subprocess.PIPE).stdout.decode())
+        if (output.count("usb0")) > 0:
+            super().debug("usb0 detected")
+        else:
+            super().debug("usb0 not detected")
+            return True
 
     # Turning on USB Ethernet adapter
     def up(self):
@@ -104,4 +113,4 @@ class FwComponentNetwork(FwComponentGadget):
 # For testing
 if __name__ == "__main__":
     test = FwComponentNetwork()
-    test.up()
+    test.test_local()
