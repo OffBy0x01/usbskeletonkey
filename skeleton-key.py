@@ -1,6 +1,7 @@
 import configparser
 import os
 import re
+from pathlib import Path
 import subprocess
 
 from framework.FwComponent import FwComponent
@@ -45,6 +46,7 @@ class SkeletonKey(object):
         # Define directory and module paths
         self.main_path = os.path.dirname(os.path.realpath(__file__))
         self.module_path = self.main_path + "/modules"
+        self.config_file = self.main_path + '/config.ini'
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
             self.fw_debug.debug("Error: " + self.module_path + " directory does not exist")
@@ -63,10 +65,10 @@ class SkeletonKey(object):
         # (Import | Create) default config
         try:
             # Attempt to read config
-            self.config_file = open(self.main_path + '/config.ini')
+            open(self.config_file)
         except FileNotFoundError:
             # Config not found, set defaults
-            self.config.read(self.main_path + '/config.ini')
+            self.config.read(self.config_file)
 
             # Interface options
             self.config.add_section('interface')
@@ -78,7 +80,7 @@ class SkeletonKey(object):
             self.config_mode = True
         else:
             # Config file exists, start importing
-            self.config.read_file(self.config_file)
+            self.config.read(self.config_file)
 
             # Set debug state accordingly
             if self.config.get('interface', 'debug') == "True":
@@ -91,14 +93,18 @@ class SkeletonKey(object):
                 self.config_mode = True
             else:
                 self.config_mode = False
+
         with open('config.ini', 'w') as self.config_file:
             self.config.write(self.config_file)
+
+        self.config = configparser.ConfigParser()
 
         # (Import | Freak out over) module configs
         for module in self.raw_module_list:
             try:
                 # Attempt to read current module's config file
-                self.module_config = open(self.main_path + '/%s.ini' % module)
+                self.fw_debug.debug(self.module_path + '/%s.ini' % module)
+                self.module_config = Path(self.module_path + '/%s.ini' % module).resolve()
             except FileNotFoundError:
 
                 # Was unable to read this module, log an error then skip
@@ -106,10 +112,12 @@ class SkeletonKey(object):
                 continue
 
             else:
-                # Module config exists, start importing data
-                self.config.read_file(self.module_config)
+                # Module config exists, start importing datas
+                self.fw_debug.debug(module + " config file found, importing data")
+                self.config.read(self.module_config)
 
             try:
+
                 # get  module_desc, options, fw_requirements, output_format, version, module_help
                 current_module = ModuleDescriptor(
                     module_name=self.config.get(module, 'module_name'),
@@ -118,7 +126,7 @@ class SkeletonKey(object):
                     module_help=self.config.get(module, 'module_help'),
                     # _sections[section] returns as a dictionary
                     options=self.config._sections['options'],
-                    fw_requirements=self.config._sections['fw_requirments'],
+                    fw_requirements=self.config._sections['fw_requirements'],
                     output_format=self.config._sections['output_format']
                 )
                 self.module_list.append(current_module)
@@ -126,6 +134,9 @@ class SkeletonKey(object):
             except configparser.Error:
                 self.fw_debug.debug("Error: Unable to import module from file")
                 pass
+            else:
+                self.fw_debug.debug("modules loaded:")
+                self.fw_debug.debug(*[module.module_name for module in self.module_list])
         # TODO WORK OUT WHAT HAPPENS IN ARMED MODE
 
     def discover_modules(self):
@@ -147,11 +158,12 @@ class SkeletonKey(object):
     def display_modules(self):
         # displays all module information.
         if not self.module_list:
+            # TODO REVIEW CAUSE OF ERROR HERE
             raise ValueError("There are no modules to display.")
         else:
             x = 1
             for module in self.module_list:
-                print(x, " ", module)
+                print(x, " ", module.module_name)
                 x += 1
 
     # TODO review if need this
@@ -288,6 +300,6 @@ class SkeletonKey(object):
 
 # debugging
 if __name__ == '__main__':
-    begin = SkeletonKey()
+    begin = SkeletonKey(debug=False)
     begin.display_title()
     begin.display_modules()
