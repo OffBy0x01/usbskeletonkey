@@ -95,4 +95,4 @@ class FwComponentNetwork(FwComponentGadget):
 # For testing
 if __name__ == "__main__":
     test = FwComponentNetwork()
-    test.network_on()
+    test.up()
