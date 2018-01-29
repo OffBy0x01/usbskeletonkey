@@ -2,6 +2,7 @@ import configparser
 import os
 import re
 from pathlib import Path
+import subprocess
 
 from framework.FwComponent import FwComponent
 from framework.helper.ModuleDescriptor import ModuleDescriptor
@@ -31,6 +32,10 @@ class SkeletonKey(object):
       """
 
     def __init__(self, debug=False):
+        # Hack for network config
+        subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
+        subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/network/interfaces", shell=True)
+
         self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
                          "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
