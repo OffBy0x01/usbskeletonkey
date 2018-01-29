@@ -36,7 +36,6 @@ class FwComponentNetwork(FwComponentGadget):
         self.ether_up = "ifup usb0"
         self.ether_down = "ifdown usb0"
         self.ping_address = "8.8.8.8"
-        self.ping_on = False
         self.ping_response = ""
 
     # Destructor
@@ -95,4 +94,4 @@ class FwComponentNetwork(FwComponentGadget):
 # For testing
 if __name__ == "__main__":
     test = FwComponentNetwork()
-    test.network_on()
+    test.up()

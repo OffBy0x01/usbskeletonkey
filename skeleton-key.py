@@ -70,6 +70,7 @@ class SkeletonKey(object):
             # General options
             self.config.add_section('general')
             self.config.set('general', 'config_mode' 'True')
+            self.config_mode = True
         else:
             # Config file exists, start importing
             self.config.read_file(self.config_file)
