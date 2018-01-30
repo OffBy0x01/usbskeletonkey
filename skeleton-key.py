@@ -205,12 +205,13 @@ class SkeletonKey(object):
         module = self.module_list[user_selection - 1]
         # if option[key] is equal to the second word
 
-        for config_selection[1] in module.options:
-            # set new value
-            new_value = input("Enter the value you would like to set this to")
-            module.options[config_selection[1]] = new_value
-            set = True
-
+        for x in module.options:
+            if x == config_selection[1]:
+                new_value = input("Enter the value you would like to set this to")
+                module.options[config_selection[1]] = new_value
+                set = True
+            else:
+                pass
         if set:
             pass
         else:
@@ -252,7 +253,7 @@ class SkeletonKey(object):
                 elif config_selection[0] == "set":
                     print("2 and set")
                     # run method to set selected attribute
-                    # self.set_with_att(config_selection, user_choice)
+                    self.set_with_att(config_selection, user_choice)
                     pass
             else:
                 print("wtf")
