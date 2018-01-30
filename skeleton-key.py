@@ -210,9 +210,13 @@ class SkeletonKey(object):
 
         for x in module.options:
             if x == config_selection[1]:
-                new_value = input("Enter the value you would like to set this to")
-                module.options[config_selection[1]] = new_value
-                set = True
+                if len(config_selection) == 3:
+                    module.options[config_selection[1]] = str(config_selection[2])
+                    set = True
+                else:
+                    new_value = input("Enter the value you would like to set this to")
+                    module.options[config_selection[1]] = new_value
+                    set = True
             else:
                 pass
         if set:
@@ -254,6 +258,11 @@ class SkeletonKey(object):
                     self.show_with_att(config_selection, user_choice)
                     pass
                 elif config_selection[0] == "set":
+                    # run method to set selected attribute
+                    self.set_with_att(config_selection, user_choice)
+                    pass
+            elif len(config_selection) == 3:
+                if config_selection[0] == "set":
                     # run method to set selected attribute
                     self.set_with_att(config_selection, user_choice)
                     pass
@@ -308,7 +317,5 @@ class SkeletonKey(object):
 # debugging
 if __name__ == '__main__':
     begin = SkeletonKey(debug=True)
-    begin.display_title()
-    begin.display_modules()
     selection = begin.input_choice()
     begin.module_configuration(selection)
