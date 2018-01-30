@@ -55,16 +55,44 @@ class Keyboard(FwComponentGadget):
             # TODO # 0 Recursively build commands to support multi-special-key-based commands
             "REM": self.ignore,
             "DEFAULTDELAY": self.set_delay,
+            "DEFAULT_DELAY": self.set_delay,  # Same as DEFAULTDELAY
             "DELAY": self.delay,
             "STRING": self.write,
             "GUI": self.super_key,
             "WINDOWS": self.super_key,
-            "MENU": "",  # TODO #ATSOMEPOINT Work out how the fuck to do this
+            "MENU": "menu",  # TODO #ATSOMEPOINT Work out how the fuck to do this
+            "APP": "menu",  # As above
             "SHIFT": self.mod_key,
             "ALT": self.mod_key,
             "CONTROL": self.mod_key,
             "CTRL": self.mod_key,
             # TODO #2 look at arrow keys and 'Extended Commands'
+            # Arrow Keys
+            "DOWNARROW": "down",
+            "DOWN": "down",
+            "LEFTARROW": "left",
+            "LEFT": "left",
+            "RIGHTARROW": "right",
+            "RIGHT": "right",
+            "UPARROW": "up",
+            "UP": "up",
+            # Extended Commands
+            "BREAK": "pause",
+            "PAUSE": "pause",
+            "CAPSLOCK": "caps-lock",
+            "DELETE": "delete",
+            "ESC": "escape",
+            "ESCAPE": "escape",
+            "HOME": "home",
+            "INSERT": "insert",
+            "NUMLOCK": "num-lock",
+            "PAGEUP": "pageup",
+            "PAGEDOWN": "pagedown",
+            "PRINTSCREEN": "",  # No idea
+            "SCROLLLOCK": "scroll-lock",
+            "SPACE": "space",
+            "TAB": "tab",
+
             "REPEAT": self.repeat_command
         }
 
