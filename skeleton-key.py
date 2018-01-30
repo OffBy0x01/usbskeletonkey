@@ -2,7 +2,6 @@ import configparser
 import os
 import re
 from pathlib import Path
-import subprocess
 
 from framework.FwComponent import FwComponent
 from framework.helper.ModuleDescriptor import ModuleDescriptor
@@ -101,10 +100,14 @@ class SkeletonKey(object):
 
         # (Import | Freak out over) module configs
         for module in self.raw_module_list:
+
+            self.module_config = self.module_path + '/%s.ini' % module
+
             try:
                 # Attempt to read current module's config file
-                self.fw_debug.debug(self.module_path + '/%s.ini' % module)
-                self.module_config = Path(self.module_path + '/%s.ini' % module).resolve()
+                self.fw_debug.debug(self.module_config)
+                Path(self.module_config).resolve()
+
             except FileNotFoundError:
 
                 # Was unable to read this module, log an error then skip
@@ -152,7 +155,7 @@ class SkeletonKey(object):
         return [os.path.splitext(m)[0] for m in module_paths]
 
     def display_title(self):
-        # displays title3
+        # displays title
         print(self.SK_title)
 
     def display_modules(self):
