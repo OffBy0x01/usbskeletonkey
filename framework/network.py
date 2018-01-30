@@ -36,15 +36,15 @@ class FwComponentNetwork(FwComponentGadget):
         self.ether_up = "ifup usb0"
         self.ether_down = "ifdown usb0"
         self.ping_address = "8.8.8.8"
-        self.ping_on = False
         self.ping_response = ""
+        self.ssh_IP = "10.10.10.10"
 
     # Destructor
     def __del__(self):
         self.disable()  # Disable eth driver
 
     # Check for internet connectivity
-    def test(self):
+    def test_internet(self):
         flag_success = False  # Flag set when connection successful
         for i in range(1, 3):  # Only attempt ping 3 times
             if subprocess.call("ping -c 1 -w 3 " + self.ping_address, shell=True) == 0:  # Ping to test connection
@@ -60,17 +60,27 @@ class FwComponentNetwork(FwComponentGadget):
             return False
         return True
 
+    # Find instance of "USB" in ifconfig to show that usb0 is connected
+    def test_local(self):
+        output = str(subprocess.run(["ifconfig"], stdout=subprocess.PIPE).stdout.decode())
+        if (output.count("usb0")) > 0:
+            super().debug("usb0 detected")
+            return True
+        else:
+            super().debug("usb0 not detected")
+            return False
+
     # Turning on USB Ethernet adapter
     def up(self):
-        subprocess.call("%s" % self.ether_up, shell=True)  # Up adapter
+        subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
         self.state = "eth up"
         if self.debug:  # Debug text
             super().debug(self.state)
-        return self.test()  # Test connection
+        return self.test_internet()  # Test connection
 
     # Turning off USB Ethernet adapter
     def down(self):
-        subprocess.call("%s" % self.ether_down, shell=True)  # Down adapter
+        subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
         self.state = "eth down"
         if self.debug:  # Debug text
             super().debug(self.state)
@@ -89,11 +99,12 @@ class FwComponentNetwork(FwComponentGadget):
         self.disable()  # Detach from bus
         return
 
-
 # TODO #1 network over USB handler
 # TODO #2 offline connection status check (must be able to test for physical connection not just internet)
 # TODO #3 Read through PiKey, poisontap Source, do some general g_ether research - see what others are using it for
+
+
 # For testing
 if __name__ == "__main__":
     test = FwComponentNetwork()
-    test.network_on()
+    test.test_local()
