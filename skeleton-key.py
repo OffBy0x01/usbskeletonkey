@@ -251,7 +251,6 @@ class SkeletonKey(object):
                     self.show_with_att(config_selection, user_choice)
                     pass
                 elif config_selection[0] == "set":
-                    print("2 and set")
                     # run method to set selected attribute
                     self.set_with_att(config_selection, user_choice)
                     pass
