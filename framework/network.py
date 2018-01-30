@@ -84,9 +84,9 @@ class FwComponentNetwork(FwComponentGadget):
     # Turning off USB Ethernet adapter
     def down(self):
         #  subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
-        subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True)
-        subprocess.call("ifconfig usb0 down", shell=True)
-        subprocess.call("ifdown usb0", shell=True)
+        super().debug(subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True))
+        super().debug(subprocess.call("ifconfig usb0 down", shell=True))
+        super().debug(subprocess.call("ifdown usb0", shell=True))
         self.state = "usb0 down"
         if self.debug:  # Debug text
             super().debug(self.state)
