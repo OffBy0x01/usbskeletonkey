@@ -35,7 +35,9 @@ class ModuleDescriptor(object):
 
         self.output_format = {
             "success": bool
-        }.update(output_format)
+        }
+
+        self.output_format.update(output_format)
 
         self.version = version
         self.module_help = module_help
