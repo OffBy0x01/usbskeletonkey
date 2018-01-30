@@ -182,7 +182,7 @@ class SkeletonKey(object):
 
     # TODO 1: Review how to fix this
     def show_with_att(self, config_selection, user_selection):
-        module = self.module_list[user_selection-1]
+        module = self.module_list[user_selection - 1]
         if "name" in config_selection[1]:
             print("Module Name: ", module.module_name)
         elif "desc" in config_selection[1]:
@@ -199,20 +199,18 @@ class SkeletonKey(object):
             print("Please enter a valid attribute")
 
     # TODO 2: test this method for bugs
-    def set_with_att(self, config_selection):
+    def set_with_att(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
         set = False
+        module = self.module_list[user_selection - 1]
+        # if option[key] is equal to the second word
 
-        # loop through all options
-        for option in self.options:
-            # if option[key] is equal to the second word
-            if self.options[option] == config_selection[1]:
-                # set new value
-                new_value = input("Enter the value you would like to set this to")
-                self.options[option] = new_value
-                set = True
-            else:
-                print("Please enter a valid value to set this attribute to")
+        for config_selection[1] in module.options:
+            # set new value
+            new_value = input("Enter the value you would like to set this to")
+            module.options[config_selection[1]] = new_value
+            set = True
+
         if set:
             pass
         else:
@@ -254,7 +252,7 @@ class SkeletonKey(object):
                 elif config_selection[0] == "set":
                     print("2 and set")
                     # run method to set selected attribute
-                    self.set_with_att(config_selection)
+                    # self.set_with_att(config_selection, user_choice)
                     pass
             else:
                 print("wtf")
@@ -306,7 +304,7 @@ class SkeletonKey(object):
 
 # debugging
 if __name__ == '__main__':
-    begin = SkeletonKey(debug=False)
+    begin = SkeletonKey(debug=True)
     begin.display_title()
     begin.display_modules()
     selection = begin.input_choice()
