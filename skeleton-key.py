@@ -49,12 +49,12 @@ class SkeletonKey(object):
         self.config_file = self.main_path + '/config.ini'
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
-            self.fw_debug.debug("Error: " + self.module_path + " directory does not exist")
+            self.fw_debug.debug("ERROR: " + self.module_path + " directory does not exist")
 
         # Get module names from file - no data ported yet
         self.raw_module_list = self.discover_modules()
         if not self.raw_module_list:
-            self.fw_debug.debug("Error: No modules found!")
+            self.fw_debug.debug("ERROR: No modules found!")
         else:
             self.fw_debug.debug(*self.raw_module_list)
 
@@ -132,7 +132,7 @@ class SkeletonKey(object):
                 self.module_list.append(current_module)
 
             except configparser.Error:
-                self.fw_debug.debug("Error: Unable to import module from file")
+                self.fw_debug.debug("ERROR: Unable to import module from file")
                 pass
             else:
                 self.fw_debug.debug("modules loaded:")
@@ -196,9 +196,8 @@ class SkeletonKey(object):
         elif "format" in config_selection[1]:
             print("Output Format: ", module.output_format)
         else:
-            print("Please enter a valid attribute")
+            raise ValueError("ERROR: Please enter a valid attribute")
 
-    # TODO 2: test this method for bugs
     def set_with_att(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
         set = False
@@ -219,8 +218,8 @@ class SkeletonKey(object):
         if set:
             pass
         else:
-            print("Please enter a valid attribute to set")
-        pass
+            raise ValueError("ERROR: Please enter a valid attribute to set")
+            pass
 
     def module_configuration(self, user_choice):
         # mainly for debug
@@ -263,6 +262,10 @@ class SkeletonKey(object):
                     # run method to set selected attribute
                     self.set_with_att(config_selection, user_choice)
                     pass
+                elif config_selection[0] == "show":
+                    # TODO: cleaner way to do this
+                    raise ValueError("ERROR: Invalid 'show' command - too many arguments")
+                    pass
             else:
                 print("wtf")
                 pass
@@ -288,10 +291,10 @@ class SkeletonKey(object):
                 exit_flag = True
                 pass
             if user_selection == str:
-                raise ValueError("Invalid selection - string instead of integer.")
+                raise ValueError("ERROR: Invalid selection - string instead of integer.")
                 pass
             elif user_selection < 0 or user_selection > len(self.module_list):
-                raise ValueError("Invalid index selection. Please enter a valid selection.")
+                raise ValueError("ERROR: Invalid index selection. Please enter a valid selection.")
                 pass
             else:
                 if not exit_flag:
