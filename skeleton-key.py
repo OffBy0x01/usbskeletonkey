@@ -2,7 +2,6 @@ import configparser
 import os
 import re
 from pathlib import Path
-import subprocess
 
 from framework.FwComponent import FwComponent
 from framework.helper.ModuleDescriptor import ModuleDescriptor
@@ -49,12 +48,12 @@ class SkeletonKey(object):
         self.config_file = self.main_path + '/config.ini'
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
-            self.fw_debug.debug("Error: " + self.module_path + " directory does not exist")
+            self.fw_debug.debug("ERROR: " + self.module_path + " directory does not exist")
 
         # Get module names from file - no data ported yet
         self.raw_module_list = self.discover_modules()
         if not self.raw_module_list:
-            self.fw_debug.debug("Error: No modules found!")
+            self.fw_debug.debug("ERROR: No modules found!")
         else:
             self.fw_debug.debug(*self.raw_module_list)
 
@@ -101,10 +100,14 @@ class SkeletonKey(object):
 
         # (Import | Freak out over) module configs
         for module in self.raw_module_list:
+
+            self.module_config = self.module_path + '/%s.ini' % module
+
             try:
                 # Attempt to read current module's config file
-                self.fw_debug.debug(self.module_path + '/%s.ini' % module)
-                self.module_config = Path(self.module_path + '/%s.ini' % module).resolve()
+                self.fw_debug.debug(self.module_config)
+                Path(self.module_config).resolve()
+
             except FileNotFoundError:
 
                 # Was unable to read this module, log an error then skip
@@ -132,7 +135,7 @@ class SkeletonKey(object):
                 self.module_list.append(current_module)
 
             except configparser.Error:
-                self.fw_debug.debug("Error: Unable to import module from file")
+                self.fw_debug.debug("ERROR: Unable to import module from file")
                 pass
             else:
                 self.fw_debug.debug("modules loaded:")
@@ -152,7 +155,7 @@ class SkeletonKey(object):
         return [os.path.splitext(m)[0] for m in module_paths]
 
     def display_title(self):
-        # displays title3
+        # displays title
         print(self.SK_title)
 
     def display_modules(self):
@@ -182,7 +185,7 @@ class SkeletonKey(object):
 
     # TODO 1: Review how to fix this
     def show_with_att(self, config_selection, user_selection):
-        module = self.module_list[user_selection-1]
+        module = self.module_list[user_selection - 1]
         if "name" in config_selection[1]:
             print("Module Name: ", module.module_name)
         elif "desc" in config_selection[1]:
@@ -196,28 +199,30 @@ class SkeletonKey(object):
         elif "format" in config_selection[1]:
             print("Output Format: ", module.output_format)
         else:
-            print("Please enter a valid attribute")
+            raise ValueError("ERROR: Please enter a valid attribute")
 
-    # TODO 2: test this method for bugs
-    def set_with_att(self, config_selection):
+    def set_with_att(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
         set = False
+        module = self.module_list[user_selection - 1]
+        # if option[key] is equal to the second word
 
-        # loop through all options
-        for option in self.options:
-            # if option[key] is equal to the second word
-            if self.options[option] == config_selection[1]:
-                # set new value
-                new_value = input("Enter the value you would like to set this to")
-                self.options[option] = new_value
-                set = True
+        for x in module.options:
+            if x == config_selection[1]:
+                if len(config_selection) == 3:
+                    module.options[config_selection[1]] = str(config_selection[2])
+                    set = True
+                else:
+                    new_value = input("Enter the value you would like to set this to")
+                    module.options[config_selection[1]] = new_value
+                    set = True
             else:
-                print("Please enter a valid value to set this attribute to")
+                pass
         if set:
             pass
         else:
-            print("Please enter a valid attribute to set")
-        pass
+            raise ValueError("ERROR: Please enter a valid attribute to set")
+            pass
 
     def module_configuration(self, user_choice):
         # mainly for debug
@@ -252,9 +257,17 @@ class SkeletonKey(object):
                     self.show_with_att(config_selection, user_choice)
                     pass
                 elif config_selection[0] == "set":
-                    print("2 and set")
                     # run method to set selected attribute
-                    self.set_with_att(config_selection)
+                    self.set_with_att(config_selection, user_choice)
+                    pass
+            elif len(config_selection) == 3:
+                if config_selection[0] == "set":
+                    # run method to set selected attribute
+                    self.set_with_att(config_selection, user_choice)
+                    pass
+                elif config_selection[0] == "show":
+                    # TODO: cleaner way to do this
+                    raise ValueError("ERROR: Invalid 'show' command - too many arguments")
                     pass
             else:
                 print("wtf")
@@ -281,10 +294,10 @@ class SkeletonKey(object):
                 exit_flag = True
                 pass
             if user_selection == str:
-                raise ValueError("Invalid selection - string instead of integer.")
+                raise ValueError("ERROR: Invalid selection - string instead of integer.")
                 pass
             elif user_selection < 0 or user_selection > len(self.module_list):
-                raise ValueError("Invalid index selection. Please enter a valid selection.")
+                raise ValueError("ERROR: Invalid index selection. Please enter a valid selection.")
                 pass
             else:
                 if not exit_flag:
@@ -306,8 +319,6 @@ class SkeletonKey(object):
 
 # debugging
 if __name__ == '__main__':
-    begin = SkeletonKey(debug=False)
-    begin.display_title()
-    begin.display_modules()
+    begin = SkeletonKey(debug=True)
     selection = begin.input_choice()
     begin.module_configuration(selection)
