@@ -13,7 +13,7 @@ class FwComponentNetwork(FwComponentGadget):
 
         functions:
             disable:        allows for the disabling of driver
-            up:             allows for the driver to be turned on
+            up:             allows for the driver to be turned on and DHCP to be enabled
             down:           allows for the driver to be turned off
             kill:           allows for the driver to be disabled and removed if
                             a ping fails or usb0 isn't recognised
@@ -63,8 +63,9 @@ class FwComponentNetwork(FwComponentGadget):
         else:
             return self.kill("usb0 not detected")
 
-    # Turning on USB Ethernet adapter
+    # Turning on USB Ethernet adapter and enabling DHCP server
     def up(self):
+        self.enable()
         #  subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
         subprocess.call("ifup usb0", shell=True)  # Up usb0 interface
         subprocess.call("ifconfig usb0 up", shell=True)  # Up networking on usb0
