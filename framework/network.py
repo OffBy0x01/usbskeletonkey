@@ -14,12 +14,11 @@ class FwComponentNetwork(FwComponentGadget):
         functions:
             enable:         allows for enabling of driver
             disable:        allows for disabling of driver
-            up:             allows for the ethernet adapter to be turned on
-            down:           allows for the ethernet adapter to be turned off
-            kill:           allows for the ethernet adapter to be disabled and removed if
-                            not recognised by the pi
-            test_internet:  allows for the checking of internet connectivity
-            test_local:     checks whether usb0 is being recognised by the pi
+            network_on:     allows for the ethernet adapter to be turned on
+            network_off:    allows for the ethernet adapter to be turned off
+            network_remove: allows for disable() to be called to disable and remove the driver
+            network_kill:   allows for the Ethernet Adapter to be disabled and removed if
+                            a ping fails
 
         Returns:
             framework component object
@@ -30,19 +29,21 @@ class FwComponentNetwork(FwComponentGadget):
     """
 
     # Constructor
-    def __init__(self, enabled=False, debug=False, state="uninitialised"):
+    def __init__(self, enabled=False, debug=True, state="uninitialised"):
         super().__init__(driver_name="g_ether", enabled=enabled, vendor_id="0x04b3", product_id="0x4010", debug=debug)
         self.debug = debug
         self.state = state
         self.ether_up = "ifup usb0"
         self.ether_down = "ifdown usb0"
         self.ping_address = "8.8.8.8"
+        self.ping_response = ""
+        self.ssh_IP = "10.10.10.10"
 
     # Destructor
     def __del__(self):
         self.disable()  # Disable eth driver
 
-    # Check for internet connectivity (might not need)
+    # Check for internet connectivity
     def test_internet(self):
         flag_success = False  # Flag set when connection successful
         for i in range(1, 3):  # Only attempt ping 3 times
@@ -66,12 +67,11 @@ class FwComponentNetwork(FwComponentGadget):
             super().debug("usb0 detected")
             return True
         else:
-            self.kill("usb0 not detected")
+            super().debug("usb0 not detected")
             return False
 
     # Turning on USB Ethernet adapter
     def up(self):
-        subprocess.call([""])
         subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
         self.state = "eth up"
         if self.debug:  # Debug text
