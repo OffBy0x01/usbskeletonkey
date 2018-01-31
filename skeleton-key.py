@@ -1,7 +1,7 @@
 import configparser
 import os
 import re
-import subprocess
+from pathlib import Path
 
 from framework.FwComponent import FwComponent
 from framework.helper.ModuleDescriptor import ModuleDescriptor
@@ -31,9 +31,9 @@ class SkeletonKey(object):
       """
 
     def __init__(self, debug=False):
-        # Hack for network config
-        subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
-        subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/networkinterfaces", shell=True)
+        # Hack for network config (something ellis has placed in - its causing errors just now) TODO: Fix this code
+        # subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
+        # subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/network/interfaces", shell=True)
 
         self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
@@ -45,14 +45,15 @@ class SkeletonKey(object):
         # Define directory and module paths
         self.main_path = os.path.dirname(os.path.realpath(__file__))
         self.module_path = self.main_path + "/modules"
+        self.config_file = self.main_path + '/config.ini'
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
-            self.fw_debug.debug("Error: " + self.module_path + " directory does not exist")
+            self.fw_debug.debug("ERROR: " + self.module_path + " directory does not exist")
 
         # Get module names from file - no data ported yet
         self.raw_module_list = self.discover_modules()
         if not self.raw_module_list:
-            self.fw_debug.debug("Error: No modules found!")
+            self.fw_debug.debug("ERROR: No modules found!")
         else:
             self.fw_debug.debug(*self.raw_module_list)
 
@@ -63,10 +64,10 @@ class SkeletonKey(object):
         # (Import | Create) default config
         try:
             # Attempt to read config
-            self.config_file = open(self.main_path + '/config.ini')
+            open(self.config_file)
         except FileNotFoundError:
             # Config not found, set defaults
-            self.config.read(self.main_path + '/config.ini')
+            self.config.read(self.config_file)
 
             # Interface options
             self.config.add_section('interface')
@@ -78,7 +79,7 @@ class SkeletonKey(object):
             self.config_mode = True
         else:
             # Config file exists, start importing
-            self.config.read_file(self.config_file)
+            self.config.read(self.config_file)
 
             # Set debug state accordingly
             if self.config.get('interface', 'debug') == "True":
@@ -91,14 +92,22 @@ class SkeletonKey(object):
                 self.config_mode = True
             else:
                 self.config_mode = False
+
         with open('config.ini', 'w') as self.config_file:
             self.config.write(self.config_file)
 
+        self.config = configparser.ConfigParser()
+
         # (Import | Freak out over) module configs
         for module in self.raw_module_list:
+
+            self.module_config = self.module_path + '/%s.ini' % module
+
             try:
                 # Attempt to read current module's config file
-                self.module_config = open(self.main_path + '/%s.ini' % module)
+                self.fw_debug.debug(self.module_config)
+                Path(self.module_config).resolve()
+
             except FileNotFoundError:
 
                 # Was unable to read this module, log an error then skip
@@ -106,10 +115,12 @@ class SkeletonKey(object):
                 continue
 
             else:
-                # Module config exists, start importing data
-                self.config.read_file(self.module_config)
+                # Module config exists, start importing datas
+                self.fw_debug.debug(module + " config file found, importing data")
+                self.config.read(self.module_config)
 
             try:
+
                 # get  module_desc, options, fw_requirements, output_format, version, module_help
                 current_module = ModuleDescriptor(
                     module_name=self.config.get(module, 'module_name'),
@@ -118,14 +129,17 @@ class SkeletonKey(object):
                     module_help=self.config.get(module, 'module_help'),
                     # _sections[section] returns as a dictionary
                     options=self.config._sections['options'],
-                    fw_requirements=self.config._sections['fw_requirments'],
+                    fw_requirements=self.config._sections['fw_requirements'],
                     output_format=self.config._sections['output_format']
                 )
                 self.module_list.append(current_module)
 
             except configparser.Error:
-                self.fw_debug.debug("Error: Unable to import module from file")
+                self.fw_debug.debug("ERROR: Unable to import module from file")
                 pass
+            else:
+                self.fw_debug.debug("modules loaded:")
+                self.fw_debug.debug(*[module.module_name for module in self.module_list])
         # TODO WORK OUT WHAT HAPPENS IN ARMED MODE
 
     def discover_modules(self):
@@ -141,18 +155,28 @@ class SkeletonKey(object):
         return [os.path.splitext(m)[0] for m in module_paths]
 
     def display_title(self):
-        # displays title3
+        # displays title
         print(self.SK_title)
 
     def display_modules(self):
         # displays all module information.
         if not self.module_list:
+            # TODO REVIEW CAUSE OF ERROR HERE
             raise ValueError("There are no modules to display.")
         else:
             x = 1
             for module in self.module_list:
-                print(x, " ", module)
+                print(x, " ", module.module_name)
                 x += 1
+
+    def display_information_current_module(self, user_selection):
+        module = self.module_list[user_selection - 1]
+        print("Module Name: ", module.module_name)
+        print("Module Description: ", module.module_desc)
+        print("Framework Requirements: ", module.fw_requirements)
+        print("Options: ", module.options)
+        print("Module Help: ", module.module_help)
+        print("Output Format: ", module.output_format)
 
     # TODO review if need this
     def bool_ask_question(self, question):
@@ -160,52 +184,52 @@ class SkeletonKey(object):
                 Enables asking of y/n questions"""
 
     # TODO 1: Review how to fix this
-    def show_with_att(self, config_selection, user_selection, module_list):
+    def show_with_att(self, config_selection, user_selection):
+        module = self.module_list[user_selection - 1]
         if "name" in config_selection[1]:
-            print("Module Name: ", module_list[user_selection-1].module_name)
+            print("Module Name: ", module.module_name)
         elif "desc" in config_selection[1]:
-            print("Module Description: ", module_list[user_selection-1].module_desc)
+            print("Module Description: ", module.module_desc)
         elif "req" in config_selection[1]:
-            print("Framework Requirements: ", module_list[user_selection-1].fw_reqs)
+            print("Framework Requirements: ", module.fw_requirements)
         elif "opt" in config_selection[1]:
-            print("Options: ", module_list[user_selection-1].options)
+            print("Options: ", module.options)
         elif "help" in config_selection[1]:
-            print("Module Help: ", module_list[user_selection-1].module_help)
+            print("Module Help: ", module.module_help)
         elif "format" in config_selection[1]:
-            print("Output Format: ", module_list[user_selection-1].output_format)
+            print("Output Format: ", module.output_format)
         else:
-            print("Please enter a valid attribute")
+            raise ValueError("ERROR: Please enter a valid attribute")
 
-    # TODO 2: test this method for bugs - issues on lines 49??
-    def set_with_att(self, config_selection):
-        #set flag to display error message if option is invalid
+    def set_with_att(self, config_selection, user_selection):
+        # set flag to display error message if option is invalid
         set = False
+        module = self.module_list[user_selection - 1]
+        # if option[key] is equal to the second word
 
-        # loop through all options
-        for option in self.options:
-            # if option[key] is equal to the second word
-            if self.options[option] == config_selection[1]:
-                # set new value
-                new_value = input("Enter the value you would like to set this to")
-                self.options[option] = new_value
-                set = True
+        for x in module.options:
+            if x == config_selection[1]:
+                if len(config_selection) == 3:
+                    module.options[config_selection[1]] = str(config_selection[2])
+                    set = True
+                else:
+                    new_value = input("Enter the value you would like to set this to")
+                    module.options[config_selection[1]] = new_value
+                    set = True
             else:
-                print("Please enter a valid value to set this attribute to")
+                pass
         if set:
             pass
         else:
-            print("Please enter a valid attribute to set")
-        pass
+            raise ValueError("ERROR: Please enter a valid attribute to set")
+            pass
 
-    def module_configuration(self, user_choice, module_list):
-        current_module = module_list[(user_choice - 1)]
-
+    def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
         print("Entering Configuration mode")
         config_mode = True
         while config_mode:
-            print("Configuring current module: ", current_module)
             print("Enter 'exit' to finish.")
             print("\n")
 
@@ -220,7 +244,7 @@ class SkeletonKey(object):
                     pass
                 elif config_selection[0] == "show":
                     # display all information to do with current module.
-                    module_list[user_choice - 1].display_info()
+                    self.display_information_current_module(user_choice)
                     pass
                 elif config_selection[0] == "set":
                     print("Please select an attribute to set in the format 'set [attribute]'")
@@ -229,15 +253,21 @@ class SkeletonKey(object):
             # If the users enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
             elif len(config_selection) == 2:
                 if config_selection[0] == "show":
-                    print("2 and show")
-                    # TODO #1
                     # run method to show selected attribute
-                    self.show_with_att(config_selection)
+                    self.show_with_att(config_selection, user_choice)
                     pass
                 elif config_selection[0] == "set":
-                    print("2 and set")
                     # run method to set selected attribute
-                    self.set_with_att(config_selection)
+                    self.set_with_att(config_selection, user_choice)
+                    pass
+            elif len(config_selection) == 3:
+                if config_selection[0] == "set":
+                    # run method to set selected attribute
+                    self.set_with_att(config_selection, user_choice)
+                    pass
+                elif config_selection[0] == "show":
+                    # TODO: cleaner way to do this
+                    raise ValueError("ERROR: Invalid 'show' command - too many arguments")
                     pass
             else:
                 print("wtf")
@@ -264,10 +294,10 @@ class SkeletonKey(object):
                 exit_flag = True
                 pass
             if user_selection == str:
-                raise ValueError("Invalid selection - string instead of integer.")
+                raise ValueError("ERROR: Invalid selection - string instead of integer.")
                 pass
             elif user_selection < 0 or user_selection > len(self.module_list):
-                raise ValueError("Invalid index selection. Please enter a valid selection.")
+                raise ValueError("ERROR: Invalid index selection. Please enter a valid selection.")
                 pass
             else:
                 if not exit_flag:
@@ -283,11 +313,12 @@ class SkeletonKey(object):
         for file in self.files:
             os.unlink(file)
 
+
 # TODO #ATSOMEPOINT implement new testing methods
 
 
 # debugging
 if __name__ == '__main__':
-    begin = SkeletonKey()
-    begin.display_title()
-    begin.display_modules()
+    begin = SkeletonKey(debug=True)
+    selection = begin.input_choice()
+    begin.module_configuration(selection)

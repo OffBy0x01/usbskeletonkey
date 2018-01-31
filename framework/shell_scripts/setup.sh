@@ -3,14 +3,13 @@
 
 # Install Requirements
 apt-get update
-apt-get --assume-yes install python 3.6 # Ensure Python is installed
+# Ensure Python is installed
 apt-get --assume-yes install isc-dhcp-server
 apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
 
-# Make Files
-# dhcpd.conf
-mkdir -p /etc/dhcp
-echo -e "# /etc/dhcp/dhcpd.conf \n # Needs Created" >> /etc/dhcp/dhcpd.conf
+# Network set up
+echo -e '\nallow-hotplug wlan0\niface wlan0 inet static\naddress 192.168.0.237\nnetmask 255.255.255.0\n\nallow-hotplug usb0\niface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/network/interfaces  # Set static IP in interfaces
+echo -e '\ninterface wlan0\nstatic ip_address=192.168.0.237/24\n\ninterface usb0\nstatic ip_address=10.10.10.10/7' >> /etc/dhcpcd.conf # Set static IP in dhcpcd.conf
 
 # compgen -c | grep "mkfs\."
