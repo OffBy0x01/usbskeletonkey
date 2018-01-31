@@ -99,24 +99,6 @@ class Keyboard(FwComponentGadget):
         }
 
     # TODO #3 improve comments
-    # Handles string write to target
-    def write(self, string):
-        current_char = ''
-
-        for c in string:
-            if c.isalpha() and c.isupper():
-                current_char = "left-shift %s" % (c.lower())
-            elif c.isalpha or c.isdigit:
-                curent_char = c
-            else:
-                # special characters need string equivalents
-                current_char = self.char_eqv.get(c, 0)
-                if current_char is None:
-                    super().debug("something went horribly wrong or I've missed a character")
-
-            subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (current_char, "DEFAULT_PATH"),
-                            shell=True)  # Documentation says use .run() unless Py < 3.5 - is this intentional?
-
     def ignore(self):
         pass
 
@@ -150,17 +132,31 @@ class Keyboard(FwComponentGadget):
 
     def repeat_command(self):
         self.last_command()
-
         # TODO fix this
 
-    # Might not need this but just theorizing
-    def get_script(self, path):
-        print(0)
+    # Handles string write to target
+    def write(self, string):
+        curr_char = ''
+
+        for c in string:
+            if c.isalpha() and c.isupper():
+                curr_char = "left-shift %s" % (c.lower())
+            elif c.isalpha or c.isdigit:
+                curent_char = c
+            else:
+                # special characters need string equivalents
+                curr_char = self.char_eqv.get(c, 0)
+                if curr_char is None:
+                    super().debug("something went horribly wrong or I've missed a character")
+
+            subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (curr_char, "DEFAULT_PATH"),
+                            shell=True)
 
     def resolve(self, script):
         path = os.path.dirname(os.path.realpath(__file__))
         with open(path + "/../scripts/" + script, "r") as file:
             for line in file:
+                self.debug('Resolving: ' + line)
                 pair = line.split(maxsplit=1)
                 command = pair[0]
                 args = line.split(pair[1])
@@ -185,29 +181,10 @@ class Keyboard(FwComponentGadget):
 
                 # Most likely bad syntax or undiscovered case; throw error and log line
                 else:
-                    self.debug(line)
+                    self.debug("Error: (Bad syntax) " + line)
 
-    # TODO #1 finish command interpreter
-    def exec(self, script):
-
-        # This is far from pretty, but it works
-        path = os.path.dirname(os.path.realpath(__file__))
-        with open(path + "/../scripts/" + script, "r") as file:
-            for line in file:
-                print(line, end="\n")
-                # split into command and value
-                command_value = line.split(maxsplit=1)
-                try:
-                    self.command = self.commands.get(command_value[0])
-                    self.debug("Looking for command in commands")
-
-                except KeyError:  # command not found
-                    self.debug("Error: could not find command in commands")
-
-                else:
-                    pass  # command was found
             # TODO If command not single input then check for other commands
-            # TODO If command was single input then do the functions
+            # TODO If command single input then do the functions
 
             # Needs:
             #   read scripts line by line
