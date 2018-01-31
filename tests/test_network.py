@@ -11,3 +11,4 @@ if __name__ == "__main__":
     test = FwComponentNetwork(debug=True)
     test.up()
     test.test_local()
+
