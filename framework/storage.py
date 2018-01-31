@@ -59,6 +59,8 @@ class StorageAccess(FwComponentGadget):
         This should be looked into further in testing
         Documentation -- http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/mass-storage.txt
                          http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/usbmon.txt
+                         
+        Vendor 0x0011 - Product 0x7788
     '''
 
     def __createfs(self):
@@ -109,8 +111,8 @@ class StorageAccess(FwComponentGadget):
             if os.path.isfile(self.file_name):
                 super().debug("File discovered")
             else:
-        # TODO Die
-
+                super().debug("No file discovered, execution cannot continue")
+                exit(1)
 
         # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],
@@ -118,9 +120,9 @@ class StorageAccess(FwComponentGadget):
 
         if "Permission denied" in self.loopback_device:
             super().debug("Permissions are required"
-                          "This should be running as root or at least some sort of admin"
-                          "Now attempting to fail gracefully")
-            # TODO Try to find an alternative method of storage and drop the ability to mount on bus
+                          "This should be running as root or at least some sort of admin")
+            super().debug("Execution cannot continue")
+            exit(1)
 
         super().debug("Attempting to mount on " + self.loopback_device +
                       "Running Command - losetup " + self.loopback_device + " " + self.directory + self.file_name)
@@ -129,16 +131,17 @@ class StorageAccess(FwComponentGadget):
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
-            super().debug("The file attempted to load onto the loopback device cannot be mounted\n" +
-                          "Attempting to recover...")
-            # TODO Die
+            super().debug("The file attempted to load onto the loopback device cannot be mounted")
+            super().debug("Execution cannot continue")
+            exit(1)
 
         # If the first loopback device available is still the one we should be mounted to
         if self.loopback_device == subprocess.run(["losetup", "-f"],
                                                   stdout=subprocess.PIPE).stdout.decode('utf-8'):
             super().debug("Something went wrong here"
                           "The next available loopback is the loopback we should be on, IDK")
-            # TODO Die
+            super().debug("Execution cannot continue")
+            exit(1)
 
         self.local_mount = False
         self.bus_mounted = False
