@@ -3,8 +3,8 @@ import os
 import re
 from pathlib import Path
 
-from components.framework import FwComponent
-from components.framework import ModuleDescriptor
+from components.framework.FwComponent import FwComponent
+from components.helpers.ModuleDescriptor import ModuleDescriptor
 
 
 class SkeletonKey(object):
@@ -46,16 +46,18 @@ class SkeletonKey(object):
         self.main_path = os.path.dirname(os.path.realpath(__file__))
         self.module_path = self.main_path + "/modules"
         self.config_file = self.main_path + '/config.ini'
+
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
             self.fw_debug.debug("ERROR: " + self.module_path + " directory does not exist")
 
         # Get module names from file - no data ported yet
         self.raw_module_list = self.discover_modules()
-        if not self.raw_module_list:
+
+        if not len(self.raw_module_list):
             self.fw_debug.debug("ERROR: No modules found!")
         else:
-            self.fw_debug.debug(*self.raw_module_list)
+            self.fw_debug.debug(self.raw_module_list)
 
         # TODO #3 clean up config parser calls
         '''Load or create config files'''
@@ -139,7 +141,7 @@ class SkeletonKey(object):
                 pass
             else:
                 self.fw_debug.debug("modules loaded:")
-                self.fw_debug.debug(*[module.module_name for module in self.module_list])
+                self.fw_debug.debug([module.module_name for module in self.module_list])
         # TODO WORK OUT WHAT HAPPENS IN ARMED MODE
 
     def discover_modules(self):
