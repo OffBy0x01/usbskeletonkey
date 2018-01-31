@@ -8,5 +8,6 @@ from components.framework.network import FwComponentNetwork
 
 # For testing
 if __name__ == "__main__":
-    test = FwComponentNetwork()
+    test = FwComponentNetwork(debug=True)
+    test.up()
     test.test_local()
