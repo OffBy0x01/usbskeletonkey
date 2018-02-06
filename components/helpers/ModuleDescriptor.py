@@ -1,4 +1,3 @@
-
 class ModuleDescriptor(object):
     """
     Desc:
@@ -16,7 +15,8 @@ class ModuleDescriptor(object):
 
     """
 
-    def __init__(self, module_name, module_desc, options, fw_requirements, output_format, version=1, module_help ="You're on your own buddy!"):
+    def __init__(self, module_name, module_desc, options, fw_requirements, output_format, version=1,
+                 module_help="You're on your own buddy!"):
         self.module_name = module_name
         self.module_desc = module_desc
         self.options = {
@@ -41,6 +41,3 @@ class ModuleDescriptor(object):
 
         self.version = version
         self.module_help = module_help
-
-
-

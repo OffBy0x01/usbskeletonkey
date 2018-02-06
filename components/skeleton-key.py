@@ -3,8 +3,8 @@ import os
 import re
 from pathlib import Path
 
-from framework.FwComponent import FwComponent
-from framework.helper.ModuleDescriptor import ModuleDescriptor
+from components.framework.FwComponent import FwComponent
+from components.helpers.ModuleDescriptor import ModuleDescriptor
 
 
 class SkeletonKey(object):
@@ -46,16 +46,18 @@ class SkeletonKey(object):
         self.main_path = os.path.dirname(os.path.realpath(__file__))
         self.module_path = self.main_path + "/modules"
         self.config_file = self.main_path + '/config.ini'
+
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
             self.fw_debug.debug("ERROR: " + self.module_path + " directory does not exist")
 
         # Get module names from file - no data ported yet
         self.raw_module_list = self.discover_modules()
-        if not self.raw_module_list:
+
+        if not len(self.raw_module_list):
             self.fw_debug.debug("ERROR: No modules found!")
         else:
-            self.fw_debug.debug(*self.raw_module_list)
+            self.fw_debug.debug(self.raw_module_list)
 
         # TODO #3 clean up config parser calls
         '''Load or create config files'''
@@ -98,7 +100,7 @@ class SkeletonKey(object):
 
         self.config = configparser.ConfigParser()
 
-        # (Import | Freak out over) module configs
+        # (Import | Freak out over) module config
         for module in self.raw_module_list:
 
             self.module_config = self.module_path + '/%s.ini' % module
@@ -139,7 +141,7 @@ class SkeletonKey(object):
                 pass
             else:
                 self.fw_debug.debug("modules loaded:")
-                self.fw_debug.debug(*[module.module_name for module in self.module_list])
+                self.fw_debug.debug([module.module_name for module in self.module_list])
         # TODO WORK OUT WHAT HAPPENS IN ARMED MODE
 
     def discover_modules(self):
@@ -203,7 +205,7 @@ class SkeletonKey(object):
 
     def set_with_att(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
-        set = False
+        flag = False
         module = self.module_list[user_selection - 1]
         # if option[key] is equal to the second word
 
@@ -211,14 +213,14 @@ class SkeletonKey(object):
             if x == config_selection[1]:
                 if len(config_selection) == 3:
                     module.options[config_selection[1]] = str(config_selection[2])
-                    set = True
+                    flag = True
                 else:
                     new_value = input("Enter the value you would like to set this to")
                     module.options[config_selection[1]] = new_value
-                    set = True
+                    flag = True
             else:
                 pass
-        if set:
+        if flag:
             pass
         else:
             raise ValueError("ERROR: Please enter a valid attribute to set")

