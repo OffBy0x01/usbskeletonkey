@@ -27,3 +27,9 @@ else
 	echo "dwc2" | sudo tee --append /etc/modules > /dev/null
 fi
 
+sudo bash <(curl -S https://github.com/jjhelmus/berryconda/releases/download/v2.0.0/Berryconda3-2.0.0-Linux-armv6l.sh)
+
+echo "run this:"
+echo "./conda config --add channels rpi"
+echo "./conda install python=3.6"
+
