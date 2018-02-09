@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 
-from components.framework.FwComponent import FwComponent
+from components.framework.Debug import Debug
 from components.helpers.ModuleDescriptor import ModuleDescriptor
 
 
@@ -40,7 +40,7 @@ class SkeletonKey(object):
                          "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
 
         self.module_list = []
-        self.fw_debug = FwComponent(debug=debug)
+        self.fw_debug = Debug(debug=debug)
 
         # Define directory and module paths
         self.main_path = os.path.dirname(os.path.realpath(__file__))

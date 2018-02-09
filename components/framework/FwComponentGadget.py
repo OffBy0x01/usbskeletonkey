@@ -1,9 +1,9 @@
 import subprocess
 
-from components.framework.FwComponent import FwComponent
+from components.framework.Debug import Debug
 
 
-class FwComponentGadget(FwComponent):
+class FwComponentGadget(Debug):
     """Parent class for components requiring use of usb_gadget
 
     Args:
@@ -21,7 +21,8 @@ class FwComponentGadget(FwComponent):
         ImportError when kernel module not found
     """
 
-    def __init__(self, driver_name, enabled=False, vendor_id="", product_id="", debug=False):
+    def __init__(self, driver_name, enabled=False, vendor_id="", product_id="", debug=False, name="debug",
+                 type="component"):
         """Return a new framework component"""
 
         self.driver_name = driver_name
@@ -36,7 +37,7 @@ class FwComponentGadget(FwComponent):
         self.product_id = product_id
 
         # set debug state
-        super().__init__(debug=debug)
+        super().__init__(debug=debug, name=name, type=type)
 
     def enable(self):
         """Enable a disabled framework object"""

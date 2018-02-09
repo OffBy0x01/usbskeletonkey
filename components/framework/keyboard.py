@@ -7,7 +7,7 @@ from components.framework.FwComponentGadget import FwComponentGadget
 class Keyboard(FwComponentGadget):
     def __init__(self, enabled=False, other=False, debug=False):
         # to set the things of the parent class
-        # super().__init__(driver_name="g_hid", enabled=enabled, debug=debug)
+        super().__init__(driver_name="g_hid", enabled=enabled, debug=debug, name="keyboard", type="component")
         self.other = other  # doesn't do shit just for demo
 
         # defaults
@@ -164,6 +164,7 @@ class Keyboard(FwComponentGadget):
                     continue
                 if command == "STRING":
                     # Do write
+                    self.write(pair[1])
                     continue  # until this is finalized
                 # if command is recognised and there are multiple entries
                 if command in self.commands and len(args) > 1:
