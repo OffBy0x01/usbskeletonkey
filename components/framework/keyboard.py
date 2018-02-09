@@ -165,19 +165,23 @@ class Keyboard(FwComponentGadget):
                 if command == "STRING":
                     # Do write
                     self.write(pair[1])
-                    continue  # until this is finalized
+                    continue  # go to next line
                 # if command is recognised and there are multiple entries
                 if command in self.commands and len(args) > 1:
-                    # if current arg is actually another command
+                    # current arg is actually another command?
                     for arg in args:
                         if arg in self.commands:  # this arg is actually another command
+                            # TODO add current command to list of commands then join and run
                             continue  # For now
                         elif arg.isalnum():  # arg is arg
+                            # TODO join and run
                             continue  # For now
                         else:
                             pass  # Something went wrong
+                            # TODO test this with file
                 # Only one command in this line
                 elif command in self.commands:
+                    # TODO run this command
                     continue  # For now
 
                 # Most likely bad syntax or undiscovered case; throw error and log line
