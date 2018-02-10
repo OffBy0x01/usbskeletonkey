@@ -56,6 +56,7 @@ class FwComponentNetwork(FwComponentGadget):
     # Find instance of "USB" in ifconfig to show that usb0 is connected
     def test_local(self):
         output = str(subprocess.run(["ifconfig"], stdout=subprocess.PIPE).stdout.decode())
+        super().debug(output)
         if (output.count("usb0")) > 0:
             super().debug("usb0 detected")
             return True
@@ -79,10 +80,10 @@ class FwComponentNetwork(FwComponentGadget):
                             shell=True))  # Bind port 80 to port 1337
         super().debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53",
                                       shell=True))  # Start dnsspoof on port 53
-        self.state = "usb0 up"
+        self.state = "usb0 should be up"
         if self.debug:  # Debug text
             super().debug(self.state)
-        return self.test_internet()  # Test connection
+        return self.test_local()  # Test connection
 
     # Turning off USB Ethernet adapter
     def down(self):
