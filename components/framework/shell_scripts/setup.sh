@@ -14,5 +14,8 @@ apt-get --assume-yes install screen
 
 cp ../../../config/interfaces /etc/network/interfaces
 cp ../../../config/dhcpcd.conf /etc/dhcpcd.conf
+ifdown wlan0
+ifup wlan0
+ifconfig wlan0 up
 
 # compgen -c | grep "mkfs\."
