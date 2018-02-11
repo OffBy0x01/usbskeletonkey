@@ -14,6 +14,7 @@ apt-get --assume-yes install screen
 
 cp ../../../config/interfaces /etc/network/interfaces
 cp ../../../config/dhcpcd.conf /etc/dhcpcd.conf
+cp ../../../config/resolv.conf /etc/resolv.conf
 ifdown wlan0
 ifup wlan0
 ifconfig wlan0 up
