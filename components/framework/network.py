@@ -35,8 +35,7 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Destructor
     def __del__(self):
-        subprocess.call("ifconfig usb0 down", shell=True)
-        subprocess.call("ifdown usb0", shell=True)
+        self.down()  # Ensure adapter is downed
         super().disable()  # Disable eth driver
 
     # Check for internet connectivity
