@@ -70,8 +70,8 @@ class FwComponentNetwork(FwComponentGadget):
         super().debug(subprocess.call("ifup usb0", shell=True))  # Up usb0 interface
         super().debug(subprocess.call("ifconfig usb0 up", shell=True))  # Up networking on usb0
         super().debug(
-            subprocess.call("/bin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
-        super().debug(subprocess.call("/etc/init.d/isc-dhcp-server", shell=True))  # Start DHCP server
+            subprocess.call("/sbin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
+        super().debug(subprocess.call("/etc/init.d/isc-dhcp-server start", shell=True))  # Start DHCP server
 
         # Does things (stolen from poisontap)
         super().debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True))  # No idea what this does
@@ -89,6 +89,8 @@ class FwComponentNetwork(FwComponentGadget):
     def down(self):
         #  subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
         super().debug(subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True))
+        super().debug(
+            subprocess.call("/sbin/route del -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
         super().debug(subprocess.call("ifconfig usb0 down", shell=True))
         super().debug(subprocess.call("ifdown usb0", shell=True))
         self.state = "usb0 down"
