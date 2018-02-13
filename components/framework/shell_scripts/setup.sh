@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # MUST run as root!
+# DEPRECATED!
+# Use install_dependencies instead!
 
 # Install Requirements
 apt-get update
