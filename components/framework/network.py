@@ -35,6 +35,7 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Destructor
     def __del__(self):
+        self.down()  # Ensure adapter is downed
         super().disable()  # Disable eth driver
 
     # Check for internet connectivity

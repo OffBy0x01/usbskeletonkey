@@ -12,6 +12,6 @@ iface wlan0 inet static
     wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
 
 allow-hotplug usb0
-    address 10.10.10.10
-    netmask 128.0.0.0
-    gateway 10.10.10.1
+iface usb0 inet static
+    address 1.0.0.1
+    netmask 0.0.0.0
