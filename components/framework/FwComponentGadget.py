@@ -26,13 +26,18 @@ class FwComponentGadget(Debug):
         """Return a new framework component"""
 
         self.driver_name = driver_name
-        # If kernel module was not found then modprobe -n will return x not found in y
+        # If kernel module was not found then modprobe -n will return driver_name not found in modules
         if "not found" in subprocess.run(["modprobe", "-n", driver_name], stdout=subprocess.PIPE).stdout.decode(
                 'utf-8'):  # THROW EXCEPTION HERE
             print("THROW EXCEPTION HERE")
 
         self.driver_name = driver_name
-        self.enabled = enabled
+
+        if enabled:
+            self.enable()
+
+        self.enabled = enabled;
+
         self.vendor_id = vendor_id
         self.product_id = product_id
 
