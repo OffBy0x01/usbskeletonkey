@@ -62,6 +62,9 @@ class StorageAccess(FwComponentGadget):
     '''
 
     def __createfs(self):
+        """
+        Creates a file system: This action does not require sudo. This action does not have exit codes
+        """
         super().debug("    Creating a filesystem")
 
         # Create device to store to
@@ -80,8 +83,10 @@ class StorageAccess(FwComponentGadget):
         # Done
 
     def __init__(self, readable_size=None, fs="fat", old_fs=False, directory="./", debug=False):
-        # Starting the super class first
+        # Initialise super class
         super().__init__("g_mass_storage", enabled=False, debug=debug)
+        self._type = "Component"
+        self._name = "Storage"
 
         # Inform the user on debug what module has started
         super().debug("Starting Module: Storage Access")
@@ -109,17 +114,16 @@ class StorageAccess(FwComponentGadget):
             if os.path.isfile(self.file_name):
                 super().debug("File discovered")
             else:
-        # TODO Die
+                super().debug("File" + self.file_name + "does not exist: 2.04")
+                exit(2.04)
 
         # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],
                                               stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "Permission denied" in self.loopback_device:
-            super().debug("Permissions are required"
-                          "This should be running as root or at least some sort of admin"
-                          "Now attempting to fail gracefully")
-            # TODO Try to find an alternative method of storage and drop the ability to mount on bus
+            super().debug("Insufficient Permissions: 2.00")
+            exit(2.00)
 
         super().debug("Attempting to mount on " + self.loopback_device +
                       "Running Command - losetup " + self.loopback_device + " " + self.directory + self.file_name)
@@ -128,16 +132,14 @@ class StorageAccess(FwComponentGadget):
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
-            super().debug("The file attempted to load onto the loopback device cannot be mounted\n" +
-                          "Attempting to recover...")
-            # TODO Die
+            super().debug("Loop back device does not exist: 2.04")
+            exit(2.04)
 
-        # If the first loopback device available is still the one we should be mounted to
+        # If the first loop back device available is still the one we should be mounted to
         if self.loopback_device == subprocess.run(["losetup", "-f"],
                                                   stdout=subprocess.PIPE).stdout.decode('utf-8'):
-            super().debug("Something went wrong here"
-                          "The next available loopback is the loopback we should be on, IDK")
-            # TODO Die
+            super().debug("Loop back setup Failed")
+            exit(2.04)
 
         self.local_mount = False
         self.bus_mounted = False
@@ -154,7 +156,7 @@ class StorageAccess(FwComponentGadget):
         # There is not a circumstance where it would be a good idea to allow the user to do this via umount so only on
         # __del__ should it be called to remove from loopback
 
-        super().debug("Storage class has been successfully removed")
+        super().debug("Storage class: Successfully removed")
         return
 
     # This code is derived from code from dive into python. Thanks Mark <3
@@ -169,7 +171,7 @@ class StorageAccess(FwComponentGadget):
             fs_size /= multiple
             if fs_size < multiple:
                 return '{0:.1f} {1}'.format(fs_size, suffix)
-        raise ValueError('Filesystem out of bounds (this is an easy fix if necessary)')
+        raise ValueError('Filesystem out of bounds (Why is it over 999 TB?!)')
 
     # Overwriting the default sizeof method
     def __sizeof__(self):
@@ -181,12 +183,14 @@ class StorageAccess(FwComponentGadget):
     def mountlocal(self, directory="./fs/", read_only=False):  # make this more unique for a default folder
         # Mount the file system locally for amending of any desc (unless RO)
 
+        # Should mount the loopback here instead of at the start
+
         # The directory we intend to mount to
         self.directory = directory
 
         # When the user tries to mount us on a non existent directory
         if not os.path.exists(self.directory):
-            super().debug("No file system exists at " + directory + "\nCreating folder")
+            super().debug("Directory Traversal failure: No directory at " + directory + "\nCreating folder")
             os.mkdir(self.directory)
 
         if read_only:
@@ -197,17 +201,16 @@ class StorageAccess(FwComponentGadget):
 
     def mountbus(self, write_block=False):
         # Mount over USB
-        #
         if write_block:
             # modprobe g_mass_storage ro=1 file=foo.bar
             super().vendor_id = "ro=1"  # This only accepts y or 1 for true
             super().product_id = "file=" + self.directory + self.file_name
-            super().enable()
-            super().debug("Mounted over bus (RO)")  # mount RO
         else:
             # modprobe g_mass_storage file=foo.bar
             super().vendor_id = "file=" + self.directory + self.file_name
-            super().debug("Mounted over bus")  # mount norm
+
+        super().enable()
+        super().debug("Mounted over bus. RO: " + write_block.__str__())
         self.bus_mounted = True
         return
 
@@ -215,7 +218,7 @@ class StorageAccess(FwComponentGadget):
         subprocess.run(["umount", self.directory])  # un-mount
         super().debug("The filesystem was unmounted with command umount " + self.directory)
         if self.directory == "./fs/":
-            super().debug("    Default directory was used; it will now be removed")
+            super().debug("   Default directory was used; it will now be removed")
             os.removedirs("fs")
         self.local_mount = False
         return
@@ -242,68 +245,3 @@ class StorageAccess(FwComponentGadget):
             super().debug("Filesystem is mounted on " + self.directory)
             self.unmountlocal()
         return
-
-
-# debugging
-if __name__ == '__main__':
-    bp = "\u2022"
-
-    print("This is an example run of specifically the storage class"
-          "The intent is to:\n" +
-          bp + " Open a new file system\n" +
-          bp + " Mount locally\n" +
-          bp + " Add a file\n" +
-          bp + " Close the file system\n" +
-          bp + " Confirm the closure\n" +
-          bp + " Reopen the file system\n" +
-          bp + " Read from it\n" +
-          bp + " Close it again\n"
-               "This will be done with two classes in debug mode")
-
-    print("Starting Test One")
-    TestOne = StorageAccess(debug=True)
-
-    print("Size " + TestOne.__sizeof__())
-
-    TestOne.mountlocal()
-
-    if not os.path.exists(TestOne.directory):
-        print("TEST ONE: The file system did not make a directory correctly")
-        exit(1)
-
-    subprocess.run(["touch", TestOne.directory + "Test\ File"])
-    print("Should've created a file there")
-
-    if not os.path.isfile(TestOne.directory + "Test\ File"):
-        print("Did not create a file")
-        exit(1)
-
-    test_one_file = TestOne.file_name
-    test_one_directory = TestOne.directory
-    print("Attributes of TestOne are saved")
-
-    TestOne.unmount()
-    del TestOne
-
-    if os.path.exists(test_one_directory):
-        if os.path.isfile("./" + test_one_directory + "/" + test_one_file):
-            print("The file system did not unmount correctly")
-            exit(1)
-
-    print("Starting Test Two")
-    TestTwo = StorageAccess(fs=test_one_file, old_fs=True, debug=True)
-
-    print("Size " + TestTwo.__sizeof__())
-
-    TestTwo.mountlocal("./TestTwo/", True)
-
-    if not os.path.exists(TestTwo.directory):
-        print("TEST TWO: The file system did not mount correctly")
-        exit(1)
-
-    if not os.path.isfile(TestTwo.directory + "Test\ File"):
-        print("TEST TWO: Could not see file")
-        exit(1)
-
-    del TestTwo
-    exit(0)
