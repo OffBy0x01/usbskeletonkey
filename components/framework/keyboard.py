@@ -114,7 +114,8 @@ class Keyboard(FwComponentGadget):
         }
 
         self.command_equivalent = {
-            "CTRL-ALT-DELETE": "left-control left-alt delete"
+            "CTRL-ALT-DELETE": "left-ctrl left-alt delete",
+            "CTRL-SHIFT-ESC": "left-ctrl left-shift escape"
 
         }
 
@@ -137,29 +138,22 @@ class Keyboard(FwComponentGadget):
                             shell=True)
 
     def send_data(self, data):
-        print("SENDING DATA: " + data)
+        self.debug("SENDING DATA: " + data)
         # TODO ADD G_HID CONTROL HERE
-
-    def __resolve_key(self, key):
-        key_eqv = self.key_equivalent.get(key, '')
-        # self.debug(key + " -> resolve key -> " + key_eqv)
-        return key_eqv
 
     def __resolve_ascii(self, character):
         resolved_character = ""
+        # If character is uppercase letter
         if character.isalpha() and character.isupper():
             resolved_character = "left-shift %s" % (character.lower())
+        # If character is a-z or 0-9
         elif character.isalnum():
             # Character should remain the same
             resolved_character = character
         else:
-            # special characters need string equivalents
+            # Characters must be special character
             resolved_character = self.special_char_equivalent.get(character, "")
 
-        if character in ("", None):
-            self.debug("curr_char is None")
-
-        # self.debug(character + " -> resolve ASCII -> " + resolved_character)
         return resolved_character
 
     def __resolve_args(self, args):
@@ -194,7 +188,7 @@ class Keyboard(FwComponentGadget):
         self.debug("COMMAND IN = " + command)
         self.debug("ARG/S IN = " + args)
 
-        # Resolve the line
+        # Resolve current line:
         # ------------------
         if command == "REM":
             # Comment, so do nothing
@@ -212,12 +206,16 @@ class Keyboard(FwComponentGadget):
                 delay, _, string = args.partition(' ')
 
                 try:
-                    delay = int(delay.strip() / 1000.0)
-                except ...:
+                    # Attempt to convert delay to int
+                    delay = int(delay.strip())
+                    delay /= 1000.0
+                except ValueError:
+                    # Delay was not an int
                     self.debug("BAD DELAY FORMAT")
                     self.debug("USING DEFAULT DELAY ( " + str(self.default_delay) + "ms)")
                     delay = self.default_delay / 1000.0
                 else:
+                    # Delay was an int
                     self.debug("DELAY_STRING FOR " + str(delay))
 
                 for character in string:
@@ -231,18 +229,21 @@ class Keyboard(FwComponentGadget):
                 delay, _, string = args.partition(' ')
 
                 try:
+                    # Attempt to convert delay to int
                     delay = int(delay.strip())
                     delay /= 1000.0
                 except ValueError:
+                    # Delay was not an int
                     self.debug("BAD DELAY FORMAT")
                     self.debug("USING DEFAULT DELAY ( " + str(self.default_delay) + "ms)")
                     delay = self.default_delay / 1000.0
                 else:
+                    # Delay was an int
                     self.debug("DELAY_STRING FOR " + str(delay))
                 time.sleep(delay)
 
-        elif command in ("CTRL", "CONTROL", "ALT", "SHIFT", "GUI", "ENTER", "TAB"):
-            resolved_command = self.__resolve_key(command)
+        elif command in self.key_equivalent:
+            resolved_command = self.key_equivalent.get(command, '')
             if not args:
                 self.send_data(resolved_command)
             else:
@@ -253,13 +254,16 @@ class Keyboard(FwComponentGadget):
         elif command.count("-") == 1:  # TODO - Implement similar interpreter for multi - commands
             command_1, unused, command_2 = command.partition("-")
             self.send_data(
-                self.__resolve_key(command_1) + " " + self.__resolve_key(command_2) + self.__resolve_args(args))
+                self.key_equivalent.get(command_1, '') + " " + self.key_equivalent.get(command_2,
+                                                                                       '') + self.__resolve_args(args))
 
         elif command == "MENU":
             if not args:
                 return ""
             else:
-                self.send_data(self.__resolve_key("GUI") + " " + self.__resolve_key("ALT") + self.__resolve_args(args))
+                self.send_data(
+                    self.key_equivalent.get("GUI", '') + " " + self.key_equivalent.get("ALT", '') + self.__resolve_args(
+                        args))
 
         elif command == "REPEAT":
             # Repeat last command
