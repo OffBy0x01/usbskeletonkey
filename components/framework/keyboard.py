@@ -6,6 +6,27 @@ from components.framework.FwComponentGadget import FwComponentGadget
 
 
 class Keyboard(FwComponentGadget):
+    """
+       Class that handles all Keyboard functionality
+
+           Args:
+              enabled:          boolean - enable/disable instant start
+              debug:            boolean - enable/disable debug features
+              id_vendor         string - vendor id to be used by keyboard
+              id_product        string - product id to be used by keyboard
+
+          functions:
+              write             write string using emulated keyboard
+              run               run a specified ducky script
+
+          Returns:
+              Keyboard Object
+
+          Raises:
+              IOError on failure to send data to target device
+              ValueError on bad delay/string_delay
+      """
+
     def __init__(self, keyboard_layout="default.keyboard", language_layout="default.language", enabled=False,
                  debug=False):
 
@@ -33,7 +54,7 @@ class Keyboard(FwComponentGadget):
         self.last_command = ""
 
         # still to add: return, enter, esc, escape, backspace, meta, ctrl, shift, alt (Like ducky)
-        self.special_char_equivalent = {
+        self.__special_char_equivalent = {
             " ": "space",
             "	": "tab",  # For the rare occasion
             "`": "backquote",
@@ -72,7 +93,7 @@ class Keyboard(FwComponentGadget):
             "\n": ""  # We don't like your kind around here
         }
 
-        self.key_equivalent = {
+        self.__key_equivalent = {
             # Standard Commands
             "GUI": "left-meta",
             "WINDOWS": "left-meta",
@@ -111,37 +132,67 @@ class Keyboard(FwComponentGadget):
             "SPACE": "space",
             "TAB": "tab",
 
+            # TODO ADD F1-12
         }
 
-        self.command_equivalent = {
+        self.__command_equivalent = {
             "CTRL-ALT-DELETE": "left-ctrl left-alt delete",
             "CTRL-SHIFT-ESC": "left-ctrl left-shift escape"
 
         }
 
     # Handles string write to target
-    def write(self, string):
-        curr_char = ''
+    def write(self, string=""):
+        """
+        :param string: what is to be typed with keyboard
+        :return None:
 
-        for c in string:
-            if c.isalpha() and c.isupper():
-                curr_char = "left-shift %s" % (c.lower())
-            elif c.isalpha or c.isdigit:
-                curent_char = c
-            else:
-                # special characters need string equivalents
-                curr_char = self.special_char_equivalent.get(c, 0)
-                if curr_char is None:
-                    super().debug("curr_char is None")
+        """
 
-            subprocess.call("%s | %s/hid-gadget /dev/hidg0 keyboard > /dev/null" % (curr_char, "DEFAULT_PATH"),
-                            shell=True)
+        if string:
+            for character in string:
+                keypress = self.__resolve_ascii(character)
+                if keypress:
+                    self.__send_data(keypress)
 
-    def send_data(self, data):
+    def run(self, script):
+        """
+        :param script:
+        :return :
+        """
+        path = os.path.dirname(os.path.realpath(__file__))
+        with open(path + "/../scripts/" + script, "r") as file:
+            for line in file:
+                self.resolve_line(current_line=line)
+            self.debug("RESOLVE DONE")
+        return
+
+    def __send_data(self, data):
+        """
+        NOT FOR INDIV USE
+
+        :param data: what is to be typed with keyboard
+        :return boolean: whether send was successful
+        """
+
         self.debug("SENDING DATA: " + data)
-        # TODO ADD G_HID CONTROL HERE
+        try:
+            output = subprocess.call("%s | /home/pi/skeleton-key/hid-gadget /dev/hidg0 keyboard > /dev/null" % data)
+            if "rror" in output:
+                raise IOError("Failure to send data")
+        except IOError:
+            self.debug("send_data FAILURE")
+            return False
+        return True
+
 
     def __resolve_ascii(self, character):
+        """
+        NOT FOR INDIV USE
+
+        :param character:
+        :return resolved character:
+        """
         resolved_character = ""
         # If character is uppercase letter
         if character.isalpha() and character.isupper():
@@ -152,23 +203,29 @@ class Keyboard(FwComponentGadget):
             resolved_character = character
         else:
             # Characters must be special character
-            resolved_character = self.special_char_equivalent.get(character, "")
+            resolved_character = self.__special_char_equivalent.get(character, "")
 
         return resolved_character
 
     def __resolve_args(self, args):
+        """
+        NOT FOR INDIV USE
+
+        :param args:
+        :return resolved  arguments:
+        """
         args = args.split()
         resolved_args = ""
         if len(args) < 6:
             for arg in args:
                 # is arg a key?
-                arg_resolved = self.key_equivalent.get(arg, "")
+                arg_resolved = self.__key_equivalent.get(arg, "")
                 if not arg_resolved:
                     # is arg ascii character?
                     arg_resolved = self.__resolve_ascii(arg)
                 if not arg_resolved:
                     # is arg command?
-                    arg_resolved = self.command_equivalent.get(arg, "")
+                    arg_resolved = self.__command_equivalent.get(arg, "")
 
                 # if arg has been resolved, add it to resolved args
                 if arg_resolved:
@@ -176,7 +233,10 @@ class Keyboard(FwComponentGadget):
             return resolved_args
 
     def resolve_line(self, current_line):
-
+        """
+        :param current_line:
+        :return resolved line:
+        """
         # If line is blank, skip
         if current_line == '\n':
             return
@@ -199,7 +259,7 @@ class Keyboard(FwComponentGadget):
                 for character in args:
                     keypress = self.__resolve_ascii(character)
                     if keypress:
-                        self.send_data(keypress)
+                        self.__send_data(keypress)
 
         elif command == "STRING_DELAY":
             if args:
@@ -222,7 +282,7 @@ class Keyboard(FwComponentGadget):
                     keypress = self.__resolve_ascii(character)
                     time.sleep(delay)
                     if keypress:
-                        self.send_data(keypress)
+                        self.__send_data(keypress)
 
         elif command == "DELAY":
             if args:
@@ -242,27 +302,28 @@ class Keyboard(FwComponentGadget):
                     self.debug("DELAY_STRING FOR " + str(delay))
                 time.sleep(delay)
 
-        elif command in self.key_equivalent:
-            resolved_command = self.key_equivalent.get(command, '')
+        elif command in self.__key_equivalent:
+            resolved_command = self.__key_equivalent.get(command, '')
             if not args:
-                self.send_data(resolved_command)
+                self.__send_data(resolved_command)
             else:
-                self.send_data(resolved_command + self.__resolve_args(args))
+                self.__send_data(resolved_command + self.__resolve_args(args))
 
         # Resolve multi-part commands
         # ---------------------------
         elif command.count("-") == 1:  # TODO - Implement similar interpreter for multi - commands
             command_1, unused, command_2 = command.partition("-")
-            self.send_data(
-                self.key_equivalent.get(command_1, '') + " " + self.key_equivalent.get(command_2,
+            self.__send_data(
+                self.__key_equivalent.get(command_1, '') + " " + self.__key_equivalent.get(command_2,
                                                                                        '') + self.__resolve_args(args))
 
         elif command == "MENU":
             if not args:
                 return ""
             else:
-                self.send_data(
-                    self.key_equivalent.get("GUI", '') + " " + self.key_equivalent.get("ALT", '') + self.__resolve_args(
+                self.__send_data(
+                    self.__key_equivalent.get("GUI", '') + " " + self.__key_equivalent.get("ALT",
+                                                                                           '') + self.__resolve_args(
                         args))
 
         elif command == "REPEAT":
@@ -272,10 +333,3 @@ class Keyboard(FwComponentGadget):
 
             # Done in a "weird" way so that delays etc still work
         self.last_command = current_line
-
-    def resolve(self, script):
-        path = os.path.dirname(os.path.realpath(__file__))
-        with open(path + "/../scripts/" + script, "r") as file:
-            for line in file:
-                self.resolve_line(current_line=line)
-            self.debug("DONE")
