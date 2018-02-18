@@ -1,6 +1,6 @@
 import subprocess
 
-from framework.FwComponent import FwComponent
+from components.framework.FwComponent import FwComponent
 
 
 class FwComponentGadget(FwComponent):
@@ -42,10 +42,10 @@ class FwComponentGadget(FwComponent):
         """Enable a disabled framework object"""
         if not self.enabled:
             subprocess.call("modprobe %s %s %s" % (self.driver_name, self.vendor_id, self.product_id), shell=True)
-            super().debug(self.enabled)
+            self.debug(self.enabled)
             self.enabled = True
         else:
-            super().debug("Driver already enabled: %s" % self.enabled)
+            self.debug("Driver already enabled: %s" % self.enabled)
 
     def disable(self):
         """Disable an enabled framework object"""
@@ -53,12 +53,9 @@ class FwComponentGadget(FwComponent):
             subprocess.call("modprobe -r %s" % self.driver_name, shell=True)
             self.enabled = False
         else:
-            super().debug("Driver already disabled: %s" % self.enabled)
+            self.debug("Driver already disabled: %s" % self.enabled)
 
     def status(self):
         """Return the driver status"""
-        if self.enabled:
-            super().debug("Driver enabled: %s" % self.enabled)
-        else:
-            super().debug("Driver disabled %s" % self.enabled)
+        self.debug("Driver enabled: %s" % self.enabled)
         return self.enabled

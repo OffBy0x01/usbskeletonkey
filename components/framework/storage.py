@@ -2,7 +2,7 @@ import os
 import subprocess
 from datetime import datetime
 
-from framework.FwComponentGadget import FwComponentGadget
+from components.framework.FwComponentGadget import FwComponentGadget
 
 
 class StorageAccess(FwComponentGadget):
@@ -110,7 +110,6 @@ class StorageAccess(FwComponentGadget):
                 super().debug("File discovered")
             else:
         # TODO Die
-
 
         # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],

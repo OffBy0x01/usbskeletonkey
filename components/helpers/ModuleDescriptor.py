@@ -1,4 +1,3 @@
-
 class ModuleDescriptor(object):
     """
     Desc:
@@ -16,26 +15,29 @@ class ModuleDescriptor(object):
 
     """
 
-    def __init__(self, module_name, module_desc, options, fw_requirements, output_format, version=1, module_help ="You're on your own buddy!"):
+    def __init__(self, module_name, module_desc, options, fw_requirements, output_format, version=1,
+                 module_help="You're on your own buddy!"):
         self.module_name = module_name
         self.module_desc = module_desc
-
         self.options = {
             "enabled": False
-        }.update(options)
+        }
+
+        self.options.update(options)
 
         self.fw_requirements = {
             "keyboard": False,
             "network": False,
             "storage": False
-            }.update(fw_requirements)
+        }
+
+        self.fw_requirements.update(fw_requirements)
 
         self.output_format = {
             "success": bool
-        }.update(output_format)
+        }
+
+        self.output_format.update(output_format)
 
         self.version = version
         self.module_help = module_help
-
-
-
