@@ -1,16 +1,16 @@
 USB Skeleton Key
 =================
-
-Skeleton Key is a physical pen-testing tool using a micro-controller
+Skeleton Key is a physical pen-testing framework that makes use of a Raspberry Pi micro-controller to provide a portable and streamline Enumeration/Exploitation capabilities
 
 Features
 ---------
+  * Enumeration
+  * NMAP
 
-- NMAP
-- Enumeration
-
-Installation 
+Setup
 -------------
+When making use of the Pi we expect a specifically crafted Raspberry Pi Zero in order to provide status lights (Although this is optional).
+The HAT we make use of by default is the [Blinkt kit](https://shop.pimoroni.com/products/blinkt) and we also make use of a [USB Stem kit](https://shop.pimoroni.com/products/zero-stem-usb-otg-connector) to provide a USB stick look and feel.
 
 Install USB Skeleton Key by running:
 
@@ -20,14 +20,14 @@ Install USB Skeleton Key by running:
 Contribute
 -----------
 
-- Issue Traker: github.com/usbskeletonkey/usbskeletonkey/issues
-- Source Code: github.com/usbskeletonkey/usbskeletonkey
+- [Issue Traker](github.com/usbskeletonkey/usbskeletonkey/issues)
+- [Source Code](github.com/usbskeletonkey/usbskeletonkey)
 
 Support
 --------
 
 If you are having any issues, please let us know.
-We have a mailing list located at: usbskeletonkey@
+We have a mailing list located at: <usbskeletonkey@temporarydomain.scot>
 
 License
 --------
@@ -92,14 +92,13 @@ Bugs
 Interface is not perfect therefore, will at times, throw errors. Many of these errors have been fixed or altered
 but some may still creep in. For this, we ask that you report any bugs or even write a patch to fix them.
 
-If Skeleton Key does not act in the way you expect - please update to the latest version available from
-https://github.com/usbskeletonkey. If the problem persists do some research to determine if the error has already 
+If Skeleton Key does not act in the way you expect - please update to the [latest version](https://github.com/usbskeletonkey). If the problem persists do some research to determine if the error has already 
 been discovered and addressed. Try seraching for the problem or error message on Google, if nothing comes up please
-feel free to create an Issue on our tracker (https://github.com/usbskeletonkey) and/or may a bug report to
-<usbskeletonkey@ >
+feel free to create an [Issue](https://github.com/usbskeletonkey) and/or may a bug report to
+<usbskeletonkey@temporarydomain.scot>
 
-If you are able to write a patch improving Nmap or fixing a bug, that is even better! Instructions for submitting 
-patches or git pull requests are available from https://github.com/nmap/usbskeletonkey
+If you are able to write a patch improving Nmap or fixing a bug, that is even better!
+Instructions for submitting patches or git pull requests are available [here](https://github.com/nmap/usbskeletonkey)
 
 
 network.py
@@ -124,12 +123,14 @@ As user interaction is pretty much non-existant with this componenent there is v
 - Windows systems prioritise "new" ethernet network devices over existing ones, so unfortunately it is only possible to use network emulation to capture network traffic once during an attack. This is due to fact that the target system won't automatically connect to the "ethernet" adapter as the device would be known to the system after its first use.   
 
 
-
 Authors
 -------
+[Andrew Calder](https://github.com/AR-Calder) <1503321@uad.ac.uk>
 
-Andrew Calder 		<1503321@uad.ac.uk>
-Corey Forbes 		<1500812@uad.ac.uk>
-Elis Richmond		<1501363@uad.ac.uk>
-Jonathan Ross		<1500598@uad.ac.uk>
-Michaela Stewart	<1501125@uad.ac.uk>
+[Corey Forbes](https://github.com/yeroc-sebrof) <1500812@uad.ac.uk>
+
+[Ellis Richmond](https://github.com/EGRichmond) <1501363@uad.ac.uk>
+
+[Jonathan Ross](https://github.com/Joh98) <1500598@uad.ac.uk>
+
+[Michaela Stewart](https://github.com/muicheka) <1501125@uad.ac.uk>
