@@ -36,10 +36,6 @@ class StorageAccess(FwComponentGadget):
 
         Put disclaimers on scary bits of code
 
-        If NULL: filesystem make one
-
-        Make a graceful kill method
-
     """
     '''
     Notes:
@@ -92,9 +88,9 @@ class StorageAccess(FwComponentGadget):
         super().debug("Starting Module: Storage Access")
 
         # Variable init
-        self.fs = fs
+        self.fs = fs.strip().strip("\n")
         self.old_fs = old_fs
-        self.directory = directory
+        self.directory = directory.strip().strip("\n")
 
         # In the event the user wants a default value
         if readable_size is None:
@@ -127,7 +123,7 @@ class StorageAccess(FwComponentGadget):
 
         super().debug("Attempting to mount on " + self.loopback_device +
                       "Running Command - losetup " + self.loopback_device + " " + self.directory + self.file_name)
-        # When using 'losetup' offset should not be required in our use case as we will be using a single partition
+        # THIS LINE IS FUCKED AND I DONT KNOW WHY
         loop_output = subprocess.run(["losetup", self.loopback_device, self.directory + self.file_name],
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')
 
@@ -171,7 +167,7 @@ class StorageAccess(FwComponentGadget):
             fs_size /= multiple
             if fs_size < multiple:
                 return '{0:.1f} {1}'.format(fs_size, suffix)
-        raise ValueError('Filesystem out of bounds (Why is it over 999 TB?!)')
+        raise ValueError('Filesystem out of bounds (Why is it over 1023 TB?!)')
 
     # Overwriting the default sizeof method
     def __sizeof__(self):
@@ -231,17 +227,16 @@ class StorageAccess(FwComponentGadget):
 
     def unmount(self):
         super().debug("Starting unmount")
-        if not self.local_mount:
-            if not self.bus_mounted:
-                super().debug("Nothing was mounted")
-                return
 
-            else:
-                super().debug("Filesystem is mounted on the bus")
-                self.unmountbus()
-                return
-
-        else:
+        if self.local_mount:
             super().debug("Filesystem is mounted on " + self.directory)
             self.unmountlocal()
+            return
+
+        if self.bus_mounted:
+            super().debug("Filesystem is mounted on the bus")
+            self.unmountbus()
+            return
+
+        super().debug("Nothing was mounted")
         return
