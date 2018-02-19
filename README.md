@@ -125,11 +125,11 @@ As user interaction is pretty much non-existant with this componenent there is v
 
 
 
-Author
+Authors
 -------
 
-Andrew Calder 		<>
-Corey Forbes		<>
-Elis Richmond		<>
+Andrew Calder 		<1503321@uad.ac.uk>
+Corey Forbes 		<1500812@uad.ac.uk>
+Elis Richmond		<1501363@uad.ac.uk>
 Jonathan Ross		<1500598@uad.ac.uk>
 Michaela Stewart	<1501125@uad.ac.uk>
