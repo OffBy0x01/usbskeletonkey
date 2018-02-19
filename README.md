@@ -34,7 +34,7 @@ License
 
 The project is licensed under the 
 
-================
+
 skeleton-key.py
 ================
 
@@ -101,7 +101,7 @@ feel free to create an Issue on our tracker (https://github.com/usbskeletonkey) 
 If you are able to write a patch improving Nmap or fixing a bug, that is even better! Instructions for submitting 
 patches or git pull requests are available from https://github.com/nmap/usbskeletonkey
 
-================
+
 network.py
 ================
 This framework component of Skeleton Key requries no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules to operate:
