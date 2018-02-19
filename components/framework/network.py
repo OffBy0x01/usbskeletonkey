@@ -69,20 +69,13 @@ class FwComponentNetwork(FwComponentGadget):
     # Turning on USB Ethernet adapter and enabling DHCP server
     def up(self):
         self.enable()
-        #  subprocess.call(["./shell_scripts/usb_net_up.sh"])  # Run shell script to enable DHCP server and spoof ports
         self.debug(subprocess.call("ifup usb0", shell=True))  # Up usb0 interface
         self.debug(subprocess.call("ifconfig usb0 up", shell=True))  # Up networking on usb0
-        self.debug(
-            subprocess.call("/sbin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
+        self.debug(subprocess.call("/sbin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
         self.debug(subprocess.call("/etc/init.d/isc-dhcp-server start", shell=True))  # Start DHCP server
-
-        # Does things (stolen from poisontap)
-        self.debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True))  # No idea what this does
-        self.debug(
-            subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
-                            shell=True))  # Bind port 80 to port 1337
-        self.debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53",
-                                   shell=True))  # Start dnsspoof on port 53
+        self.debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True))  # Enable IPv4 forwarding
+        self.debug(subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337", shell=True))  # Bind port 80 to port 1337
+        self.debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53", shell=True))  # Start dnsspoof on port 53
         self.state = "usb0 should be up"
         if self.debug:  # Debug text
             self.debug(self.state)
@@ -90,12 +83,15 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Turning off USB Ethernet adapter
     def down(self):
-        #  subprocess.call(["./shell_scripts/usb_net_down.sh"])  # Down adapter
-        self.debug(subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True))
-        self.debug(
-            subprocess.call("/sbin/route del -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
+        self.debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=0", shell=True))  # Disable IPv4 forwarding
+        self.debug(subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True))  # Stop DHCP server
+        self.debug(subprocess.call("/sbin/route del -net 0.0.0.0/0 usb0", shell=True))  # Remove route for all IPv4 addresses
+
+        # Down adapter
         self.debug(subprocess.call("ifconfig usb0 down", shell=True))
         self.debug(subprocess.call("ifdown usb0", shell=True))
+
+        # Debug
         self.state = "usb0 down"
         self.debug(self.state)
 
@@ -111,7 +107,3 @@ class FwComponentNetwork(FwComponentGadget):
         super().debug(error_message)  # Debug text
         self.disable()  # Detach from bus
         return
-
-# TODO #1 network over USB handler
-# TODO #2 offline connection status check (must be able to test for physical connection not just internet)
-# TODO #3 Read through PiKey, poisontap Source, do some general g_ether research - see what others are using it for
