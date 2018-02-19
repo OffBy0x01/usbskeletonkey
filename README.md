@@ -112,7 +112,11 @@ Features
 ---------
 
 - Turns the rapsberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device)
-- Uses code from the "poisiontap" project to allow for the pi to act as a DHCP server and capture network traffic
+- Uses code from the "poisiontap" project to allow for the pi to act as a DHCP server and capture network traffic:
+	- Adds routes for all ipv4 addresses
+	- Starts DHCP server and enables ipv4 forwarding
+	- Binds port 80 to port 1337
+	- Starts dnsspoof on port 53
 
 Bugs
 -----
@@ -120,7 +124,7 @@ As user interaction is pretty much non-existant with this componenent there is v
 
 - Due to how Linux and Mac systems interact with network devices the capturing of network traffic is only possible on Windows systems currently. (NEED TO RE-TEST THIS)
 
-- Windows systems prioritise "new" ethernet network devices over existing ones, so unfortunately it is only possible to use network emulation to capture network traffic once during an attack. This is due to fact that the target system won't automatically connect to the "ethernet" adapter as the device would be known to the system after its first use.   
+- Windows systems prioritise "new" ethernet network devices over existing ones, so unfortunately it is only possible to use network emulation to capture network traffic once during an attack. This is due to fact that the target system won't automatically connect to the "ethernet" adapter as the device will be known to the system after its first use.   
 
 
 Authors
