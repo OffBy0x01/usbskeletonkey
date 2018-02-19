@@ -23,6 +23,7 @@ cp config/resolv.conf /etc/resolv.conf  # Set DNS server
 cp config/dhcpd.conf /etc/dhcp/dhcpd.conf  # Set subnet for the DHCP server
 cp config/isc-dhcp-server /etc/default/isc-dhcp-server  # Set interface for DHCP server
 
+# TODO Comments
 if ! uname -a | grep -q "4.4.50+"; then
 	BRANCH=master rpi-update 5224108
 	reboot now
@@ -47,6 +48,7 @@ else
 	echo "dwc2" | tee --append /etc/modules > /dev/null
 fi
 
+# TODO Test this
 # Install python 3.6
 ( cd ~ ;
 bash <(curl -S https://github.com/jjhelmus/berryconda/releases/download/v2.0.0/Berryconda3-2.0.0-Linux-armv6l.sh) ;
