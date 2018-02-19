@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# MUST run as root!
+# Used to rectify issues with the wlan0 adapter
+# By resetting the adapter
 
 ip addr flush dev wlan0  # Flush wlan0
 
