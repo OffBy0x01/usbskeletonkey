@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Ensure DHCP server is stopped
+/etc/init.d/isc-dhcp-server stop
+
 # Copy network configs
 cp ../../../config/interfaces /etc/network/interfaces  # Set interfaces for usb0
 cp ../../../config/dhcpcd.conf /etc/dhcpcd.conf  # Set static IPs for wlan0 and usb0
