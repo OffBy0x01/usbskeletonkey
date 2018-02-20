@@ -201,7 +201,7 @@ class SkeletonKey(object):
         elif "format" in config_selection[1]:
             print("Output Format: ", module.output_format)
         else:
-            raise ValueError("ERROR: Please enter a valid attribute")
+            print("ERROR: Please enter a valid attribute")
 
     def set_with_att(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
@@ -223,7 +223,23 @@ class SkeletonKey(object):
         if flag:
             pass
         else:
-            raise ValueError("ERROR: Please enter a valid attribute to set")
+            print("ERROR: Please enter a valid attribute to set")
+            pass
+
+    def show_select_option(self, config_selection, user_selection):
+        # set flag to display error message if option is invalid
+        flag = False
+        module = self.module_list[user_selection - 1]
+        # if option[key] is equal to the second word
+
+        for x in module.options:
+            if config_selection[1] == "option" and x == config_selection[2]:
+                print(x, " : ", module.options[x])
+                flag = True
+        if flag:
+            pass
+        else:
+            print("ERROR: Please enter a valid option to show")
             pass
 
     def module_configuration(self, user_choice):
@@ -252,6 +268,8 @@ class SkeletonKey(object):
                     print("Please select an attribute to set in the format 'set [attribute]'")
                     # provide options on what is available to set
                     pass
+                else:
+                    print("Please enter a valid keyword.")
             # If the users enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
             elif len(config_selection) == 2:
                 if config_selection[0] == "show":
@@ -262,15 +280,22 @@ class SkeletonKey(object):
                     # run method to set selected attribute
                     self.set_with_att(config_selection, user_choice)
                     pass
+                else:
+                    print("Please enter a valid command")
             elif len(config_selection) == 3:
                 if config_selection[0] == "set":
                     # run method to set selected attribute
                     self.set_with_att(config_selection, user_choice)
                     pass
+                if config_selection[0] == "show":
+                    self.show_select_option(config_selection, user_choice)
+                    pass
                 elif config_selection[0] == "show":
                     # TODO: cleaner way to do this
-                    raise ValueError("ERROR: Invalid 'show' command - too many arguments")
+                    print("ERROR: Invalid 'show' command - too many arguments")
                     pass
+                else:
+                    print("Please enter a valid command.")
             else:
                 print("wtf")
                 pass
@@ -288,26 +313,27 @@ class SkeletonKey(object):
             # Communicating to user how to use the Interface.
             print("\n")
             print("Enter 0 to exit")
-            user_selection = int(input("Please enter the module you would like to configure. (Based on index)"))
-
-            # Based on user input - moves to respective method
-            if user_selection == 0:
-                print("Exiting Program...")
-                exit_flag = True
-                pass
-            if user_selection == str:
-                raise ValueError("ERROR: Invalid selection - string instead of integer.")
-                pass
-            elif user_selection < 0 or user_selection > len(self.module_list):
-                raise ValueError("ERROR: Invalid index selection. Please enter a valid selection.")
-                pass
+            try:
+                user_selection = int(input("Please enter the module you would like to configure. (Based on index)"))
+            except ValueError:
+                print("ERROR: Invalid selection - string instead of integer.")
+                return -1
             else:
-                if not exit_flag:
-                    return user_selection
+                # Based on user input - moves to respective method
+                if user_selection == 0:
+                    print("Exiting Program...")
+                    exit_flag = True
+                    pass
+                elif user_selection < 0 or user_selection > len(self.module_list):
+                    print("ERROR: Invalid index selection. Please enter a valid selection.")
+                    pass
                 else:
-                    # Ending program
-                    print("Thank you for using 'Skeleton Key'.")
-                    exit(0)
+                    if not exit_flag:
+                        return user_selection
+                    else:
+                        # Ending program
+                        print("Thank you for using 'Skeleton Key'.")
+                        exit(0)
 
     def __exit__(self):
         print("Killing Interface...")
@@ -321,6 +347,9 @@ class SkeletonKey(object):
 
 # debugging
 if __name__ == '__main__':
+    selection = -1
     begin = SkeletonKey(debug=True)
-    selection = begin.input_choice()
+    while selection == -1:
+        selection = begin.input_choice()
+
     begin.module_configuration(selection)
