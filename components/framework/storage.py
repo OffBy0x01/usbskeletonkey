@@ -115,16 +115,20 @@ class StorageAccess(FwComponentGadget):
 
         # To find the first available loop back device and claim it
         self.loopback_device = subprocess.run(["losetup", "-f"],
-                                              stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                              stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
 
         if "Permission denied" in self.loopback_device:
             super().debug("Insufficient Permissions: 2.00")
             exit(2.00)
 
         super().debug("Attempting to mount on " + self.loopback_device +
-                      "Running Command - losetup " + self.loopback_device + " " + self.directory + self.file_name)
-        # THIS LINE IS FUCKED AND I DONT KNOW WHY
-        loop_output = subprocess.run(["losetup", self.loopback_device, self.directory + self.file_name],
+                      "Running Command:")
+        super().debug("losetup " + self.loopback_device.strip() + " " + (self.directory + self.file_name))
+
+        super().debug((self.directory + self.file_name))
+
+        loop_output = subprocess.run(["losetup", self.loopback_device,
+                                      (self.directory + self.file_name)],
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
