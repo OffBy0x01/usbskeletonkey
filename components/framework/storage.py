@@ -91,6 +91,7 @@ class StorageAccess(FwComponentGadget):
         self.fs = fs.strip().strip("\n")
         self.old_fs = old_fs
         self.directory = directory.strip().strip("\n")
+        self.mounted_dir = str(None)
 
         # In the event the user wants a default value
         if readable_size is None:
@@ -186,17 +187,17 @@ class StorageAccess(FwComponentGadget):
         # Should mount the loopback here instead of at the start
 
         # The directory we intend to mount to
-        self.directory = directory
+        self.mounted_dir = directory
 
         # When the user tries to mount us on a non existent directory
-        if not os.path.exists(self.directory):
+        if not os.path.exists(self.mounted_dir):
             super().debug("Directory Traversal failure: No directory at " + directory + "\nCreating folder")
-            os.mkdir(self.directory)
+            os.mkdir(self.mounted_dir)
 
         if read_only:
-            subprocess.run(["mount", "-o", "ro", "/dev/" + self.loopback_device, self.directory])  # mount RO
+            subprocess.run(["mount", "-o ro", self.loopback_device, self.mounted_dir])  # mount RO
         else:
-            subprocess.run(["mount", "/dev/" + self.loopback_device, self.directory])  # mount norm
+            subprocess.run(["mount", self.loopback_device, self.mounted_dir])  # mount norm
         return
 
     def mountbus(self, write_block=False):
@@ -215,12 +216,14 @@ class StorageAccess(FwComponentGadget):
         return
 
     def unmountlocal(self):
-        subprocess.run(["umount", self.directory])  # un-mount
+        subprocess.run(["umount", self.mounted_dir])  # un-mount
         super().debug("The filesystem was unmounted with command umount " + self.directory)
-        if self.directory == "./fs/":
+        if self.mounted_dir == "./fs/":
             super().debug("   Default directory was used; it will now be removed")
-            os.removedirs("fs")
+            os.removedirs("./fs")
+
         self.local_mount = False
+        self.mounted_dir = str(None)
         return
 
     def unmountbus(self):
