@@ -32,22 +32,24 @@ if not os.path.exists(TestOne.directory):
     print("TEST ONE: The file system did not make a directory correctly")
     exit(1)
 
-subprocess.run(["touch", TestOne.directory + "Test\ File"])
+file = "Test.txt"
+
+subprocess.run(["touch", TestOne.mounted_dir + file])
 print("Should've created a file there")
 
-if not os.path.isfile(TestOne.directory + "Test\ File"):
+if not os.path.isfile(TestOne.mounted_dir + file):
     print("Did not create a file")
     exit(1)
 
 test_one_file = TestOne.file_name
-test_one_directory = TestOne.directory
+test_one_directory = TestOne.mounted_dir
 print("Attributes of TestOne are saved")
 
 TestOne.unmount()
 del TestOne
 
 if os.path.exists(test_one_directory):
-    if os.path.isfile("./" + test_one_directory + "/" + test_one_file):
+    if os.path.isfile(test_one_directory + test_one_file):
         print("The file system did not unmount correctly")
         exit(1)
 
