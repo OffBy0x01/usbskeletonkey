@@ -41,22 +41,22 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
 
         else:  # if target is just an IP
             if not ipIsValid(target):
-                return "Error: Target is not a valid IP"
+                return "Error: Target is not a valid IP or Range"
 
     if targetIsAFile is True:
         target = "-f " + target  # The target in this case should be the path to a target list
 
-    flags = "-v -I " + interface + " -R -r 5"
-
-    if "self" is not sourceIP:
-        flags = flags + ""
-
-    return subprocess.run(["arp-scan", flags, target], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    if "self" is sourceIP:
+        return subprocess.run(["arp-scan", "-v", "-I " + interface, "-R", "-r 5", target],
+                              stdout=subprocess.PIPE).stdout.decode('utf-8')
+    else:
+        return subprocess.run(["arp-scan", "-v", "-I " + interface, "-R", "-r 5", "-s " + sourceIP, target],
+                              stdout=subprocess.PIPE).stdout.decode('utf-8')
 
 
 def ipIsValid(IP):
     """
-    Checks that the string passed in entirely consists of an IPv4 address
+    Checks that the string passed in entirely consists of an IPv4 address or a range of IP's
 
     Args:
         IP:     string that is being checked as a valid IP
@@ -66,11 +66,15 @@ def ipIsValid(IP):
                     True for valid IP
     """
     # Side note, might need IPv6 support. TODO Check this isn't an issue
-    ipRange = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"  # Will accept only 0-255
+    ipRange = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"  # This checks a number is within 0-255
+    anIPv4 = ipRange + "\." + ipRange + "\." + ipRange + "\." + ipRange  # This regex will check its a IP
 
-    check = re.search("\A" + ipRange + "\." + ipRange + "\." + ipRange + "\." + ipRange + "\Z", IP)
+    anIPv4Range = anIPv4 + "\/[0-2][0-9]|" + anIPv4 + "\/3[0-2]"  # This checks IP ranges such as 192.168.0.0/24
+    # The checks with this one are more lax. Still error prone
 
-    if None == check:
+    check = re.search("\A" + anIPv4 + "\Z|\A" + anIPv4Range + "\Z", IP)
+
+    if check is None:
         return False
     else:
         return True
