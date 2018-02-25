@@ -35,19 +35,21 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
         command = command + ["-f", target]  # The target in this case should be the path to a target list file
 
     else:  # if target is not a file
-        if target is list:
-            for targets in target:
-                if not ipIsValid(target[targets]):
-                    return "Error: Target " + str(targets) + " in list is not a valid IP"
+        if type(target) is list:
+            for current in target:
+                if not ipIsValid(current):
+                    return "Error: Target " + str(current) + " in list is not a valid IP"
             command = command + target
 
-        else:  # if target is just an IP
-
+        elif type(target) is str:  # if target is just an IP
             if not ipIsValid(target):
                 return "Error: Target is not a valid IP or Range"
 
             command = command + [target]
+        else:
+            return "Error: Target is not a string or list"
 
+    print(command)
     return subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
 
