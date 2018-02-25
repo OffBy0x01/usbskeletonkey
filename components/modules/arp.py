@@ -17,14 +17,21 @@ import re
 def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
     """
     Makes use of the arp-scan command.
-    By default makes use of the verbose, random and retry flag.
+    By default makes use of the verbose, random and retry flags.
 
     Target can be a list of IP's or a single IP.
-        This allows for passing in the lists that configs store
+        This allows for passing in the lists (such as that which the configs stores)
+    :param target:          IPv4 address(s) e.g "192.168.0.1", "192.168.0.0/24", ["192.168.0.1", "192.168.0.2"]
+    :param interface:       Defaults to usb0 but can make use of any interface that is available
+    :param sourceIP:        Defaults to self but, for in the niche case its useful, can be changed to another address
+    :param targetIsAFile:   Defaults to False but, when the user wishes to use a file containing addresses this flag can
+                                be set to true and the target can instead be a path to the file.
+
+    :return: output of the command to be parsed
     """
     command = ["arp-scan", "-v", "-I", interface, "-R", "-r", "3"]
 
-    if sourceIP is not "self":
+    if sourceIP is not "self" and ipIsValid(sourceIP):
         command = command + ["-s", sourceIP]
 
     if targetIsAFile is True:
@@ -35,32 +42,33 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
         command = command + ["-f", target]  # The target in this case should be the path to a target list file
 
     else:  # if target is not a file
-        if target is list:
-            for targets in target:
-                if not ipIsValid(target[targets]):
-                    return "Error: Target " + str(targets) + " in list is not a valid IP"
+        if type(target) is list:
+            for current in target:
+                if not ipIsValid(current, iprange=True):
+                    return "Error: Target " + str(current) + " in list is not a valid IP"
             command = command + target
 
-        else:  # if target is just an IP
-
-            if not ipIsValid(target):
+        elif type(target) is str:  # if target is just an IP
+            if not ipIsValid(target, iprange=True):
                 return "Error: Target is not a valid IP or Range"
 
             command = command + [target]
+        else:
+            return "Error: Target is not a string or list"
 
+    print(command)  # Make this a debug
     return subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
 
-def ipIsValid(IP):
+def ipIsValid(IP, iprange=False):
     """
     Checks that the string passed in entirely consists of an IPv4 address or a range of IP's
 
     Args:
-        IP:     string that is being checked as a valid IP
+    :param IP:      string that is being checked as a valid IP
+    :param iprange: Will also allow for IP ranges to be valid
 
-    returns:
-                boolean indicating if the IP is valid
-                    True for valid IP
+    :return: boolean indicating if the IP is valid, True for valid IP
     """
     # Side note, might need IPv6 support. TODO Check this isn't an issue
     ipRange = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"  # This checks a number is within 0-255
@@ -69,7 +77,10 @@ def ipIsValid(IP):
     anIPv4Range = anIPv4 + "\/[0-2][0-9]|" + anIPv4 + "\/3[0-2]"  # This checks IP ranges such as 192.168.0.0/24
     # The checks with this one are more lax. Still error prone
 
-    check = re.search("\A" + anIPv4 + "\Z|\A" + anIPv4Range + "\Z", IP)
+    if iprange:
+        check = re.search("\A" + anIPv4 + "\Z|\A" + anIPv4Range + "\Z", IP)
+    else:
+        check = re.search("\A" + anIPv4 + "\Z", IP)
 
     if check is None:
         return False
