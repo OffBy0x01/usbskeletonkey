@@ -13,6 +13,7 @@
 import subprocess
 import re
 
+
 def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
     """
     Makes use of the arp-scan command.
@@ -21,37 +22,33 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
     Target can be a list of IP's or a single IP.
         This allows for passing in the lists that configs store
     """
+    command = ["arp-scan", "-v", "-I", interface, "-R", "-r", "3"]
+
+    if sourceIP is not "self":
+        command = command + ["-s", sourceIP]
+
     if targetIsAFile is True:
+
         if target is list:
             return "Error: A list of files cannot be scanned"
 
-        target = "-f " + target  # The target in this case should be the path to a target list file
+        command = command + ["-f", target]  # The target in this case should be the path to a target list file
 
     else:  # if target is not a file
         if target is list:
-            # TODO find pythonic method for making a list of ips into one long string
-            concatTargets = str(None)
             for targets in target:
-                if ipIsValid(target[targets]):  # check current IP is legit
-                    concatTargets = concatTargets + target[targets]
-                else:
+                if not ipIsValid(target[targets]):
                     return "Error: Target " + str(targets) + " in list is not a valid IP"
-
-            target = concatTargets  # replace target for later
+            command = command + target
 
         else:  # if target is just an IP
+
             if not ipIsValid(target):
                 return "Error: Target is not a valid IP or Range"
 
-    if targetIsAFile is True:
-        target = "-f " + target  # The target in this case should be the path to a target list
+            command = command + [target]
 
-    if "self" is sourceIP:
-        return subprocess.run(["arp-scan", "-v", "-I", interface, "-R", "-r", "3", target],
-                              stdout=subprocess.PIPE).stdout.decode('utf-8')
-    else:
-        return subprocess.run(["arp-scan", "-v", "-I", interface, "-R", "-r", "3", "-s " + sourceIP, target],
-                              stdout=subprocess.PIPE).stdout.decode('utf-8')
+    return subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
 
 def ipIsValid(IP):
