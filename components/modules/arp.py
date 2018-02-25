@@ -47,10 +47,10 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
         target = "-f " + target  # The target in this case should be the path to a target list
 
     if "self" is sourceIP:
-        return subprocess.run(["arp-scan", "-v", "-I " + interface, "-R", "-r 5", target],
+        return subprocess.run(["arp-scan", "-v", "-I", interface, "-R", "-r", "3", target],
                               stdout=subprocess.PIPE).stdout.decode('utf-8')
     else:
-        return subprocess.run(["arp-scan", "-v", "-I " + interface, "-R", "-r 5", "-s " + sourceIP, target],
+        return subprocess.run(["arp-scan", "-v", "-I", interface, "-R", "-r", "3", "-s " + sourceIP, target],
                               stdout=subprocess.PIPE).stdout.decode('utf-8')
 
 
