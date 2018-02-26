@@ -205,12 +205,8 @@ class StorageAccess(FwComponentGadget):
         return
 
     def unmountlocal(self):
-        subprocess.run(["umount", self.mounted_dir])  # un-mount
+        subprocess.run(["umount", self.mounted_dir], shell=True)  # un-mount
         super().debug("The filesystem was unmounted with command umount " + self.mounted_dir)
-
-        if self.mounted_dir is "./fs/":
-            super().debug("   Default directory was used; it will now be removed")
-            os.removedirs(self.mounted_dir)
 
         super().debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
         subprocess.run(["losetup", "-d", self.loopback_device])
