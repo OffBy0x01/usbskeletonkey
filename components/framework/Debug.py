@@ -8,7 +8,7 @@ class Debug(object):
         self._operations = 0
         self._successful_operations = 0
 
-    def __del__(self):
+    def __exit__(self):
         self.debug(str(self._successful_operations) + "/" + str(self._operations) + " succeeded")
 
     def debug(self, txt=""):

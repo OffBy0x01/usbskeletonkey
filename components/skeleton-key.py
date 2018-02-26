@@ -1,13 +1,11 @@
 import configparser
 import os
-import re
-from pathlib import Path
 
 from components.framework.Debug import Debug
-from components.helpers.ModuleDescriptor import ModuleDescriptor
+from components.helpers.ModuleManager import ModuleManager
 
 
-class SkeletonKey(object):
+class SkeletonKey(ModuleManager, Debug):
     # TODO update descriptor
     """
        Class for the Interface
@@ -31,6 +29,7 @@ class SkeletonKey(object):
       """
 
     def __init__(self, debug=False):
+        super().__init__(debug=debug)
         # Hack for network config (something ellis has placed in - its causing errors just now) TODO: Fix this code
         # subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
         # subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/network/interfaces", shell=True)
@@ -39,9 +38,6 @@ class SkeletonKey(object):
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
                          "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
 
-        self.module_list = []
-        self.fw_debug = Debug(debug=debug)
-
         # Define directory and module paths
         self.main_path = os.path.dirname(os.path.realpath(__file__))
         self.module_path = self.main_path + "/modules"
@@ -49,15 +45,7 @@ class SkeletonKey(object):
 
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
-            self.fw_debug.debug("ERROR: " + self.module_path + " directory does not exist")
-
-        # Get module names from file - no data ported yet
-        self.raw_module_list = self.discover_modules()
-
-        if not len(self.raw_module_list):
-            self.fw_debug.debug("ERROR: No modules found!")
-        else:
-            self.fw_debug.debug(self.raw_module_list)
+            self.debug("ERROR: " + self.module_path + " directory does not exist")
 
         # TODO #3 clean up config parser calls
         '''Load or create config files'''
@@ -98,63 +86,9 @@ class SkeletonKey(object):
         with open('config.ini', 'w') as self.config_file:
             self.config.write(self.config_file)
 
-        self.config = configparser.ConfigParser()
 
-        # (Import | Freak out over) module config
-        for module in self.raw_module_list:
 
-            self.module_config = self.module_path + '/%s.ini' % module
-
-            try:
-                # Attempt to read current module's config file
-                self.fw_debug.debug(self.module_config)
-                Path(self.module_config).resolve()
-
-            except FileNotFoundError:
-
-                # Was unable to read this module, log an error then skip
-                self.fw_debug.debug(module + " config file not found!")
-                continue
-
-            else:
-                # Module config exists, start importing datas
-                self.fw_debug.debug(module + " config file found, importing data")
-                self.config.read(self.module_config)
-
-            try:
-
-                # get  module_desc, options, fw_requirements, output_format, version, module_help
-                current_module = ModuleDescriptor(
-                    module_name=self.config.get(module, 'module_name'),
-                    module_desc=self.config.get(module, 'module_desc'),
-                    version=self.config.get(module, 'version'),
-                    module_help=self.config.get(module, 'module_help'),
-                    # _sections[section] returns as a dictionary
-                    options=self.config._sections['options'],
-                    fw_requirements=self.config._sections['fw_requirements'],
-                    output_format=self.config._sections['output_format']
-                )
-                self.module_list.append(current_module)
-
-            except configparser.Error:
-                self.fw_debug.debug("ERROR: Unable to import module from file")
-                pass
-            else:
-                self.fw_debug.debug("modules loaded:")
-                self.fw_debug.debug([module.module_name for module in self.module_list])
         # TODO WORK OUT WHAT HAPPENS IN ARMED MODE
-
-    def discover_modules(self):
-        # get the module paths from modules directory
-        print("Looking for modules...")
-        module_paths = os.listdir(self.module_path)
-
-        # regex to look for .py files
-        py = re.compile("\.py", re.IGNORECASE)
-        module_paths = filter(py.search, module_paths)
-
-        # identify module name from file path
-        return [os.path.splitext(m)[0] for m in module_paths]
 
     def display_title(self):
         # displays title
