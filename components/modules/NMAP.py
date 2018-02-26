@@ -1,4 +1,5 @@
 import subprocess
+import datetime
 
 
 class NMAP:
@@ -47,7 +48,7 @@ class NMAP:
         self.ip = "192.168.0.1"
         self.service_verbosity_level = "9"
         self.speed = "-T4"
-        self.save_to_file = False
+        self.save_to_file = True
         self.file_name = " > temp.txt"
         self.command = ["nmap"]
 
@@ -65,11 +66,18 @@ class NMAP:
 
         self.command = ["nmap"]  # Reset the command list
         self.check_if_file()  # Check if a file containing targets should be used
+
+        #  Change "noise/speed" levels for the scan
+        self.service_verbosity_level = "9"
+        self.speed = "-T4"
+
         self.command = self.command + ["-sV", "--version-intensity", self.service_verbosity_level,
                                        self.speed, "-O"]  # Build command
 
         # Add the "save output to file" flag to the command if required
         if self.save_to_file:
+            now = datetime.datetime.now()
+            self.file_name = " > NMAP Loud " + str(now.strftime("%d-%m-%Y %H:%M")) + ".txt"
             self.command.append(self.file_name)
 
         print(self.command)  # debug
@@ -90,6 +98,8 @@ class NMAP:
 
         # Add the "save output to file" flag to the command if required
         if self.save_to_file:
+            now = datetime.datetime.now()
+            self.file_name = " > NMAP Quiet " + str(now.strftime("%d-%m-%Y %H:%M")) + ".txt"
             self.command.append(self.file_name)
 
         print(self.command)  # debug
