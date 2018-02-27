@@ -20,7 +20,8 @@ class TargetInfo:
         self.PRINTER_INFO = []
         self.PORTS = {}  # prolly formatted like this "PORT_NUMBER : STATUS"
 
-
+#-.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
+        
 class Enumerate(Debug):
     def __init__(self, debug=False):
         super().__init__(name="Enumerate", type="Module", debug=debug)

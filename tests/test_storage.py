@@ -40,6 +40,8 @@ print("Should've created a file there")
 if not os.path.isfile(TestOne.mounted_dir + file):
     print("Did not create a file")
     exit(1)
+else:
+    print("File was created")
 
 test_one_file = TestOne.file_name
 test_one_directory = TestOne.mounted_dir
