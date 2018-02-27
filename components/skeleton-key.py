@@ -270,6 +270,7 @@ class SkeletonKey(ModuleManager, Debug):
                 if user_selection == 0:
                     print("Exiting Program...")
                     exit_flag = True
+                    return user_selection
                     pass
                 elif user_selection < 0 or user_selection > len(self.module_list):
                     print("ERROR: Invalid index selection. Please enter a valid selection.")
@@ -298,5 +299,9 @@ if __name__ == '__main__':
     begin = SkeletonKey(debug=True)
     while selection == -1:
         selection = begin.input_choice()
-        begin.module_configuration(selection)
-        selection = -1
+        if selection == 0:
+           print("Thanks for playing.")
+           break
+        else:
+            begin.module_configuration(selection)
+            selection = -1
