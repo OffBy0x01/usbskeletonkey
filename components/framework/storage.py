@@ -205,7 +205,7 @@ class StorageAccess(FwComponentGadget):
         return
 
     def unmountlocal(self):
-        subprocess.run(["umount", self.mounted_dir], shell=True)  # un-mount
+        subprocess.run(["umount", self.mounted_dir])  # un-mount
         super().debug("The filesystem was unmounted with command umount " + self.mounted_dir)
 
         super().debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
