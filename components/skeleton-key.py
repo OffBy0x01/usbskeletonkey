@@ -173,7 +173,7 @@ class SkeletonKey(ModuleManager, Debug):
             print("ERROR: Please enter a valid option to show")
             pass
 
-    def display_help(self, config_selection, user_selection):
+    def display_help(self):
         # Displays help information for Skeleton Key
         print("Displaying help...")
         print("\n")
@@ -187,7 +187,7 @@ class SkeletonKey(ModuleManager, Debug):
         print("exit 				            - exits configuration mode")
         print("\n")
         print("Leaving help...")
-        pass
+        return
 
     def user_save(self, config_selection, user_choice):
         print("Confirm save: (Y/N)")
@@ -204,7 +204,6 @@ class SkeletonKey(ModuleManager, Debug):
             print("Discarding changes...")
             self.save_config(module_name, False)
             pass
-
 
     def module_configuration(self, user_choice):
         # mainly for debug
@@ -248,7 +247,7 @@ class SkeletonKey(ModuleManager, Debug):
                     pass
                 elif config_selection[0] == "help":
                     # run method to set selected attribute
-                    self.display_help(config_selection, user_choice)
+                    self.display_help()
                     pass
                 elif config_selection[0] == "save":
                     # run method to set selected attribute
