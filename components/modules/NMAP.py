@@ -1,5 +1,6 @@
 import subprocess
 import datetime
+import nmap
 
 
 class NMAP:
@@ -45,11 +46,12 @@ class NMAP:
     def __init__(self):
         self.target_is_a_file = False
         self.ip_file = "targets.txt"
-        self.ip = "192.168.0.1"
+        self.ip = "127.0.0.1"
         self.service_verbosity_level = "9"
         self.speed = "-T4"
         self.save_to_file = True
         self.file_name = " > temp.txt"
+        self.nm = nmap.PortScanner()
         self.command = ["nmap"]
 
     def check_if_file(self):
@@ -106,22 +108,13 @@ class NMAP:
         return subprocess.run(self.command, stdout=subprocess.PIPE).stdout.decode\
             ("utf-8")  # Run command, print output to screen and return
 
+    def os_detection(self):
+
+        self.nm.scan(hosts=self.ip, arguments='-O')
+        self.nm.command_line()
+
 
 # Testing
 test = NMAP()
-test.nmap_loud()
-test.nmap_quiet()
-test.nmap_loud()
-
-
-
-
-
-
-
-
-
-
-
-
+test.os_detection()
 
