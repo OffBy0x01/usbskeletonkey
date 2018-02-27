@@ -1,6 +1,6 @@
 import subprocess
 import datetime
-import nmap
+from components.helpers.nmap import *
 
 
 class NMAP:
@@ -111,10 +111,5 @@ class NMAP:
     def os_detection(self):
 
         self.nm.scan(hosts=self.ip, arguments='-O')
-        self.nm.command_line()
-
-
-# Testing
-test = NMAP()
-test.os_detection()
+        print(self.nm.command_line())
 
