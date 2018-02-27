@@ -152,13 +152,10 @@ class SkeletonKey(ModuleManager, Debug):
                     new_value = input("Enter the value you would like to set this to")
                     module.options[config_selection[1]] = new_value
                     flag = True
-            else:
-                pass
         if flag:
-            pass
+            print("Value changed")
         else:
             print("ERROR: Please enter a valid attribute to set")
-            pass
 
     def show_select_option(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
@@ -237,16 +234,12 @@ class SkeletonKey(ModuleManager, Debug):
                 else:
                     print("Please enter a valid command")
             elif len(config_selection) == 3:
-                if config_selection[0] == "set":
+                if config_selection[0] == 'set':
                     # run method to set selected attribute
                     self.set_with_att(config_selection, user_choice)
                     pass
-                if config_selection[0] == "show":
+                elif config_selection[0] == 'show':
                     self.show_select_option(config_selection, user_choice)
-                    pass
-                elif config_selection[0] == "show":
-                    # TODO: cleaner way to do this
-                    print("ERROR: Invalid 'show' command - too many arguments")
                     pass
                 else:
                     print("Please enter a valid command.")
@@ -305,5 +298,5 @@ if __name__ == '__main__':
     begin = SkeletonKey(debug=True)
     while selection == -1:
         selection = begin.input_choice()
-
-    begin.module_configuration(selection)
+        begin.module_configuration(selection)
+        selection = -1
