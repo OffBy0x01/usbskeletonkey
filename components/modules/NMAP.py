@@ -49,7 +49,7 @@ class NMAP:
         self.ip_file = "targets.txt"
         self.service_verbosity_level = "9"
         self.speed = "-T4"
-        self.save_output = True
+        self.save_output = False
         self.file_name = " > temp.txt"
         self.nm = nmap.PortScanner()
         self.loud_scan = True
@@ -87,18 +87,25 @@ class NMAP:
 
         if self.loud_scan:
             if port_range:
-                range_of_ports = "-p " + port_start + "-" + port_end  # CAN'T USE VARIABLES WITHIN PYTHON NMAP?
-                self.nm.scan(hosts=self.targets, arguments=range_of_ports + "-sV --version-all -T4")
+                command = "-p " + port_start + "-" + port_end + " -sV --version-light -T4"
+                self.nm.scan(hosts=self.targets, arguments=command)
             else:
-                self.nm.scan(hosts=self.targets, arguments="-sV --version-all")
+                command = "-sV --version-all -T4"
+                self.nm.scan(hosts=self.targets, arguments=command)
 
         else:
-            self.nm.scan(hosts=self.targets, arguments="-sV --version-light")
+            if port_range:
+                command = "-p " + port_start + "-" + port_end + " -sV --version-light"
+                self.nm.scan(hosts=self.targets, arguments=command)
+            else:
+                command = "-sV --version-light"
+                self.nm.scan(hosts=self.targets, arguments=command)
 
         print(self.nm.command_line())  # debug
 
         if self.save_output:
             return self.output_to_file()
+        else:
             return self.output()
 
     def os_detection(self, target, scan_loud, save_output):
