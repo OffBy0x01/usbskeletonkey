@@ -189,6 +189,23 @@ class SkeletonKey(ModuleManager, Debug):
         print("Leaving help...")
         pass
 
+    def user_save(self, config_selection, user_choice):
+        print("Confirm save: (Y/N)")
+        print("WARNING: Any unsaved changes will be lost on exit")
+        confirm_save = input(">")
+        confirm_save.upper()
+        module = self.module_list[user_choice - 1]
+        module_name = module.module_name
+        if confirm_save == "Y":
+            print("Saving...")
+            self.save_config(module_name, True)
+            pass
+        elif confirm_save == "N":
+            print("Discarding changes...")
+            self.save_config(module_name, False)
+            pass
+
+
     def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
@@ -197,6 +214,7 @@ class SkeletonKey(ModuleManager, Debug):
         while config_mode:
             print("Enter 'exit' to finish.")
             print("\n")
+            save_flag = False
 
             # Whatever the user enters - convert it to lowercase and place each word in an array.
             config_selection = str(input(">")).lower().split()
@@ -204,9 +222,22 @@ class SkeletonKey(ModuleManager, Debug):
             # If the users enters one word - i.e. a keyword such as 'show', 'set' or 'exit' run
             if len(config_selection) == 1:
                 if config_selection[0] == "exit":
-                    print("Exiting Configuration mode...")
-                    config_mode = False
-                    pass
+                    if not save_flag:
+                            confirm_exit = input("You are about to exit without saving, are you sure? (Y/N")
+                            confirm_exit.upper()
+                            if confirm_exit == "Y":
+                                print("Exiting Configuration mode...")
+                                config_mode = False
+                                pass
+                            elif confirm_exit == "N":
+                                self.user_save(config_selection, user_choice)
+                                print("Exiting Configuration mode...")
+                                config_mode = False
+                                pass
+                    elif save_flag:
+                        print("Exiting Configuration mode...")
+                        config_mode = False
+                        pass
                 elif config_selection[0] == "show":
                     # display all information to do with current module.
                     self.display_information_current_module(user_choice)
@@ -218,6 +249,10 @@ class SkeletonKey(ModuleManager, Debug):
                 elif config_selection[0] == "help":
                     # run method to set selected attribute
                     self.display_help(config_selection, user_choice)
+                    pass
+                elif config_selection[0] == "save":
+                    # run method to set selected attribute
+                    self.user_save(config_selection, user_choice)
                     pass
                 else:
                     print("Please enter a valid keyword.")
