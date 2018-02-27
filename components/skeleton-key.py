@@ -176,6 +176,22 @@ class SkeletonKey(ModuleManager, Debug):
             print("ERROR: Please enter a valid option to show")
             pass
 
+    def display_help(self, config_selection, user_selection):
+        # Displays help information for Skeleton Key
+        print("Displaying help...")
+        print("\n")
+        print("Command                          Description of command")
+        print("--------------------------------------------------------------------------------------------------------------------")
+        print("show				            - shows all info on the current module")
+        print("show [attribute]		        - shows the info on the specified attribute of the current module")
+        print("set				                - displays instructions on how to use the set command")
+        print("set [attribute]			        - allows the user to enter a value to set the specified attribute for the current module")
+        print("set [attribute] [value]		    - sets the value for the specified attribute for the current module")
+        print("exit 				            - exits configuration mode")
+        print("\n")
+        print("Leaving help...")
+        pass
+
     def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
@@ -201,6 +217,10 @@ class SkeletonKey(ModuleManager, Debug):
                 elif config_selection[0] == "set":
                     print("Please select an attribute to set in the format 'set [attribute]'")
                     # provide options on what is available to set
+                    pass
+                elif config_selection[0] == "help":
+                    # run method to set selected attribute
+                    self.display_help(config_selection, user_choice)
                     pass
                 else:
                     print("Please enter a valid keyword.")
