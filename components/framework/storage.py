@@ -1,6 +1,7 @@
 import os
 import subprocess
 from datetime import datetime
+import time
 
 from components.framework.FwComponentGadget import FwComponentGadget
 
@@ -78,7 +79,7 @@ class StorageAccess(FwComponentGadget):
         super().debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.directory + self.file_name + "'")
         # Done
 
-    def __init__(self, readable_size=None, fs="fat", old_fs=False, directory="./", debug=False):
+    def __init__(self, readable_size="2M", fs="fat", old_fs=False, directory="./", debug=False):
         # Initialise super class
         super().__init__("g_mass_storage", enabled=False, debug=debug)
         self._type = "Component"
@@ -88,16 +89,12 @@ class StorageAccess(FwComponentGadget):
         super().debug("Starting Module: Storage Access")
 
         # Variable init
-        self.fs = fs.strip().strip("\n")
+        self.fs = fs
         self.old_fs = old_fs
-        self.directory = directory.strip().strip("\n")
+        self.directory = directory
         self.mounted_dir = str(None)
-
-        # In the event the user wants a default value
-        if readable_size is None:
-            self.readable_size = "2M"  # TODO add a default size to config?
-        else:
-            self.readable_size = readable_size
+        self.loopback_device = str(None)
+        self.readable_size = readable_size
 
         if not old_fs:
             self.__createfs()
@@ -114,34 +111,6 @@ class StorageAccess(FwComponentGadget):
                 super().debug("File" + self.file_name + "does not exist: 2.04")
                 exit(2.04)
 
-        # To find the first available loop back device and claim it
-        self.loopback_device = subprocess.run(["losetup", "-f"],
-                                              stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
-
-        if "Permission denied" in self.loopback_device:
-            super().debug("Insufficient Permissions: 2.00")
-            exit(2.00)
-
-        super().debug("Attempting to mount on " + self.loopback_device +
-                      "Running Command:")
-        super().debug("losetup " + self.loopback_device.strip() + " " + (self.directory + self.file_name))
-
-        super().debug((self.directory + self.file_name))
-
-        loop_output = subprocess.run(["losetup", self.loopback_device,
-                                      (self.directory + self.file_name)],
-                                     stdout=subprocess.PIPE).stdout.decode('utf-8')
-
-        if "failed to set up loop device" in loop_output:
-            super().debug("Loop back device does not exist: 2.04")
-            exit(2.04)
-
-        # If the first loop back device available is still the one we should be mounted to
-        if self.loopback_device == subprocess.run(["losetup", "-f"],
-                                                  stdout=subprocess.PIPE).stdout.decode('utf-8'):
-            super().debug("Loop back setup Failed")
-            exit(2.04)
-
         self.local_mount = False
         self.bus_mounted = False
         return
@@ -151,11 +120,6 @@ class StorageAccess(FwComponentGadget):
         # No matter what call unmount?
         super().debug("Running unmount to ensure the file system is not being left active")
         self.unmount()
-
-        super().debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
-        subprocess.run(["losetup", "-d", self.loopback_device])
-        # There is not a circumstance where it would be a good idea to allow the user to do this via umount so only on
-        # __del__ should it be called to remove from loopback
 
         super().debug("Storage class: Successfully removed")
         return
@@ -184,7 +148,28 @@ class StorageAccess(FwComponentGadget):
     def mountlocal(self, directory="./fs/", read_only=False):  # make this more unique for a default folder
         # Mount the file system locally for amending of any desc (unless RO)
 
-        # Should mount the loopback here instead of at the start
+        self.loopback_device = subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+
+        mount_loopback = ["losetup"]
+
+        if read_only:
+            mount_loopback = mount_loopback + ["-r"]
+
+        mount_loopback = mount_loopback + [self.loopback_device, (self.directory + self.file_name)]
+
+        super().debug("Attempting to mount on " + self.loopback_device)
+
+        loop_output = subprocess.run(mount_loopback, stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        if "failed to set up loop device" in loop_output:
+            super().debug("Error mounting on loop back " + self.loopback_device + ": 2.04")
+            exit(2.04)
+
+        # If the first loop back device available is still the one we should be mounted to
+        if self.loopback_device == subprocess.run(["losetup", "-f"],
+                                                  stdout=subprocess.PIPE).stdout.decode('utf-8'):
+            super().debug("Loop back setup Failed: 2.04")
+            exit(2.04)
 
         # The directory we intend to mount to
         self.mounted_dir = directory
@@ -195,19 +180,23 @@ class StorageAccess(FwComponentGadget):
             os.mkdir(self.mounted_dir)
 
         if read_only:
-            subprocess.run(["mount", "-o ro", self.loopback_device, self.mounted_dir])  # mount RO
+            mount_command = ["mount", "-o", "ro", self.loopback_device, self.mounted_dir]  # mount RO
         else:
-            subprocess.run(["mount", self.loopback_device, self.mounted_dir])  # mount norm
+            mount_command = ["mount", self.loopback_device, self.mounted_dir]  # mount norm
+
+        subprocess.run(mount_command)
+
+        self.local_mount = True
         return
 
     def mountbus(self, write_block=False):
         # Mount over USB
         if write_block:
-            # modprobe g_mass_storage ro=1 file=foo.bar
+            # modprobe g_mass_storage ro=1 file=./foo.bar
             super().vendor_id = "ro=1"  # This only accepts y or 1 for true
             super().product_id = "file=" + self.directory + self.file_name
         else:
-            # modprobe g_mass_storage file=foo.bar
+            # modprobe g_mass_storage file=./foo.bar
             super().vendor_id = "file=" + self.directory + self.file_name
 
         super().enable()
@@ -217,12 +206,13 @@ class StorageAccess(FwComponentGadget):
 
     def unmountlocal(self):
         subprocess.run(["umount", self.mounted_dir])  # un-mount
-        super().debug("The filesystem was unmounted with command umount " + self.directory)
-        if self.mounted_dir == "./fs/":
-            super().debug("   Default directory was used; it will now be removed")
-            os.removedirs("./fs")
+        super().debug("The filesystem was unmounted with command umount " + self.mounted_dir)
+
+        super().debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
+        subprocess.run(["losetup", "-d", self.loopback_device])
 
         self.local_mount = False
+        self.loopback_device = str(None)
         self.mounted_dir = str(None)
         return
 
@@ -236,7 +226,7 @@ class StorageAccess(FwComponentGadget):
         super().debug("Starting unmount")
 
         if self.local_mount:
-            super().debug("Filesystem is mounted on " + self.directory)
+            super().debug("Filesystem is mounted on " + self.mounted_dir)
             self.unmountlocal()
             return
 
