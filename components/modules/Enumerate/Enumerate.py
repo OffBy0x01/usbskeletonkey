@@ -21,10 +21,13 @@ class TargetInfo:
         self.PORTS = {}  # prolly formatted like this "PORT_NUMBER : STATUS"
 
 #-.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
-        
+
+
 class Enumerate(Debug):
     def __init__(self, debug=False):
         super().__init__(name="Enumerate", type="Module", debug=debug)
+
+        self.nm = nmap.PortScanner()
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -35,6 +38,10 @@ class Enumerate(Debug):
             self.debug("Error: could not import config of " + self._name)
 
         self.targets = self.current_config.options["targets"]
+        self.quiet = self.current_config.options["quiet"]
+        self.verbose = self.current_config.options["verbose"]
+        self.use_port_range = self.current_config.options["use_port_range"]
+
 
     # Just an example - This takes ages on windows but is actually really fast under linux (<1s vs 8s)
     def get_port_state(self, target, port_range="22-443"):
@@ -63,6 +70,37 @@ class Enumerate(Debug):
         self.debug(raw_shares)
         # TODO 1/2 test in lab as could not test at home
 
+    # NMAP scans for service and operating system detection
+    def nmap(self, port_start, port_end):
+
+        if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
+
+            if self.use_port_range == "true":  # If a port range has been specified use
+                # "-p "start port"-"end port" in command
+                command = "-p " + port_start + "-" + port_end + " -sV --version-light"
+                self.nm.scan(hosts=self.targets, arguments=command)
+            else:
+                command = "-sV --version-light"
+                self.nm.scan(hosts=self.targets, arguments=command)
+
+            super().debug("NMAP command = " + " '" + self.nm.command_line() + "'")  # debug for printing the command
+            self.nm.scan(hosts=self.targets, arguments="-O")
+            super().debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+
+        else:  # Use "loud" scan pre-sets
+            if self.use_port_range == "true":
+                command = "-p " + port_start + "-" + port_end + " -sV --version-all -T4"
+                self.nm.scan(hosts=self.targets, arguments=command)
+            else:
+                command = "-sV --version-all -T4"
+                self.nm.scan(hosts=self.targets, arguments=command)
+
+        super().debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+        self.nm.scan(hosts=self.targets, arguments="-O --osscan-guess -T5")
+        super().debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+
+        return True
+
     def get_local_groups(self):
         # Part of net
         pass
@@ -80,6 +118,6 @@ class Enumerate(Debug):
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
     # e.g. def for nbtstat, def for nmap, def for net etc...
 
-
 e = Enumerate(debug=True)
-e.get_port_state("192.168.0.11", "80")
+e.nmap(str(1), str(100))
+# e.get_port_state("192.168.0.11", "80")
