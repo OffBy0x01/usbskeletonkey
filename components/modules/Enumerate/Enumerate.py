@@ -29,6 +29,7 @@ class Enumerate(Debug):
     def __init__(self, debug=False):
         super().__init__(name="Enumerate", type="Module", debug=debug)
 
+        # TODO @Joh Justify why nmap needs to be a self!
         self.nm = nmap.PortScanner()
 
         # Setup module manager
@@ -50,9 +51,11 @@ class Enumerate(Debug):
         self.port_list = [port for port in self.get_port_list(ports) if port not in self.get_port_list(port_exclusions)]
 
         # ~Produce list of usable users~
-        # -- Andrew
-        #
-        self.user_list = "I've not implemented this yet"
+        self.user_list = []
+        with open("user_list.txt") as user_file:
+            for line in user_file:
+                user, _, password = line.strip().partition(":")
+                self.user_list.append({user: password})
 
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
@@ -62,6 +65,7 @@ class Enumerate(Debug):
     # ~Runs all the things~
     # ---------------------
     def enumeration(self):
+        print(self.user_list)
         for ip in self.ip_list:
             for port in self.port_list:
                 # self.other thing that uses ports
