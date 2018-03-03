@@ -76,6 +76,14 @@ class Enumerate(Debug):
         # Basically does the same as the real NBTSTAT but really really disgusting output
         # TODO 2/2 test in lab as could not test at home (Fully).
 
+    def get_rpcclient(self, users, target):
+        # Pass usernames in otherwise test against defaults
+        raw_rpc = subprocess.run("rpcclient -U "+users+" "+target+" -c 'lsaquery' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+    def get_smbclient(self, users, target):
+        # Pass usernames in otherwise test against defaults
+        raw_smb = subprocess.run("smbclient // "+target+" / ipc$ -U"+users+" - c 'help' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
     # e.g. def for nbtstat, def for nmap, def for net etc...
