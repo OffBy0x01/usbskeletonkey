@@ -242,6 +242,35 @@ class Enumerate(Debug):
 
 
 
+    def get_rpcclient(self, users, target):
+        # Pass usernames in otherwise test against defaults
+        raw_rpc = subprocess.run("rpcclient -U "+users+" "+target+" -c 'lsaquery' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        # once with a rpcclient commend line
+        #   enumdomusers
+        #   enumdomgroups
+        #   getdompwinfo - min password length
+        #   getusrdompwinfo [user number 0x44f] - look for string 'cleartext'
+
+        # for u in 'cat domain-users.txt'; do \
+        #   echo -n "[*] user: $u" && \
+        #   rpcclient -U "$u%[common password]" \
+        #       -c "getusername;quit" 10.10.10.10 \
+        # done
+        #if string == "Authority"
+        #   success
+        #elif string == "NT_STATUS_LOGON_FAILURE"
+        #   failure
+        #elif string == "ACCOUNT_LOCKED"
+        #   locked out and should stop immediately
+        #then run get_smbclient if successful
+
+
+
+    def get_smbclient(self, users, target):
+        # Pass usernames in otherwise test against defaults
+        raw_smb = subprocess.run("smbclient // "+target+" / ipc$ -U"+users+" - c 'help' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
     # e.g. def for nbtstat, def for nmap, def for net etc...
