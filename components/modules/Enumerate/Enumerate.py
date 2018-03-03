@@ -1,11 +1,10 @@
 import struct
 import subprocess
 
-import nmap
-
 from components.framework.Debug import Debug
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
+from components.helpers.nmap import nmap  # TODO Find a fix on Pi that doesn't require local storage of import
 
 
 class TargetInfo:
@@ -20,9 +19,10 @@ class TargetInfo:
         self.SHARE_INFO = []  # include SMB info?
         self.PASSWD_POLICY = []
         self.PRINTER_INFO = []
-        self.PORTS = {}  # prolly formatted like this "PORT_NUMBER : STATUS"
+        self.PORTS = []  # prolly formatted like this "PORT_NUMBER, SERVICE, STATUS"
 
-#-.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
+
+# -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
 
 class Enumerate(Debug):
@@ -61,22 +61,89 @@ class Enumerate(Debug):
         self.verbose = self.current_config.options["verbose"]
         self.use_port_range = self.current_config.options["use_port_range"]
 
+        ###############################################################################
+        # The following  mappings for nmblookup (nbtstat) status codes to human readable
+        # format is taken from nbtscan 1.5.1 "statusq.c".  This file in turn
+        # was derived from the Samba package which contains the following
+        # license:
+        #    Unix SMB/Netbios implementation
+        #    Version 1.9
+        #    Main SMB server routine
+        #    Copyright (C) Andrew Tridgell 1992-1999
+        #
+        #    This program is free software; you can redistribute it and/or modif
+        #    it under the terms of the GNU General Public License as published b
+        #    the Free Software Foundation; either version 2 of the License, o
+        #    (at your option) any later version
+        #
+        #    This program is distributed in the hope that it will be useful
+        #    but WITHOUT ANY WARRANTY; without even the implied warranty o
+        #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See th
+        #    GNU General Public License for more details
+        #
+        #    You should have received a copy of the GNU General Public Licens
+        #    along with this program; if not, write to the Free Softwar
+        #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA
+
+        self.nbt_info = [
+            ["__MSBROWSE__", "01", 0, "Master Browser"],
+            ["INet~Services", "1C", 0, "IIS"],
+            ["IS~", "00", 1, "IIS"],
+            ["", "00", 1, "Workstation Service"],
+            ["", "01", 1, "Messenger Service"],
+            ["", "03", 1, "Messenger Service"],
+            ["", "06", 1, "RAS Server Service"],
+            ["", "1F", 1, "NetDDE Service"],
+            ["", "20", 1, "File Server Service"],
+            ["", "21", 1, "RAS Client Service"],
+            ["", "22", 1, "Microsoft Exchange Interchange(MSMail Connector)"],
+            ["", "23", 1, "Microsoft Exchange Store"],
+            ["", "24", 1, "Microsoft Exchange Directory"],
+            ["", "30", 1, "Modem Sharing Server Service"],
+            ["", "31", 1, "Modem Sharing Client Service"],
+            ["", "43", 1, "SMS Clients Remote Control"],
+            ["", "44", 1, "SMS Administrators Remote Control Tool"],
+            ["", "45", 1, "SMS Clients Remote Chat"],
+            ["", "46", 1, "SMS Clients Remote Transfer"],
+            ["", "4C", 1, "DEC Pathworks TCPIP service on Windows NT"],
+            ["", "52", 1, "DEC Pathworks TCPIP service on Windows NT"],
+            ["", "87", 1, "Microsoft Exchange MTA"],
+            ["", "6A", 1, "Microsoft Exchange IMC"],
+            ["", "BE", 1, "Network Monitor Agent"],
+            ["", "BF", 1, "Network Monitor Application"],
+            ["", "03", 1, "Messenger Service"],
+            ["", "00", 0, "Domain/Workgroup Name"],
+            ["", "1B", 1, "Domain Master Browser"],
+            ["", "1C", 0, "Domain Controllers"],
+            ["", "1D", 1, "Master Browser"],
+            ["", "1E", 0, "Browser Service Elections"],
+            ["", "2B", 1, "Lotus Notes Server Service"],
+            ["IRISMULTICAST", "2F", 0, "Lotus Notes"],
+            ["IRISNAMESERVER", "33", 0, "Lotus Notes"],
+            ['Forte_$ND800ZA', "20", 1, "DCA IrmaLan Gateway Server Service"]
+        ]
+        # ~end of enum4linux.pl-derived code~
 
     # ~Runs all the things~
     # ---------------------
     def enumeration(self):
+        targets = ()
         print(self.user_list)
         for ip in self.ip_list:
+            current = TargetInfo
             for port in self.port_list:
-                # self.other thing that uses ports
+                # things that use ports
+                current.PORTS.append(self.get_port_state())
                 pass
+
             for user in self.user_list:
-                # self.other thing that uses users
+                # things that need users
                 pass
 
             #self.other things that just uses IPs
-        # TODO PUT ALL THE THINGS IN HERE - If format doesn't work for you hmu with why
 
+            # Add target information TODO Evaluate less memory intensive methods
+            targets += (ip, current)
 
 
     def get_port_list(self, current):
@@ -112,17 +179,8 @@ class Enumerate(Debug):
         # NMap
         nm = nmap.PortScanner()
         nm.scan(target, port)
-
-        print('----------------------------------------------------')
-        print('Host : %s (%s)' % (target, nm[target].hostname()))
-        print('State : %s' % nm[target].state())
-        for protocol in nm[target].all_protocols():
-            print('----------')
-            print('Protocol : %s' % protocol)
-            specified_ports = nm[target][protocol].keys()
-            specified_ports = sorted(specified_ports)
-            for port in specified_ports:
-                print('port : %s\tstate : %s' % (port, nm[target][protocol][port]['state']))
+        protocol = nm[target].all_protocols()[0]
+        return [port, protocol, nm[target][protocol][port]['state']]
 
     def get_share(self, target, user, password, work_group):
         raw_shares = subprocess.run("net rpc share " +
@@ -175,6 +233,13 @@ class Enumerate(Debug):
     def get_nbt_stat(self, target):
         raw_nbt = subprocess.run("nmblookup -A " + target, stdout=subprocess.PIPE).stdout.decode('utf-8')
         # Basically does the same as the real NBTSTAT but really really disgusting output
+        for line in raw_nbt:
+            # TODO Regex here
+            for info in self.nbt_info:
+                pattern, code, group, description = info
+                if pattern == "thing":
+                    pass
+
 
 
 
