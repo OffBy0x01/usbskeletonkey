@@ -33,7 +33,7 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
     if not mapHostnames:
         command = command + ["-n"]
 
-    if type(command) is str:
+    if type(target) is str:
         if ipIsValid(target):
             command = command + [target]
     else:

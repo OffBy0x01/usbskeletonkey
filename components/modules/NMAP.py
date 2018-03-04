@@ -1,6 +1,7 @@
-import subprocess
-import datetime
-import nmap
+
+from components.helpers.nmap import *
+
+
 
 
 class NMAP:
@@ -46,75 +47,80 @@ class NMAP:
     def __init__(self):
         self.target_is_a_file = False
         self.ip_file = "targets.txt"
-        self.ip = "127.0.0.1"
         self.service_verbosity_level = "9"
         self.speed = "-T4"
-        self.save_to_file = True
+        self.save_output = False
         self.file_name = " > temp.txt"
         self.nm = nmap.PortScanner()
-        self.command = ["nmap"]
+        self.loud_scan = True
+        self.targets = ""
 
-    def check_if_file(self):
-        if self.target_is_a_file:  # If a file of targets is being used
-            self.command = self.command + ["-iL", self.ip_file]  # Add the IP address(es) from the file to the command
+    def output(self):  # Quick "mockup" for output
 
-        else:
-            self.command = self.command + [self.ip]  # Add the IP address(es) to the command
+        print('----------------------------------------------------')
+        print('Host : %s (%s)' % (self.targets, self.nm[self.targets].hostname()))
+        print('State : %s' % self.nm[self.targets].state())
 
+        for protocol in self.nm[self.targets].all_protocols():
+            print('----------')
+            print('Protocol : %s' % protocol)
+            print('----------')
+
+            for port in self.nm[self.targets][protocol]:
+                nmap_results = self.nm[self.targets][protocol][port]
+
+                print('PORT: ' + str(port) + ': ' + "SERVICE: " + nmap_results['product']
+                      + " VERSION: " + nmap_results['version'] + " STATE: " + nmap_results['state'])
+
+            # TODO - Sort output for OS detection.
+            # For outputting -sV info use the keys: product and version (Service running and version)
+            # For outputting -O info I HAVE NO CLUE on the keys. "osclass" should work but it doesn't
+
+    def output_to_file(self):
+
+        # FILE OUTPUT BULLSHIT!
         return
 
-    #  "Loud scan"
-    def nmap_loud(self):
+    def service_detection(self, target, port_range, port_start, port_end):
 
-        self.command = ["nmap"]  # Reset the command list
-        self.check_if_file()  # Check if a file containing targets should be used
+        self.targets = target
 
-        #  Change "noise/speed" levels for the scan
-        self.service_verbosity_level = "9"
-        self.speed = "-T4"
+        if self.loud_scan:
+            if port_range:
+                command = "-p " + port_start + "-" + port_end + " -sV --version-light -T4"
+                self.nm.scan(hosts=self.targets, arguments=command)
+            else:
+                command = "-sV --version-all -T4"
+                self.nm.scan(hosts=self.targets, arguments=command)
 
-        self.command = self.command + ["-sV", "--version-intensity", self.service_verbosity_level,
-                                       self.speed, "-O"]  # Build command
+        else:
+            if port_range:
+                command = "-p " + port_start + "-" + port_end + " -sV --version-light"
+                self.nm.scan(hosts=self.targets, arguments=command)
+            else:
+                command = "-sV --version-light"
+                self.nm.scan(hosts=self.targets, arguments=command)
 
-        # Add the "save output to file" flag to the command if required
-        if self.save_to_file:
-            now = datetime.datetime.now()
-            self.file_name = " > NMAP Loud " + str(now.strftime("%d-%m-%Y %H:%M")) + ".txt"
-            self.command.append(self.file_name)
+        print(self.nm.command_line())  # debug
 
-        print(self.command)  # debug
-        return subprocess.run(self.command, stdout=subprocess.PIPE).stdout.decode\
-            ("utf-8")  # Run command, print output to screen and return
+        if self.save_output:
+            return self.output_to_file()
+        else:
+            return self.output()
 
-    #  "Quiet scan"
-    def nmap_quiet(self):
+    def os_detection(self, target, scan_loud, save_output):
 
-        self.command = ["nmap"]  # Reset the command list
-        self.check_if_file()  # Check if a file containing targets should be used
+        self.targets = target
+        self.loud_scan = scan_loud
+        self.save_output = save_output
 
-        #  Change "noise/speed" levels for the scan
-        self.service_verbosity_level = "1"
-        self.speed = "-T2"
-        self.command = self.command + ["-sV", "--version-intensity", self.service_verbosity_level, self.speed, "-O",
-                                       "-D"]  # Build command
+        if self.loud_scan:
+            self.nm.scan(hosts=target, arguments="-O --osscan-guess -T5")
 
-        # Add the "save output to file" flag to the command if required
-        if self.save_to_file:
-            now = datetime.datetime.now()
-            self.file_name = " > NMAP Quiet " + str(now.strftime("%d-%m-%Y %H:%M")) + ".txt"
-            self.command.append(self.file_name)
+        else:
+            self.nm.scan(hosts=target, arguments="-O")
 
-        print(self.command)  # debug
-        return subprocess.run(self.command, stdout=subprocess.PIPE).stdout.decode\
-            ("utf-8")  # Run command, print output to screen and return
+        print(self.nm.command_line())  # debug
 
-    def os_detection(self):
-
-        self.nm.scan(hosts=self.ip, arguments='-O')
-        self.nm.command_line()
-
-
-# Testing
-test = NMAP()
-test.os_detection()
+       # return self.service_detection()
 
