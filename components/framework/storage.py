@@ -1,7 +1,6 @@
 import os
 import subprocess
 from datetime import datetime
-import time
 
 from components.framework.FwComponentGadget import FwComponentGadget
 
@@ -116,12 +115,8 @@ class StorageAccess(FwComponentGadget):
         return
 
     def __del__(self):
-        super().debug("Storage class is being deleted")
-        # No matter what call unmount?
-        super().debug("Running unmount to ensure the file system is not being left active")
-        self.unmount()
-
-        super().debug("Storage class: Successfully removed")
+        # TODO move the auto mount that I had here into exit
+        super().debug("Removed")
         return
 
     # This code is derived from code from dive into python. Thanks Mark <3
@@ -198,6 +193,7 @@ class StorageAccess(FwComponentGadget):
         else:
             # modprobe g_mass_storage file=./foo.bar
             super().vendor_id = "file=" + self.directory + self.file_name
+            super().product_id = ""
 
         super().enable()
         super().debug("Mounted over bus. RO: " + write_block.__str__())
@@ -205,7 +201,7 @@ class StorageAccess(FwComponentGadget):
         return
 
     def unmountlocal(self):
-        subprocess.run(["umount", self.mounted_dir])  # un-mount
+        super().debug(subprocess.run(["umount", self.mounted_dir], stdout=subprocess.PIPE).stdout.decode('utf-8'))  # un-mount
         super().debug("The filesystem was unmounted with command umount " + self.mounted_dir)
 
         super().debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
@@ -218,6 +214,7 @@ class StorageAccess(FwComponentGadget):
 
     def unmountbus(self):
         super().disable()
+
         super().debug("The bus was unmounted")
         self.bus_mounted = False
         return
