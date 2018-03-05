@@ -1,3 +1,4 @@
+import re
 import struct
 import subprocess
 
@@ -164,6 +165,7 @@ class Enumerate(Debug):
         # Range of IPs
         elif "-" in current:
             start, _, end = current.strip().partition('-')
+
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
             return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
@@ -234,11 +236,14 @@ class Enumerate(Debug):
         raw_nbt = subprocess.run("nmblookup -A " + target, stdout=subprocess.PIPE).stdout.decode('utf-8')
         # Basically does the same as the real NBTSTAT but really really disgusting output
         for line in raw_nbt:
-            # TODO Regex here
-            for info in self.nbt_info:
-                pattern, code, group, description = info
-                if pattern == "thing":
-                    pass
+            # TODO fix Regex here
+            re_pattern = re.compile("/\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]/")
+            if filter(re_pattern.search, line):
+                values = line.partition()
+                for info in self.nbt_info:
+                    pattern, code, group, description = info
+                    if pattern:
+                        pass
 
 
 
