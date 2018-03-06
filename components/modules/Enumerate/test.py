@@ -32,6 +32,7 @@ for times in range(0, counter+1):
     rids.append(raw_command[start:end])
     index = end
     times += 1
+
     #current = TargetInfo
     #users = (ip, users)
     #rids = (ip, rids)

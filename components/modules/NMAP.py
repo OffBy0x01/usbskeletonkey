@@ -1,9 +1,6 @@
 
 from components.helpers.nmap import *
 
-
-
-
 class NMAP:
     """ Class for NMAP (Part of Enumeration)
 
@@ -113,14 +110,24 @@ class NMAP:
         self.targets = target
         self.loud_scan = scan_loud
         self.save_output = save_output
+        output = subprocess.run("nmap 45.33.32.156 -O -T5 ", shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
-        if self.loud_scan:
-            self.nm.scan(hosts=target, arguments="-O --osscan-guess -T5")
+        print(output)
+        print("----------------------------------")
+        parsed_output = ''
 
-        else:
-            self.nm.scan(hosts=target, arguments="-O")
+        for line in output.splitlines():
+            if "OS" in line and "detection" not in line and "matches" not in line:
 
-        print(self.nm.command_line())  # debug
+                if "Aggressive OS guesses" in line:
+                    new_line = line.replace(',', '\n')
+                    new_line = new_line.replace('Aggressive OS guesses:', '')
+                    parsed_output = (parsed_output + new_line)
 
-       # return self.service_detection()
+                elif "OS CPE" in line or "OS details":
+                    new_line = line.strip('OS CPE:')
+                    new_line = new_line.strip('OS details: ')
+                    parsed_output = (parsed_output + '\n' + new_line)
 
+        print(parsed_output)
+        return

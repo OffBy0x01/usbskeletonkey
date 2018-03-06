@@ -31,7 +31,7 @@ class Enumerate(Debug):
         super().__init__(name="Enumerate", type="Module", debug=debug)
 
         # TODO @Joh Justify why nmap needs to be a self!
-        self.nm = nmap.PortScanner()
+
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -141,7 +141,7 @@ class Enumerate(Debug):
                 # things that need users
                 pass
 
-            # self.other things that just uses IPs
+            #self.other things that just uses IPs
 
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
@@ -166,9 +166,7 @@ class Enumerate(Debug):
             start, _, end = current.strip().partition('-')
 
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
-            return [socket.inet_ntoa(struct.pack('>I', i)) for i in
-                    range(struct.unpack('>I', socket.inet_aton(start))[0],
-                          struct.unpack('>I', socket.inet_aton(end))[0])]
+            return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
         elif IpValidator.is_valid_ipv4_address(current):
             return [current]
@@ -196,34 +194,64 @@ class Enumerate(Debug):
 
     # NMAP scans for service and operating system detection
     def nmap(self, port_start, port_end):
-        # TODO reduce dependency on self - unless usage can be justified.
+
+        nm = nmap.PortScanner() # Declare python NMAP object
+
+        # Local function for parsing OS information (required as python NMAP OS isn't working correctly)
+        def os_parsing(output):
+
+            parsed_output = ''
+
+            for line in output.splitlines():
+
+                if "OS" in line and "detection" not in line and "matches" not in line:
+
+                    if "Aggressive OS guesses" in line:
+                        new_line = line.replace(',', '\n')
+                        new_line = new_line.replace('Aggressive OS guesses:', '')
+                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
+
+                    elif "OS CPE" in line or "OS details":
+                        new_line = line.strip('OS CPE:')
+                        new_line = new_line.strip('OS details: ')
+                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
+
+            super().debug(parsed_output)  # Debug
+
+            return parsed_output
+
         if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
 
             if self.use_port_range == "true":  # If a port range has been specified use
                 # "-p "start port"-"end port" in command
                 command = "-p " + port_start + "-" + port_end + " -sV --version-light"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
             else:
                 command = "-sV --version-light"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
 
-            self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")  # debug for printing the command
-            self.nm.scan(hosts=self.ip_list, arguments="-O")
-            self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+            self.debug("NMAP command = " + " '" + nm.command_line() + "'")  # debug for printing the command
+
+            # Run "quiet" nmap OS scan and save output to a variable for parsing
+            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
+                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         else:  # Use "loud" scan pre-sets
             if self.use_port_range == "true":
                 command = "-p " + port_start + "-" + port_end + " -sV --version-all -T4"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
             else:
                 command = "-sV --version-all -T4"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
 
-        self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
-        self.nm.scan(hosts=self.ip_list, arguments="-O --osscan-guess -T5")
-        self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+            self.debug("NMAP command = " + " '" + nm.command_line() + "'")
 
-        return True
+            # Run "loud" nmap OS scan and save output to a variable for parsing
+            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
+                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        return os_parsing(os_output)  # Call local function for nmap OS parsing
+
 
     def get_local_groups(self):
         # Part of net
@@ -304,26 +332,14 @@ class Enumerate(Debug):
 # done
 
 
-def get_smbclient(self, users, target):
-    # Pass usernames in otherwise test against defaults
-    raw_smb = subprocess.run("smbclient // " + target + " / ipc$ -U" + users + " - c 'help' 2>&1",
-                             stdout=subprocess.PIPE).stdout.decode('utf-8')
+    def get_smbclient(self, users, target):
+        # Pass usernames in otherwise test against defaults
+        raw_smb = subprocess.run("smbclient // "+target+" / ipc$ -U"+users+" - c 'help' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
 
 
-# Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
-# e.g. def for nbtstat, def for nmap, def for net etc...
+    # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
+    # e.g. def for nbtstat, def for nmap, def for net etc...
 
 e = Enumerate(debug=True)
-"""# e.nmap(str(1), str(100))
-e.enumeration()"""
-
-e.get_rpcclient("192.168.0.1")
-
-raw_command = """user:[Administrator] rid:[0x1f4]
-user:[Guest] rid:[0x1f5]
-user:[krbtgt] rid:[0x1f6]
-user:[Benny Hill] rid:[0x3e8]
-user:[R.Gudino] rid:[0x20da]
-user:[E.Breck] rid:[0x20db]
-user:[D.Lecroy] rid:[0x20dc]
-user:[C.Armes] rid:[0x20dd]"""
+e.nmap(str(1), str(100))
+e.enumeration()
