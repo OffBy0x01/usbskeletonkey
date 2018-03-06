@@ -22,7 +22,8 @@ class TargetInfo:
         self.PRINTER_INFO = []
         self.PORTS = {}  # prolly formatted like this "PORT_NUMBER : STATUS"
 
-#-.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
+
+# -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
 
 class Enumerate(Debug):
@@ -61,7 +62,6 @@ class Enumerate(Debug):
         self.verbose = self.current_config.options["verbose"]
         self.use_port_range = self.current_config.options["use_port_range"]
 
-
     # ~Runs all the things~
     # ---------------------
     def enumeration(self):
@@ -74,10 +74,8 @@ class Enumerate(Debug):
                 # self.other thing that uses users
                 pass
 
-            #self.other things that just uses IPs
+            # self.other things that just uses IPs
         # TODO PUT ALL THE THINGS IN HERE - If format doesn't work for you hmu with why
-
-
 
     def get_port_list(self, current):
         # TODO 01/03/18 [1/2] Add error handling
@@ -98,7 +96,9 @@ class Enumerate(Debug):
         elif "-" in current:
             start, _, end = current.strip().partition('-')
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
-            return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
+            return [socket.inet_ntoa(struct.pack('>I', i)) for i in
+                    range(struct.unpack('>I', socket.inet_aton(start))[0],
+                          struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
         elif IpValidator.is_valid_ipv4_address(current):
             return [current]
@@ -176,40 +176,51 @@ class Enumerate(Debug):
         raw_nbt = subprocess.run("nmblookup -A " + target, stdout=subprocess.PIPE).stdout.decode('utf-8')
         # Basically does the same as the real NBTSTAT but really really disgusting output
 
-
-    def get_rpcclient(self, users, target):
+    def get_rpcclient(self, user_list, password_list, target, password):
         # Pass usernames in otherwise test against defaults
-        raw_rpc = subprocess.run("rpcclient -U "+users+" "+target+" -c 'lsaquery' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+        for user in user_list:
+            for password in password_list:
+                subprocess.run("rpcclient -U " + user + " " + target + " -c 'lsaquery' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+                # enter password
+                raw_rpc = subprocess.run(password).stdout.decode('utf-8')
 
-        # once with a rpcclient commend line
-        #   enumdomusers
-        #   enumdomgroups
-        #   getdompwinfo - min password length
-        #   getusrdompwinfo [user number 0x44f] - look for string 'cleartext'
+                if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
+                    # Unable to connect
+                    print("Connection refused under - " + user + ":" + password)
+                elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
+                    # Incorrect username or password
+                    print("Incorrect username or password under -  " + user + ":" + password)
+                elif "rpcclient $>" in raw_rpc:
+                    # Success
+                    raw_command = subprocess.run("enumdomusers").stdout.decode('utf-8')
 
-        # for u in 'cat domain-users.txt'; do \
-        #   echo -n "[*] user: $u" && \
-        #   rpcclient -U "$u%[common password]" \
-        #       -c "getusername;quit" 10.10.10.10 \
-        # done
-        #if string == "Authority"
-        #   success
-        #elif string == "NT_STATUS_LOGON_FAILURE"
-        #   failure
-        #elif string == "ACCOUNT_LOCKED"
-        #   locked out and should stop immediately
-        #then run get_smbclient if successful
+                    # then run get_smbclient
+                else:
+                    #error
+                    print("No reply")
+# No reply
+# once with a rpcclient commend line
+#   enumdomusers
+#   enumdomgroups
+#   getdompwinfo - min password length
+#   getusrdompwinfo [user number 0x44f] - look for string 'cleartext'
+
+# for u in 'cat domain-users.txt'; do \
+#   echo -n "[*] user: $u" && \
+#   rpcclient -U "$u%[common password]" \
+#       -c "getusername;quit" 10.10.10.10 \
+# done
 
 
+def get_smbclient(self, users, target):
+    # Pass usernames in otherwise test against defaults
+    raw_smb = subprocess.run("smbclient // " + target + " / ipc$ -U" + users + " - c 'help' 2>&1",
+                             stdout=subprocess.PIPE).stdout.decode('utf-8')
 
-    def get_smbclient(self, users, target):
-        # Pass usernames in otherwise test against defaults
-        raw_smb = subprocess.run("smbclient // "+target+" / ipc$ -U"+users+" - c 'help' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
 
-
-    # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
-    # e.g. def for nbtstat, def for nmap, def for net etc...
+# Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
+# e.g. def for nbtstat, def for nmap, def for net etc...
 
 e = Enumerate(debug=True)
-#e.nmap(str(1), str(100))
+# e.nmap(str(1), str(100))
 e.enumeration()
