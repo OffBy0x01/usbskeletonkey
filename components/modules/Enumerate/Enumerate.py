@@ -141,11 +141,10 @@ class Enumerate(Debug):
                 # things that need users
                 pass
 
-            #self.other things that just uses IPs
+            # self.other things that just uses IPs
 
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
-
 
     def get_port_list(self, current):
         # TODO 01/03/18 [1/2] Add error handling
@@ -167,7 +166,9 @@ class Enumerate(Debug):
             start, _, end = current.strip().partition('-')
 
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
-            return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
+            return [socket.inet_ntoa(struct.pack('>I', i)) for i in
+                    range(struct.unpack('>I', socket.inet_aton(start))[0],
+                          struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
         elif IpValidator.is_valid_ipv4_address(current):
             return [current]
@@ -245,12 +246,12 @@ class Enumerate(Debug):
                     if pattern:
                         pass
 
-
-    def get_rpcclient(self, user_list, password_list, target, password):
+    def get_rpcclient(self, user_list, password_list, target, ip):
         # Pass usernames in otherwise test against defaults
         for user in user_list:
             for password in password_list:
-                subprocess.run("rpcclient -U " + user + " " + target + " -c 'lsaquery' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+                subprocess.run("rpcclient -U " + user + " " + target + " -c 'lsaquery' 2>&1",
+                               stdout=subprocess.PIPE).stdout.decode('utf-8')
                 # enter password
                 raw_rpc = subprocess.run(password).stdout.decode('utf-8')
 
@@ -261,13 +262,34 @@ class Enumerate(Debug):
                     # Incorrect username or password
                     print("Incorrect username or password under -  " + user + ":" + password)
                 elif "rpcclient $>" in raw_rpc:
+                    users = []
+                    rids = []
                     # Success
-                    raw_command = subprocess.run("enumdomusers").stdout.decode('utf-8')
+                    # raw_command = subprocess.run("enumdomusers").stdout.decode('utf-8')
+                    #  iterate along string
+                    for line in raw_command:
+                        start = line.find('[')
+                        start += 1
+                        end = line.find(']', start)
+                        users.append(line[start:end])
 
-                    # then run get_smbclient
+                        start = line.find('[', end)
+                        start += 1
+                        end = line.find(']', start)
+                        rids.append(line[start:end])
+
+                        current = TargetInfo
+                        users = (ip, users)
+                        rids = (ip, rids)
+                        current.DOMAIN.append(users)
+                        current.DOMAIN.append(rids)
+
+                        # then run get_smbclient
+
                 else:
-                    #error
                     print("No reply")
+
+
 # No reply
 # once with a rpcclient commend line
 #   enumdomusers
@@ -292,5 +314,16 @@ def get_smbclient(self, users, target):
 # e.g. def for nbtstat, def for nmap, def for net etc...
 
 e = Enumerate(debug=True)
-# e.nmap(str(1), str(100))
-e.enumeration()
+"""# e.nmap(str(1), str(100))
+e.enumeration()"""
+
+e.get_rpcclient("192.168.0.1")
+
+raw_command = """user:[Administrator] rid:[0x1f4]
+user:[Guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[Benny Hill] rid:[0x3e8]
+user:[R.Gudino] rid:[0x20da]
+user:[E.Breck] rid:[0x20db]
+user:[D.Lecroy] rid:[0x20dc]
+user:[C.Armes] rid:[0x20dd]"""
