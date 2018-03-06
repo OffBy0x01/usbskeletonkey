@@ -31,7 +31,7 @@ class Enumerate(Debug):
         super().__init__(name="Enumerate", type="Module", debug=debug)
 
         # TODO @Joh Justify why nmap needs to be a self!
-        self.nm = nmap.PortScanner()
+
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -195,34 +195,64 @@ class Enumerate(Debug):
 
     # NMAP scans for service and operating system detection
     def nmap(self, port_start, port_end):
-        # TODO reduce dependency on self - unless usage can be justified.
+
+        nm = nmap.PortScanner() # Declare python NMAP object
+
+        # Local function for parsing OS information (required as python NMAP OS isn't working correctly)
+        def os_parsing(output):
+
+            parsed_output = ''
+
+            for line in output.splitlines():
+
+                if "OS" in line and "detection" not in line and "matches" not in line:
+
+                    if "Aggressive OS guesses" in line:
+                        new_line = line.replace(',', '\n')
+                        new_line = new_line.replace('Aggressive OS guesses:', '')
+                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
+
+                    elif "OS CPE" in line or "OS details":
+                        new_line = line.strip('OS CPE:')
+                        new_line = new_line.strip('OS details: ')
+                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
+
+            super().debug(parsed_output)  # Debug
+
+            return parsed_output
+
         if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
 
             if self.use_port_range == "true":  # If a port range has been specified use
                 # "-p "start port"-"end port" in command
                 command = "-p " + port_start + "-" + port_end + " -sV --version-light"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
             else:
                 command = "-sV --version-light"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
 
-            self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")  # debug for printing the command
-            self.nm.scan(hosts=self.ip_list, arguments="-O")
-            self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+            self.debug("NMAP command = " + " '" + nm.command_line() + "'")  # debug for printing the command
+
+            # Run "quiet" nmap OS scan and save output to a variable for parsing
+            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
+                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         else:  # Use "loud" scan pre-sets
             if self.use_port_range == "true":
                 command = "-p " + port_start + "-" + port_end + " -sV --version-all -T4"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
             else:
                 command = "-sV --version-all -T4"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
 
-        self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
-        self.nm.scan(hosts=self.ip_list, arguments="-O --osscan-guess -T5")
-        self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+            self.debug("NMAP command = " + " '" + nm.command_line() + "'")
 
-        return True
+            # Run "loud" nmap OS scan and save output to a variable for parsing
+            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
+                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        return os_parsing(os_output)  # Call local function for nmap OS parsing
+
 
     def get_local_groups(self):
         # Part of net
@@ -281,5 +311,5 @@ class Enumerate(Debug):
     # e.g. def for nbtstat, def for nmap, def for net etc...
 
 e = Enumerate(debug=True)
-#e.nmap(str(1), str(100))
+e.nmap(str(1), str(100))
 e.enumeration()
