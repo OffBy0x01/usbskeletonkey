@@ -69,9 +69,13 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, orig
     del output[-1:-2]  # Delete last two lines?1
 
     for line in output:
-        line.strip().split(" ")
+        line.strip().split(" ")  # TODO this leaves the device name in multiple items and below is a disgusting fix
+        re_concat = ""  # Could fix this by making my own string but working out the length of the IP is the only issue
+        for item in line[2:]:
+            re_concat += item + " "
+        line[2] = re_concat.strip()
 
-    return output
+    return output[0:2]
 
 
 def ipIsValid(IP, iprange=False):
