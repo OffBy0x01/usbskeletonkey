@@ -21,8 +21,6 @@ class TargetInfo:
         self.PASSWD_POLICY = []
         self.PRINTER_INFO = []
         self.PORTS = []  # prolly formatted like this "PORT_NUMBER, SERVICE, STATUS"
-
-
 # -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
 
@@ -51,12 +49,12 @@ class Enumerate(Debug):
         port_exclusions = self.current_config.options["port_exclusions"]
         self.port_list = [port for port in self.get_port_list(ports) if port not in self.get_port_list(port_exclusions)]
 
-        # ~Produce list of usable users~
-        self.user_list = []
-        with open("user_list.txt") as user_file:
-            for line in user_file:
-                user, _, password = line.strip().partition(":")
-                self.user_list.append({user: password})
+        # # ~Produce list of usable users~
+        # self.user_list = []
+        # with open("user_list.txt") as user_file:
+        #     for line in user_file:
+        #         user, _, password = line.strip().partition(":")
+        #         self.user_list.append({user: password})
 
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
@@ -127,7 +125,7 @@ class Enumerate(Debug):
 
     # ~Runs all the things~
     # ---------------------
-    def enumeration(self):
+    def run(self):
         targets = ()
         print(self.user_list)
         for ip in self.ip_list:
@@ -232,19 +230,21 @@ class Enumerate(Debug):
         # Also part of net
         pass
 
-    def get_nbt_stat(self, target):
-        raw_nbt = subprocess.run("nmblookup -A " + target, stdout=subprocess.PIPE).stdout.decode('utf-8')
+    def get_nbt_stat(self, target="127.0.0.1"):
+        raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
         for line in raw_nbt:
-            # TODO fix Regex here
-            re_pattern = re.compile("/\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]/")
-            if filter(re_pattern.search, line):
-                values = line.partition()
-                for info in self.nbt_info:
-                    pattern, code, group, description = info
-                    if pattern:
-                        pass
+            # Ignore the "Looking up status of [target]" line
+            if "up status of" in line:
+                print("nbtstat for ", target, ":", sep="")
+                continue
+            # No results found for target
+            elif target in line:
+                break
 
+            # Get actual results
+            result = re.search('\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?', line)
+            print(result)
 
 
     def get_rpcclient(self, users, target):
@@ -282,4 +282,5 @@ class Enumerate(Debug):
 
 e = Enumerate(debug=True)
 #e.nmap(str(1), str(100))
-e.enumeration()
+#e.enumeration()
+e.get_nbt_stat()
