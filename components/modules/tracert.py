@@ -23,8 +23,9 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
 
     :return: list of ip lists for each hop. Often single item list but keeps consistent for accessing
     """
-    command = ["traceroute", "-i", interface]
+    command = ["traceroute", "-i", interface]  # start with command items that are required
 
+    # Add command arguments where appropriate
     if bypassRoutingTables:
         command = command + ["-r"]
 
@@ -38,7 +39,7 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
         if ipIsValid(target):
             command = command + [target]
     else:
-        return "Error: Wrong type"
+        return "Error: Wrong type"  # Trace route is not able to target multiple hosts
 
     output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
@@ -51,14 +52,28 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
 
     output_out = []
 
-    for line in output:
-        results = []
-        line = line.split()
-        del line[0]
-        for item in line:
-            if ipIsValid(item):
-                results += [item]
-        output_out += [results]
+    if mapHostNames:
+        for line in output:
+            results = []  # init var to store current results
+            line = line.split()
+            del line[0]
+
+            for item in line:
+                # If item looks like a domain or the first three octets of an IP address
+                if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
+                    results += [item.strip("\(\)")]  # Remove any brackets and add to results for this line
+
+            output_out += [results]  # Add results from this line
+    else:
+        for line in output:
+            results = []  # init var to store current results
+            line = line.split()
+            del line[0]
+
+            for item in line:
+                if ipIsValid(item):
+                    results += [item]
+            output_out += [results]
 
     return output_out
 
