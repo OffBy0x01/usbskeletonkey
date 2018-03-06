@@ -10,6 +10,6 @@ from components.modules.tracert import *
 
 #print(ipIsValid(<test>)
 
-output = traceRoute("8.8.8.8", interface="wlp4s0b1")
+output = traceRoute("8.8.8.8", interface="wlp4s0b1", mapHostNames=False)
 
 print(output)
