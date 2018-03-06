@@ -63,8 +63,8 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
                 if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
                     results += [item.strip("\(\)")]  # Remove any brackets and add to results for this line
 
-            if ipIsValid(results[0]):
-                results = results[::2]
+            if ipIsValid(results[0]):  # If the "Host name" is an IP
+                results = results[::2]  # Grab every other variable
 
             output_out += [results]  # Add results from this line
     else:

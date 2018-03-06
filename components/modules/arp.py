@@ -69,7 +69,7 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, orig
     del output[-1:-2]  # Delete last two lines?1
 
     for line in output:
-        line.strip().split(" ")
+        line.strip().split("\t")  # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
 
     return output
 
