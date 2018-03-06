@@ -1,6 +1,7 @@
 import os.path
 import sys
 import subprocess
+import time
 
 # Required at top of file to allow testing
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -55,20 +56,20 @@ if os.path.exists(test_one_directory):
         print("The file system did not unmount correctly")
         exit(1)
 
+time.sleep(3)
+
 print("Starting Test Two")
 TestTwo = StorageAccess(fs=test_one_file, old_fs=True, debug=True)
 
 print("Size " + TestTwo.__sizeof__())
 
-TestTwo.mountlocal("./TestTwo/", True)
+TestTwo.mountlocal("./TestTwo/")
 
-if not os.path.exists(TestTwo.directory):
-    print("TEST TWO: The file system did not mount correctly")
-    exit(1)
-
-if not os.path.isfile(TestTwo.directory + "Test\ File"):
+if not os.path.isfile(TestTwo.mounted_dir + file):
     print("TEST TWO: Could not see file")
     exit(1)
+
+TestTwo.unmount()
 
 del TestTwo
 exit(0)
