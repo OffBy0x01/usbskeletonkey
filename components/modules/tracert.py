@@ -8,7 +8,7 @@ import subprocess
 import re
 
 
-def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackChecks=True, mapHostnames=True):
+def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackChecks=True, mapHostNames=True, originalOut=False):
     """
     Makes use of the traceroute command.
     No default flags are in use that the user cannot access via output
@@ -18,9 +18,10 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
     :param interface: Defaults to usb0 but can make use of any interface that is available
     :param bypassRoutingTables: Allows for traceroute to take the most direct approach bypassing routing tables
     :param hopBackChecks: Confirms that packets taken by the response follow the same path
-    :param mapHostnames: In the event that mapping host names to IP makes noise this can be disabled
+    :param mapHostNames: In the event that mapping host names to IP makes noise this can be disabled
+    :param originalOut: If the user wants the original command output this should be changed to true
 
-    :return: output of the command to be parsed
+    :return: list of ip lists for each hop. Often single item list but keeps consistent for accessing
     """
     command = ["traceroute", "-i", interface]
 
@@ -30,7 +31,7 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
     if hopBackChecks:
         command = command + ["--back"]
 
-    if not mapHostnames:
+    if not mapHostNames:
         command = command + ["-n"]
 
     if type(target) is str:
@@ -39,7 +40,27 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
     else:
         return "Error: Wrong type"
 
-    return subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+    output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+
+    if originalOut is True:
+        return output
+
+    output = output.splitlines()
+
+    del output[0]
+
+    output_out = []
+
+    for line in output:
+        results = []
+        line = line.split()
+        del line[0]
+        for item in line:
+            if ipIsValid(item):
+                results += [item]
+        output_out += [results]
+
+    return output_out
 
 
 def ipIsValid(IP, iprange=False):
