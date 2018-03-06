@@ -14,7 +14,7 @@ import subprocess
 import re
 
 
-def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
+def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, originalOut=False):
     """
     Makes use of the arp-scan command.
     By default makes use of the verbose, random and retry flags.
@@ -26,6 +26,7 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
     :param sourceIP:        Defaults to self but, for in the niche case its useful, can be changed to another address
     :param targetIsAFile:   Defaults to False but, when the user wishes to use a file containing addresses this flag can
                                 be set to true and the target can instead be a path to the file.
+    :param originalOut: If the user wants the original command output this should be changed to true
 
     :return: output of the command to be parsed
     """
@@ -35,7 +36,6 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
         command = command + ["-s", sourceIP]
 
     if targetIsAFile is True:
-
         if target is list:
             return "Error: A list of files cannot be scanned"
 
@@ -46,6 +46,7 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
             for current in target:
                 if not ipIsValid(current, iprange=True):
                     return "Error: Target " + str(current) + " in list is not a valid IP"
+
             command = command + target
 
         elif type(target) is str:  # if target is just an IP
@@ -53,11 +54,24 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False):
                 return "Error: Target is not a valid IP or Range"
 
             command = command + [target]
+
         else:
             return "Error: Target is not a string or list"
 
-    print(command)  # Make this a debug
-    return subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+    output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+
+    if originalOut is True:
+        return output
+
+    output = output.splitlines()
+
+    del output[:5]  # Delete first 6 lines
+    del output[-1:-2]  # Delete last two lines?1
+
+    for line in output:
+        line.strip().split("\t")  # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
+
+    return output
 
 
 def ipIsValid(IP, iprange=False):

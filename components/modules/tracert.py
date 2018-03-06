@@ -8,7 +8,7 @@ import subprocess
 import re
 
 
-def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackChecks=True, mapHostnames=True):
+def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackChecks=True, mapHostNames=True, originalOut=False):
     """
     Makes use of the traceroute command.
     No default flags are in use that the user cannot access via output
@@ -18,28 +18,67 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
     :param interface: Defaults to usb0 but can make use of any interface that is available
     :param bypassRoutingTables: Allows for traceroute to take the most direct approach bypassing routing tables
     :param hopBackChecks: Confirms that packets taken by the response follow the same path
-    :param mapHostnames: In the event that mapping host names to IP makes noise this can be disabled
+    :param mapHostNames: In the event that mapping host names to IP makes noise this can be disabled
+    :param originalOut: If the user wants the original command output this should be changed to true
 
-    :return: output of the command to be parsed
+    :return: list of ip lists for each hop. Often single item list but keeps consistent for accessing
     """
-    command = ["traceroute", "-i", interface]
+    command = ["traceroute", "-i", interface]  # start with command items that are required
 
+    # Add command arguments where appropriate
     if bypassRoutingTables:
         command = command + ["-r"]
 
     if hopBackChecks:
         command = command + ["--back"]
 
-    if not mapHostnames:
+    if not mapHostNames:
         command = command + ["-n"]
 
-    if type(command) is str:
+    if type(target) is str:
         if ipIsValid(target):
             command = command + [target]
     else:
-        return "Error: Wrong type"
+        return "Error: Wrong type"  # Trace route is not able to target multiple hosts
 
-    return subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+    output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+
+    if originalOut is True:
+        return output
+
+    output = output.splitlines()
+
+    del output[0]
+
+    output_out = []
+
+    if mapHostNames:
+        for line in output:
+            results = []  # init var to store current results
+            line = line.split()
+            del line[0]
+
+            for item in line:
+                # If item looks like a domain or the first three octets of an IP address
+                if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
+                    results += [item.strip("\(\)")]  # Remove any brackets and add to results for this line
+
+            if ipIsValid(results[0]):  # If the "Host name" is an IP
+                results = results[::2]  # Grab every other variable
+
+            output_out += [results]  # Add results from this line
+    else:
+        for line in output:
+            results = []  # init var to store current results
+            line = line.split()
+            del line[0]
+
+            for item in line:
+                if ipIsValid(item):
+                    results += [item]
+            output_out += [results]
+
+    return output_out
 
 
 def ipIsValid(IP, iprange=False):

@@ -29,7 +29,7 @@ class Enumerate(Debug):
         super().__init__(name="Enumerate", type="Module", debug=debug)
 
         # TODO @Joh Justify why nmap needs to be a self!
-        self.nm = nmap.PortScanner()
+
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -144,7 +144,6 @@ class Enumerate(Debug):
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
 
-
     def get_port_list(self, current):
         # TODO 01/03/18 [1/2] Add error handling
         if "," in current:
@@ -193,34 +192,64 @@ class Enumerate(Debug):
 
     # NMAP scans for service and operating system detection
     def nmap(self, port_start, port_end):
-        # TODO reduce dependency on self - unless usage can be justified.
+
+        nm = nmap.PortScanner() # Declare python NMAP object
+
+        # Local function for parsing OS information (required as python NMAP OS isn't working correctly)
+        def os_parsing(output):
+
+            parsed_output = ''
+
+            for line in output.splitlines():
+
+                if "OS" in line and "detection" not in line and "matches" not in line:
+
+                    if "Aggressive OS guesses" in line:
+                        new_line = line.replace(',', '\n')
+                        new_line = new_line.replace('Aggressive OS guesses:', '')
+                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
+
+                    elif "OS CPE" in line or "OS details":
+                        new_line = line.strip('OS CPE:')
+                        new_line = new_line.strip('OS details: ')
+                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
+
+            super().debug(parsed_output)  # Debug
+
+            return parsed_output
+
         if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
 
             if self.use_port_range == "true":  # If a port range has been specified use
                 # "-p "start port"-"end port" in command
                 command = "-p " + port_start + "-" + port_end + " -sV --version-light"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
             else:
                 command = "-sV --version-light"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
 
-            self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")  # debug for printing the command
-            self.nm.scan(hosts=self.ip_list, arguments="-O")
-            self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+            self.debug("NMAP command = " + " '" + nm.command_line() + "'")  # debug for printing the command
+
+            # Run "quiet" nmap OS scan and save output to a variable for parsing
+            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
+                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         else:  # Use "loud" scan pre-sets
             if self.use_port_range == "true":
                 command = "-p " + port_start + "-" + port_end + " -sV --version-all -T4"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
             else:
                 command = "-sV --version-all -T4"
-                self.nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, arguments=command)
 
-        self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
-        self.nm.scan(hosts=self.ip_list, arguments="-O --osscan-guess -T5")
-        self.debug("NMAP command = " + " '" + self.nm.command_line() + "'")
+            self.debug("NMAP command = " + " '" + nm.command_line() + "'")
 
-        return True
+            # Run "loud" nmap OS scan and save output to a variable for parsing
+            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
+                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        return os_parsing(os_output)  # Call local function for nmap OS parsing
+
 
     def get_local_groups(self):
         # Part of net
@@ -247,29 +276,62 @@ class Enumerate(Debug):
             print(result)
 
 
-    def get_rpcclient(self, users, target):
+    def get_rpcclient(self, user_list, password_list, target, ip):
         # Pass usernames in otherwise test against defaults
-        raw_rpc = subprocess.run("rpcclient -U "+users+" "+target+" -c 'lsaquery' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+        for user in user_list:
+            for password in password_list:
+                subprocess.run("rpcclient -U " + user + " " + target + " -c 'lsaquery' 2>&1",
+                               stdout=subprocess.PIPE).stdout.decode('utf-8')
+                # enter password
+                raw_rpc = subprocess.run(password).stdout.decode('utf-8')
 
-        # once with a rpcclient commend line
-        #   enumdomusers
-        #   enumdomgroups
-        #   getdompwinfo - min password length
-        #   getusrdompwinfo [user number 0x44f] - look for string 'cleartext'
+                if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
+                    # Unable to connect
+                    print("Connection refused under - " + user + ":" + password)
+                elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
+                    # Incorrect username or password
+                    print("Incorrect username or password under -  " + user + ":" + password)
+                elif "rpcclient $>" in raw_rpc:
+                    users = []
+                    rids = []
+                    # Success
+                    # raw_command = subprocess.run("enumdomusers").stdout.decode('utf-8')
+                    #  iterate along string
+                    for line in raw_command:
+                        start = line.find('[')
+                        start += 1
+                        end = line.find(']', start)
+                        users.append(line[start:end])
 
-        # for u in 'cat domain-users.txt'; do \
-        #   echo -n "[*] user: $u" && \
-        #   rpcclient -U "$u%[common password]" \
-        #       -c "getusername;quit" 10.10.10.10 \
-        # done
-        #if string == "Authority"
-        #   success
-        #elif string == "NT_STATUS_LOGON_FAILURE"
-        #   failure
-        #elif string == "ACCOUNT_LOCKED"
-        #   locked out and should stop immediately
-        #then run get_smbclient if successful
+                        start = line.find('[', end)
+                        start += 1
+                        end = line.find(']', start)
+                        rids.append(line[start:end])
 
+                        current = TargetInfo
+                        users = (ip, users)
+                        rids = (ip, rids)
+                        current.DOMAIN.append(users)
+                        current.DOMAIN.append(rids)
+
+                        # then run get_smbclient
+
+                else:
+                    print("No reply")
+
+
+# No reply
+# once with a rpcclient commend line
+#   enumdomusers
+#   enumdomgroups
+#   getdompwinfo - min password length
+#   getusrdompwinfo [user number 0x44f] - look for string 'cleartext'
+
+# for u in 'cat domain-users.txt'; do \
+#   echo -n "[*] user: $u" && \
+#   rpcclient -U "$u%[common password]" \
+#       -c "getusername;quit" 10.10.10.10 \
+# done
 
 
     def get_smbclient(self, users, target):
