@@ -27,25 +27,27 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
 
     # Add command arguments where appropriate
     if bypassRoutingTables:
-        command = command + ["-r"]
+        command += ["-r"]
 
     if hopBackChecks:
-        command = command + ["--back"]
+        command += ["--back"]
 
     if not mapHostNames:
-        command = command + ["-n"]
+        command += ["-n"]
 
     if type(target) is str:
         if ipIsValid(target):
-            command = command + [target]
+            command += [target]
     else:
         return "Error: Wrong type"  # Trace route is not able to target multiple hosts
 
+    # Running command
     output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
-    if originalOut is True:
+    if originalOut is True:  # If user doesnt want output parsed
         return output
 
+    # Parsing output
     output = output.splitlines()
 
     del output[0]
@@ -60,13 +62,14 @@ def traceRoute(target, interface="usb0", bypassRoutingTables=False, hopBackCheck
 
             for item in line:
                 # If item looks like a domain or the first three octets of an IP address
-                if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
+                if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):  # Would compiling a re be better here?
                     results += [item.strip("\(\)")]  # Remove any brackets and add to results for this line
 
             if ipIsValid(results[0]):  # If the "Host name" is an IP
                 results = results[::2]  # Grab every other variable
 
             output_out += [results]  # Add results from this line
+
     else:
         for line in output:
             results = []  # init var to store current results
