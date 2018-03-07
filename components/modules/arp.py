@@ -33,13 +33,13 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, orig
     command = ["arp-scan", "-v", "-I", interface, "-R", "-r", "3"]
 
     if sourceIP is not "self" and ipIsValid(sourceIP):
-        command = command + ["-s", sourceIP]
+        command += ["-s", sourceIP]
 
     if targetIsAFile is True:
         if target is list:
             return "Error: A list of files cannot be scanned"
 
-        command = command + ["-f", target]  # The target in this case should be the path to a target list file
+        command += ["-f", target]  # The target in this case should be the path to a target list file
 
     else:  # if target is not a file
         if type(target) is list:
@@ -47,13 +47,13 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, orig
                 if not ipIsValid(current, iprange=True):
                     return "Error: Target " + str(current) + " in list is not a valid IP"
 
-            command = command + target
+            command += target
 
         elif type(target) is str:  # if target is just an IP
             if not ipIsValid(target, iprange=True):
                 return "Error: Target is not a valid IP or Range"
 
-            command = command + [target]
+            command += [target]
 
         else:
             return "Error: Target is not a string or list"
@@ -65,13 +65,17 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, orig
 
     output = output.splitlines()
 
-    del output[:5]  # Delete first 6 lines
-    del output[-1:-2]  # Delete last two lines?1
+    # Removing generalised information out
+    del output[0:2]
+    del output[-3:]
+
+    outlist = [[]]  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
     for line in output:
-        line.strip().split("\t")  # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
+        # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
+        outlist += [line.split("\t")]
 
-    return output
+    return outlist  # Sorting via IP would be nice
 
 
 def ipIsValid(IP, iprange=False):
