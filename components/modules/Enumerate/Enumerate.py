@@ -275,7 +275,6 @@ class Enumerate(Debug):
             result = re.search('\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?', line)
             print(result)
 
-
     def get_rpcclient(self, user_list, password_list, target, ip):
         # Pass usernames in otherwise test against defaults
         for user in user_list:
@@ -292,47 +291,91 @@ class Enumerate(Debug):
                     # Incorrect username or password
                     print("Incorrect username or password under -  " + user + ":" + password)
                 elif "rpcclient $>" in raw_rpc:
-                    users = []
-                    rids = []
-                    # Success
-                    # raw_command = subprocess.run("enumdomusers").stdout.decode('utf-8')
-                    #  iterate along string
-                    for line in raw_command:
-                        start = line.find('[')
-                        start += 1
-                        end = line.find(']', start)
-                        users.append(line[start:end])
+                    raw_command = subprocess.run("enumdomgroups", stdout =subprocess.PIPE).stdout.decode('utf-8')
+                    users_or_groups = False
+                    # true = users / false = groups
+                    extract_info_rpc(raw_command, ip, users_or_groups)
 
-                        start = line.find('[', end)
-                        start += 1
-                        end = line.find(']', start)
-                        rids.append(line[start:end])
+                    raw_command = subprocess.run("enumdomusers", stdout =subprocess.PIPE).stdout.decode('utf-8')
+                    users_or_groups = True
+                    # true = users / false = groups
+                    extract_info_rpc(raw_command, ip, users_or_groups)
 
-                        current = TargetInfo
-                        users = (ip, users)
-                        rids = (ip, rids)
-                        current.DOMAIN.append(users)
-                        current.DOMAIN.append(rids)
+                    raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
+                    get_password_policy(raw_command, ip)
 
-                        # then run get_smbclient
+                    # then run get_smbclient
+
 
                 else:
                     print("No reply")
 
+    def get_password_policy(self, raw_command, ip):
+        length = 0
+        clear_text_pw = False
+        refuse_pw_change = False
+        lockout_admins = False
+        complex_pw = False
+        pw_no_anon_change = False
+        pw_no_change = False
 
-# No reply
-# once with a rpcclient commend line
-#   enumdomusers
-#   enumdomgroups
-#   getdompwinfo - min password length
-#   getusrdompwinfo [user number 0x44f] - look for string 'cleartext'
+        if "min_password_length" in raw_command:
+            for s in raw_command.split():
+                if s.isdigit():
+                    length = s
+        if "DOMAIN_PASSWORD_STORE_CLEARTEXT" in raw_command:
+            clear_text_pw = True
+        if "DOMAIN_REFUSE_PASSWORD_CHANGE" in raw_command:
+            refuse_pw_change = True
+        if "DOMAIN_PASSWORD_LOCKOUT_ADMINS" in raw_command:
+            lockout_admins = True
+        if "DOMAIN_PASSWORD_COMPLEX" in raw_command:
+            complex_pw = True
+        if "DOMAIN_PASSWORD_NO_ANON_CHANGE" in raw_command:
+            pw_no_anon_change = True
+        if "DOMAIN_PASSWORD_NO_CLEAR_CHANGE" in raw_command:
+            pw_no_change = True
 
-# for u in 'cat domain-users.txt'; do \
-#   echo -n "[*] user: $u" && \
-#   rpcclient -U "$u%[common password]" \
-#       -c "getusername;quit" 10.10.10.10 \
-# done
+        current = TargetInfo
+        password_policy = (
+        ip, length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change)
+        current.PASSWD_POLICY.append(password_policy)
 
+    def extract_info_rpc(self, raw_command, ip, users_or_groups):
+        index = 0
+        start = 0
+        counter = 0
+        users = []
+        rids = []
+        for char in raw_command:
+            if char == "\n":
+                counter += 1
+        for times in range(0, counter + 1):
+            start = index
+            start = raw_command.find('[', index)
+            start += 1
+            end = raw_command.find(']', start)
+            users.append(raw_command[start:end])
+            index = end
+
+            start = raw_command.find('[', index)
+            start += 1
+            end = raw_command.find(']', start)
+            rids.append(raw_command[start:end])
+            index = end
+            times += 1
+
+        current = TargetInfo
+        if users_or_groups:
+            users = (ip, users)
+            user_rids = (ip, rids)
+            current.DOMAIN.append(users)
+            current.DOMAIN.append(user_rids)
+        else:
+            groups = (ip, users)
+            user_rids = (ip, rids)
+            current.DOMAIN.append(groups)
+            current.DOMAIN.append(user_rids)
 
     def get_smbclient(self, users, target):
         # Pass usernames in otherwise test against defaults
