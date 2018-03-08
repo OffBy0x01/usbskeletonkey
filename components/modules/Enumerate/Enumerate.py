@@ -262,18 +262,38 @@ class Enumerate(Debug):
     def get_nbt_stat(self, target="127.0.0.1"):
         raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
-        for line in raw_nbt:
-            # Ignore the "Looking up status of [target]" line
-            if "up status of" in line:
-                print("nbtstat for ", target, ":", sep="")
-                continue
-            # No results found for target
-            elif target in line:
-                break
 
+        # Fixing that output
+        output = []
+        for line in raw_nbt:
             # Get actual results
-            result = re.search('\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?', line)
-            print(result)
+            result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
+            if result:  # If it matches the regex
+                result = [res if not None else "" for res in result.groups()]  # Need to replace None type with ""
+                print(result)
+
+                # Ignore the "Looking up status of [target]" line
+                if "up status of" in line:
+                    print("nbtstat for ", target, ":", sep="")
+                    continue
+                # No results found for target
+                elif target in line:
+                    break
+                for nbt_line in self.nbt_info:
+                    service, hex_code, group, descriptor = nbt_line
+                    # if we need to check service or not (this is empty for some fields)
+                    if service:
+                        if service in result[0] and hex_code in result[1] and group in result[2]:
+                            output.append("%s %s" % (line, descriptor))
+                            break
+                    else:
+                        if hex_code in result[1] and group in result[2]:
+                            output.append("%s %s" % (line, descriptor))
+                            break
+            else:  # If it didn't match the regex
+                output.append("%s" % line)
+
+        return output
 
     def get_rpcclient(self, user_list, password_list, target, ip):
         # Pass usernames in otherwise test against defaults
