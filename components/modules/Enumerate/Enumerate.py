@@ -32,7 +32,6 @@ class Enumerate(Debug):
 
         # TODO @Joh Justify why nmap needs to be a self!
 
-
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
 
@@ -141,7 +140,7 @@ class Enumerate(Debug):
                 # things that need users
                 pass
 
-            #self.other things that just uses IPs
+            # self.other things that just uses IPs
 
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
@@ -166,7 +165,9 @@ class Enumerate(Debug):
             start, _, end = current.strip().partition('-')
 
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
-            return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
+            return [socket.inet_ntoa(struct.pack('>I', i)) for i in
+                    range(struct.unpack('>I', socket.inet_aton(start))[0],
+                          struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
         elif IpValidator.is_valid_ipv4_address(current):
             return [current]
@@ -195,7 +196,7 @@ class Enumerate(Debug):
     # NMAP scans for service and operating system detection
     def nmap(self, port_start, port_end):
 
-        nm = nmap.PortScanner() # Declare python NMAP object
+        nm = nmap.PortScanner()  # Declare python NMAP object
 
         # Local function for parsing OS information (required as python NMAP OS isn't working correctly)
         def os_parsing(output):
@@ -234,7 +235,7 @@ class Enumerate(Debug):
 
             # Run "quiet" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
-                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                       stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         else:  # Use "loud" scan pre-sets
             if self.use_port_range == "true":
@@ -248,10 +249,9 @@ class Enumerate(Debug):
 
             # Run "loud" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
-                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                       stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         return os_parsing(os_output)  # Call local function for nmap OS parsing
-
 
     def get_local_groups(self):
         # Part of net
@@ -293,7 +293,7 @@ class Enumerate(Debug):
                     users = []
                     rids = []
                     # Success
-                    # raw_command = subprocess.run("enumdomusers").stdout.decode('utf-8')
+                    raw_command = subprocess.run("enumdomusers").stdout.decode('utf-8')
                     #  iterate along string
                     for line in raw_command:
                         start = line.find('[')
@@ -317,6 +317,23 @@ class Enumerate(Debug):
                 else:
                     print("No reply")
 
+    def get_smbclient(self, users, domain_name, target_ip):
+        # Pass usernames in otherwise test against defaults
+        info = []
+        raw_smb = subprocess.run(
+            "smbclient -W '" + domain_name + "' // " + target_ip + " /ipc$ -U" + users + " - c 'q' 2>&1",
+            stdout=subprocess.PIPE).stdout.decode('utf-8')
+        att = ['Domain', 'OS', 'Server']
+        for line in raw_smb:
+            for x in att:
+                start = line.find('' + att[x] + '=[')
+                start += 1
+                end = line.find(']', start)
+                info.append(line[start:end])
+        domain_info = (domain_name)
+        os_info = (info)
+        current.DOMAIN.append(domain_info)
+        current.DOMAIN.append(os_info)
 
 # No reply
 # once with a rpcclient commend line
@@ -330,15 +347,8 @@ class Enumerate(Debug):
 #   rpcclient -U "$u%[common password]" \
 #       -c "getusername;quit" 10.10.10.10 \
 # done
-
-
-    def get_smbclient(self, users, target):
-        # Pass usernames in otherwise test against defaults
-        raw_smb = subprocess.run("smbclient // "+target+" / ipc$ -U"+users+" - c 'help' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
-
-
-    # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
-    # e.g. def for nbtstat, def for nmap, def for net etc...
+# Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
+# e.g. def for nbtstat, def for nmap, def for net etc...
 
 e = Enumerate(debug=True)
 e.nmap(str(1), str(100))
