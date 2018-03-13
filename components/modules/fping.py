@@ -9,18 +9,36 @@
 `-R: makes the packets sent contain random packet data`
 `-s / --src=addr: Set source address`
 '''
-import subprocess
 
+import subprocess
 import re
 
 
-def fping(target, ping_count=0, get_ips_from_dns=False, get_dns_name=False, contain_random_data=True,
-          randomise_targets=False, source_address="self"):
-    command = ["fping", "-a"]
+def fping(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False, contain_random_data=True,
+          randomise_targets=False, source_address="self", verbose=False):
+    """
+
+
+    :param target: Either target via IPv4, IPv4 range, list of IPv4's, DNS Name(s?!)
+    :param interface: Choose which interface the pings go from. Defaults to USB0
+    :param ping_count: Will ping as many times as the input asks for
+    :param all_ips_from_dns: Scans all IP address's relating to that DNS name
+    :param get_dns_name: Will return with the DNS name for the IP scanned
+    :param contain_random_data: Will not just send empty packets like the default
+    :param randomise_targets: Will go through the targets provided in a random order
+    :param source_address: Changes where the ping says it came from
+    :param verbose: Only really effects the ping count command. Swaps output from RTTimes to Statistics
+    :return:
+    """
+
+    command = ["fping", "-a", "--iface="+interface]
 
     # Adding Flags
     if ping_count > 0:
-        command += ["--count="+str(ping_count)]
+        if verbose:
+            command += ["-D", "--count="+str(ping_count)]
+        else:
+            command += ["--vcount="+str(ping_count)]
 
     if get_dns_name:
         command += ["-n"]
@@ -35,27 +53,27 @@ def fping(target, ping_count=0, get_ips_from_dns=False, get_dns_name=False, cont
         command += ["--src="+source_address]
 
     # Adding Targets
-    if ipIsValid(target):
-        command += [target]
-
-    elif ipIsValid(target, iprange=True):
-        command += ["-g", target]
-
-    elif target is list:
-        for item in target:
-            # if re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*\Z", target.lower()) and get_ips_from_dns:
-            if get_ips_from_dns:
+    if type(target) is list:
+        if all_ips_from_dns:
+            for item in target:
                 if not re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
                     return "Error: Target in list is not a valid IP or hostname (Does not accept ranges here)"
-            else:
+        else:
+            for item in target:
                 if not ipIsValid(item):
                     return "Error: Target in list is not a valid IP (Does not accept ranges here)"
+
         command += target
 
-    elif re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*\Z", target.lower()) and get_ips_from_dns:
-        command += ["-m"]
+    elif ipIsValid(str(target)):
         command += [target]
 
+    elif ipIsValid(str(target), iprange=True):
+        command += ["-g", target]
+
+    elif re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*\Z", str(target).lower()) and all_ips_from_dns:
+        command += ["-m"]
+        command += [target]
     else:
         return "Error: Target is not a valid IP, Range or list"
 
