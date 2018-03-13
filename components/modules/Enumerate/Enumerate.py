@@ -9,6 +9,9 @@ from components.helpers.nmap import nmap  # TODO Find a fix on Pi that doesn't r
 
 
 class TargetInfo:
+    """
+    To be used with Run to create a tuple of (TargetIP, TargetInfo) for each target ip
+    """
     def __init__(self):
         self.OS_INFO = []
         self.SOFTWARE_INFO = []
@@ -27,8 +30,6 @@ class TargetInfo:
 class Enumerate(Debug):
     def __init__(self, debug=False):
         super().__init__(name="Enumerate", type="Module", debug=debug)
-
-        # TODO @Joh Justify why nmap needs to be a self!
 
 
         # Setup module manager
@@ -127,7 +128,6 @@ class Enumerate(Debug):
     # ---------------------
     def run(self):
         targets = ()
-        print(self.user_list)
         for ip in self.ip_list:
             current = TargetInfo()
             for port in self.port_list:
@@ -149,30 +149,37 @@ class Enumerate(Debug):
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
 
-    def get_port_list(self, current):
+    def get_port_list(self, raw_ports):
         # TODO 01/03/18 [1/2] Add error handling
-        if "," in current:
-            return current.strip().split(',')
-        elif "-" in current:
-            start, _, end = current.strip().partition('-')
+        # Comma separated list of Ports
+        if "," in raw_ports:
+            return raw_ports.strip().split(',')
+        # Range of ports
+        elif "-" in raw_ports:
+            start, _, end = raw_ports.strip().partition('-')
             return [port for port in range(int(start), int(end))]
+        # Single port
+        elif raw_ports >= 0 and raw_ports <= 65535:
+            return [raw_ports]
+        # Bad entry
         else:
-            return [current]
+            self.debug("Error: Invalid type, must be lower_port-upper_port, single port or p1, p2, p3, etc...")
+            return None
 
-    def get_ip_list(self, current):
+    def get_ip_list(self, raw_ips):
         # TODO 01/03/18 [2/2] Add error handling
-        # List of IPs
-        if "," in current:
-            return current.strip().split(',')
+        # Comma separated list of IPs
+        if "," in raw_ips:
+            return raw_ips.strip().split(',')
         # Range of IPs
-        elif "-" in current:
-            start, _, end = current.strip().partition('-')
+        elif "-" in raw_ips:
+            start, _, end = raw_ips.strip().partition('-')
 
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
             return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
-        elif IpValidator.is_valid_ipv4_address(current):
-            return [current]
+        elif IpValidator.is_valid_ipv4_address(raw_ips):
+            return [raw_ips]
         # Bad entry
         else:
             self.debug("Error: Invalid type, must be lower_ip-upper_ip or ip1, ip2, ip3, etc...")
@@ -339,15 +346,15 @@ class Enumerate(Debug):
                     raw_command = subprocess.run("enumdomgroups", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = False
                     # true = users / false = groups
-                    extract_info_rpc(raw_command, ip, users_or_groups)
+                    self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("enumdomusers", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = True
                     # true = users / false = groups
-                    extract_info_rpc(raw_command, ip, users_or_groups)
+                    self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                    get_password_policy(raw_command, ip)
+                    self.get_password_policy(raw_command, ip)
 
                     # then run get_smbclient
 
@@ -381,7 +388,7 @@ class Enumerate(Debug):
         if "DOMAIN_PASSWORD_NO_CLEAR_CHANGE" in raw_command:
             pw_no_change = True
 
-        current = TargetInfo
+        current = TargetInfo()
         password_policy = (
         ip, length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change)
         current.PASSWD_POLICY.append(password_policy)
@@ -392,6 +399,7 @@ class Enumerate(Debug):
         counter = 0
         users = []
         rids = []
+
         for char in raw_command:
             if char == "\n":
                 counter += 1
@@ -410,7 +418,7 @@ class Enumerate(Debug):
             index = end
             times += 1
 
-        current = TargetInfo
+        current = TargetInfo()
         if users_or_groups:
             users = (ip, users)
             user_rids = (ip, rids)
