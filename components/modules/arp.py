@@ -14,32 +14,36 @@ import subprocess
 import re
 
 
-def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, originalOut=False):
+def arpScan(target, interface="usb0", source_ip="self", target_is_file=False,
+            original_out=False, randomise_targets=False):
     """
     Makes use of the arp-scan command.
-    By default makes use of the verbose, random and retry flags.
+    By default makes use of the verbose and retry flags.
 
     Target can be a list of IP's or a single IP.
         This allows for passing in the lists (such as that which the configs stores)
-    :param target:          IPv4 address(s) e.g "192.168.0.1", "192.168.0.0/24", ["192.168.0.1", "192.168.0.2"]
-    :param interface:       Defaults to usb0 but can make use of any interface that is available
-    :param sourceIP:        Defaults to self but, for in the niche case its useful, can be changed to another address
-    :param targetIsAFile:   Defaults to False but, when the user wishes to use a file containing addresses this flag can
-                                be set to true and the target can instead be a path to the file.
-    :param originalOut: If the user wants the original command output this should be changed to true
+    :param target: IPv4 address(s) e.g "192.168.0.1", "192.168.0.0/24", ["192.168.0.1", "192.168.0.2"]
+    :param interface: String value for interface, defaults to usb0 but can make use of any interface that is available
+    :param source_ip: String value that defaults to self but can be changed send packets with source being another address
+    :param target_is_file: Binary value for when the user wishes to use a file containing addresses. Defaults False
+    :param original_out: Binary value for whether the command gives out the command output without parsing. Defaults False
+    :param randomise_targets: Binary Value for targets where they should not be scanned in the order given. Defaults False
 
     :return: output of the command to be parsed
     """
-    command = ["arp-scan", "-v", "-I", interface, "-R", "-r", "3"]
+    command = ["arp-scan", "-v", "-I", interface, "-r", "3"]
 
-    if sourceIP is not "self" and ipIsValid(sourceIP):
-        command = command + ["-s", sourceIP]
+    if randomise_targets:
+        command += ['-R']
 
-    if targetIsAFile is True:
+    if source_ip is not "self" and ipIsValid(source_ip):
+        command += ["-s", source_ip]
+
+    if target_is_file is True:
         if target is list:
             return "Error: A list of files cannot be scanned"
 
-        command = command + ["-f", target]  # The target in this case should be the path to a target list file
+        command += ["-f", target]  # The target in this case should be the path to a target list file
 
     else:  # if target is not a file
         if type(target) is list:
@@ -47,31 +51,35 @@ def arpScan(target, interface="usb0", sourceIP="self", targetIsAFile=False, orig
                 if not ipIsValid(current, iprange=True):
                     return "Error: Target " + str(current) + " in list is not a valid IP"
 
-            command = command + target
+            command += target
 
         elif type(target) is str:  # if target is just an IP
             if not ipIsValid(target, iprange=True):
                 return "Error: Target is not a valid IP or Range"
 
-            command = command + [target]
+            command += [target]
 
         else:
             return "Error: Target is not a string or list"
 
     output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
-    if originalOut is True:
+    if original_out is True:
         return output
 
     output = output.splitlines()
 
-    del output[:5]  # Delete first 6 lines
-    del output[-1:-2]  # Delete last two lines?1
+    # Removing generalised information out
+    del output[0:2]
+    del output[-3:]
+
+    outlist = [[]]  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
     for line in output:
-        line.strip().split("\t")  # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
+        # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
+        outlist += [line.split("\t")]
 
-    return output
+    return outlist  # Sorting via IP would be nice
 
 
 def ipIsValid(IP, iprange=False):
@@ -85,16 +93,16 @@ def ipIsValid(IP, iprange=False):
     :return: boolean indicating if the IP is valid, True for valid IP
     """
     # Side note, might need IPv6 support. TODO Check this isn't an issue
-    ipRange = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"  # This checks a number is within 0-255
-    anIPv4 = ipRange + "\." + ipRange + "\." + ipRange + "\." + ipRange  # This regex will check its a IP
+    ip_range = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"  # This checks a number is within 0-255
+    an_ipv4 = ip_range + "\." + ip_range + "\." + ip_range + "\." + ip_range  # This regex will check its a IP
 
-    anIPv4Range = anIPv4 + "\/[0-2][0-9]|" + anIPv4 + "\/3[0-2]"  # This checks IP ranges such as 192.168.0.0/24
+    an_ipv4_range = an_ipv4 + "\/[0-2][0-9]|" + an_ipv4 + "\/3[0-2]"  # This checks IP ranges such as 192.168.0.0/24
     # The checks with this one are more lax. Still error prone
 
     if iprange:
-        check = re.search("\A" + anIPv4 + "\Z|\A" + anIPv4Range + "\Z", IP)
+        check = re.search("\A" + an_ipv4 + "\Z|\A" + an_ipv4_range + "\Z", IP)
     else:
-        check = re.search("\A" + anIPv4 + "\Z", IP)
+        check = re.search("\A" + an_ipv4 + "\Z", IP)
 
     if check is None:
         return False

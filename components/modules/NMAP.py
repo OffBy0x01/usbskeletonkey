@@ -51,27 +51,26 @@ class NMAP:
         self.nm = nmap.PortScanner()
         self.loud_scan = True
         self.targets = ""
+        self.list = []
 
     def output(self):  # Quick "mockup" for output
 
-        print('----------------------------------------------------')
-        print('Host : %s (%s)' % (self.targets, self.nm[self.targets].hostname()))
-        print('State : %s' % self.nm[self.targets].state())
+        output = ''
 
         for protocol in self.nm[self.targets].all_protocols():
-            print('----------')
-            print('Protocol : %s' % protocol)
-            print('----------')
 
             for port in self.nm[self.targets][protocol]:
                 nmap_results = self.nm[self.targets][protocol][port]
 
-                print('PORT: ' + str(port) + ': ' + "SERVICE: " + nmap_results['product']
-                      + " VERSION: " + nmap_results['version'] + " STATE: " + nmap_results['state'])
+                output += (('PORT: ' + str(port) + ': ' + "SERVICE: " + nmap_results['product']
+                      + " VERSION: " + nmap_results['version'] + " STATE: " + nmap_results['state']) + '\n')
 
             # TODO - Sort output for OS detection.
             # For outputting -sV info use the keys: product and version (Service running and version)
             # For outputting -O info I HAVE NO CLUE on the keys. "osclass" should work but it doesn't
+
+        self.list.append(output)
+        return
 
     def output_to_file(self):
 
@@ -84,11 +83,11 @@ class NMAP:
 
         if self.loud_scan:
             if port_range:
-                command = "-p " + port_start + "-" + port_end + " -sV --version-light -T4"
-                self.nm.scan(hosts=self.targets, arguments=command)
+                command = " -sV --version-light -T4"
+                service_output = self.nm.scan(hosts="127.0.0.1", ports="23,34,44", arguments=command)
             else:
                 command = "-sV --version-all -T4"
-                self.nm.scan(hosts=self.targets, arguments=command)
+                self.nm.scan(hosts="127.0.0.1", arguments=command)
 
         else:
             if port_range:
@@ -98,18 +97,19 @@ class NMAP:
                 command = "-sV --version-light"
                 self.nm.scan(hosts=self.targets, arguments=command)
 
-        print(self.nm.command_line())  # debug
+       # print(self.nm.command_line())  # debug
 
-        if self.save_output:
-            return self.output_to_file()
-        else:
-            return self.output()
+        return self.output()
 
-    def os_detection(self, target, scan_loud, save_output):
+
+
+
+
+    def os_detection(self, target, scan_loud):
 
         self.targets = target
         self.loud_scan = scan_loud
-        self.save_output = save_output
+        #self.save_output = save_output
         output = subprocess.run("nmap 45.33.32.156 -O -T5 ", shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         print(output)
@@ -129,5 +129,9 @@ class NMAP:
                     new_line = new_line.strip('OS details: ')
                     parsed_output = (parsed_output + '\n' + new_line)
 
-        print(parsed_output)
+        # print(parsed_output)
+        self.list.append(parsed_output)
+        print (self.list[0])
+        print (self.list[1])
+
         return
