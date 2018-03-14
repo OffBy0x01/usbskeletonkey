@@ -22,13 +22,13 @@ Install USB Skeleton Key by running:
 Contribute
 -----------
 
-- [Issue Traker](github.com/AR-Calder/usbskeletonkey/usbskeletonkey/issues)
+- [Issue Tracker](github.com/AR-Calder/usbskeletonkey/usbskeletonkey/issues)
 - [Source Code](github.com/AR-Calder/usbskeletonkey/usbskeletonkey)
 
 Support
 --------
 
-If you are having any issues, please create an issue with a detailed explanation of the problem encountered.
+If you are having any issues, please create an issue with a detailed explanation of the encountered problem.
 
 License
 --------
@@ -39,8 +39,8 @@ The project is licensed under the <LICENSE>
 skeleton-key.py
 ================
 
-This part of the project acts as the UI and allows the user to configure 
-module setting before deployment on a target system.
+This part of the project acts as the UI and allows the user to configure
+module settings prior to deployment on a target system.
 
 	#install project
 	run skeleton-key.py
@@ -51,8 +51,8 @@ module setting before deployment on a target system.
 Interface Features
 ---------
 
-- View all available modules installed
-- Configure any module
+- View all installed modules 
+- Configure any installed module
 - Use keyword commands to perform actions
 
 Interface use
@@ -69,7 +69,7 @@ Modules are selected by a index number in the following form:
 
 --------------------
 
-Once a module is selected - enter configuration mode of the selected module.
+Once a module is selected, configuration mode for said module is entered.
 The following commands can be used to interact with configuration mode:
 
 command				- Description of command
@@ -105,8 +105,6 @@ network.py
 ================
 This framework component of Skeleton Key requries no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules to operate:
 
-	LIST OF MODULES (COME BACK TO)
-
 
 Network Features
 ---------
@@ -122,7 +120,7 @@ Network Bugs
 -----
 As user interaction is pretty much non-existant with this componenent there is very little to worry about regarding bugs (that we have been able to find). Please note the following however:
 
-- Due to how Linux and Mac systems interact with network devices the capturing of network traffic is only possible on Windows systems currently. (NEED TO RE-TEST THIS)
+- Due to how Linux and Mac systems interact with network devices the capturing of network traffic is only possible on Windows systems currently. -NEED TO RE-TEST THIS
 
 - Windows systems prioritise "new" ethernet network devices over existing ones, so unfortunately it is only possible to use network emulation to capture network traffic once during an attack. This is due to fact that the target system won't automatically connect to the "ethernet" adapter as the device will be known to the system after its first use.   
 
@@ -143,7 +141,7 @@ Keyboard Features
 
 Keyboard Bugs
 -----
-The ducky interpreter currently doesn't support F Numbers - Working on it 
+The ducky interpreter currently doesn't support F Numbers
 
 
 Authors
