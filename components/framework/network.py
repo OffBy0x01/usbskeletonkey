@@ -37,8 +37,12 @@ class FwComponentNetwork(FwComponentGadget):
 
     # Destructor
     def __del__(self):
-        self.down()  # Ensure adapter is downed
-        super().disable()  # Disable eth driver
+        if self.state == "usb0 down":
+            super().disable()  # Disable eth driver
+        else:
+            self.down()  # Ensure adapter is downed
+            super().disable()  # Disable eth driver
+
 
     # Check for internet connectivity
     def test_internet(self):
