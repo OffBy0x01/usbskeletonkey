@@ -1,4 +1,4 @@
-USB Skeleton Key
+ USB Skeleton Key
 =================
 Skeleton Key is a physical pen-testing framework that makes use of a Raspberry Pi micro-controller to provide a portable and streamline Enumeration/Exploitation capabilities
 
