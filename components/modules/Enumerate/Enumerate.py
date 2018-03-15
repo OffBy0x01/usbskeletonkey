@@ -9,6 +9,9 @@ from components.helpers.nmap import nmap  # TODO Find a fix on Pi that doesn't r
 
 
 class TargetInfo:
+    """
+    To be used with Run to create a tuple of (TargetIP, TargetInfo) for each target ip
+    """
     def __init__(self):
         self.OS_INFO = []
         self.SOFTWARE_INFO = []
@@ -21,14 +24,14 @@ class TargetInfo:
         self.PASSWD_POLICY = []
         self.PRINTER_INFO = []
         self.PORTS = []  # prolly formatted like this "PORT_NUMBER, SERVICE, STATUS"
+
+
 # -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
 
 class Enumerate(Debug):
     def __init__(self, debug=False):
         super().__init__(name="Enumerate", type="Module", debug=debug)
-
-        # TODO @Joh Justify why nmap needs to be a self!
 
 
         # Setup module manager
@@ -127,9 +130,8 @@ class Enumerate(Debug):
     # ---------------------
     def run(self):
         targets = ()
-        print(self.user_list)
         for ip in self.ip_list:
-            current = TargetInfo
+            current = TargetInfo()
             for port in self.port_list:
                 # things that use ports
                 current.PORTS.append(self.get_port_state())
@@ -139,35 +141,47 @@ class Enumerate(Debug):
                 # things that need users
                 pass
 
-            #self.other things that just uses IPs
+            #  self.other things that just uses IPs
+
+            # Use nmap to determine OS, port and service info then save to a list
+            nmap_output = self.nmap()  # TODO portsCSV
+            current.OS_INFO.append(nmap_output[0])
+            current.PORTS.append(nmap_output[1])
 
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
 
-    def get_port_list(self, current):
+    def get_port_list(self, raw_ports):
         # TODO 01/03/18 [1/2] Add error handling
-        if "," in current:
-            return current.strip().split(',')
-        elif "-" in current:
-            start, _, end = current.strip().partition('-')
+        # Comma separated list of Ports
+        if "," in raw_ports:
+            return raw_ports.strip().split(',')
+        # Range of ports
+        elif "-" in raw_ports:
+            start, _, end = raw_ports.strip().partition('-')
             return [port for port in range(int(start), int(end))]
+        # Single port
+        elif raw_ports >= 0 and raw_ports <= 65535:
+            return [raw_ports]
+        # Bad entry
         else:
-            return [current]
+            self.debug("Error: Invalid type, must be lower_port-upper_port, single port or p1, p2, p3, etc...")
+            return None
 
-    def get_ip_list(self, current):
+    def get_ip_list(self, raw_ips):
         # TODO 01/03/18 [2/2] Add error handling
-        # List of IPs
-        if "," in current:
-            return current.strip().split(',')
+        # Comma separated list of IPs
+        if "," in raw_ips:
+            return raw_ips.strip().split(',')
         # Range of IPs
-        elif "-" in current:
-            start, _, end = current.strip().partition('-')
+        elif "-" in raw_ips:
+            start, _, end = raw_ips.strip().partition('-')
 
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
             return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
-        elif IpValidator.is_valid_ipv4_address(current):
-            return [current]
+        elif IpValidator.is_valid_ipv4_address(raw_ips):
+            return [raw_ips]
         # Bad entry
         else:
             self.debug("Error: Invalid type, must be lower_ip-upper_ip or ip1, ip2, ip3, etc...")
@@ -191,15 +205,34 @@ class Enumerate(Debug):
         self.debug(raw_shares)
 
     # NMAP scans for service and operating system detection
-    def nmap(self, port_start, port_end):
+    def nmap(self):
 
-        nm = nmap.PortScanner() # Declare python NMAP object
+        nm = nmap.PortScanner()  # Declare python NMAP object
+        output_list = []  # List for saving the output of the commands to
 
-        # Local function for parsing OS information (required as python NMAP OS isn't working correctly)
-        def os_parsing(output):
+        def service_parsing():  # local function for parsing service and port info
 
             parsed_output = ''
 
+            for protocol in nm[self.ip_list].all_protocols():
+
+                for port in nm[self.ip_list][protocol]:
+                    nmap_results = nm[self.ip_list][protocol][port]
+
+                    #  Add output to variable
+                    parsed_output += (('PORT: ' + str(port) + ': ' + "SERVICE: " + nmap_results['product']
+                                + " VERSION: " + nmap_results['version'] + " STATE: " + nmap_results['state']) + '\n')
+
+            output_list.append(parsed_output)  # Add parsed data to the output list
+
+            return
+
+        def os_parsing(output):  # Local function for parsing OS information
+            # (required as python NMAP OS isn't working correctly)
+
+            parsed_output = ''
+
+            # Separating OS info and appending it to the output list
             for line in output.splitlines():
 
                 if "OS" in line and "detection" not in line and "matches" not in line:
@@ -216,16 +249,16 @@ class Enumerate(Debug):
 
             super().debug(parsed_output)  # Debug
 
-            return parsed_output
+            output_list.append(parsed_output)
+
+            return
 
         if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
+            command = "-sV --version-light"
 
             if self.use_port_range == "true":  # If a port range has been specified use
-                # "-p "start port"-"end port" in command
-                command = "-p " + port_start + "-" + port_end + " -sV --version-light"
-                nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, ports=self.port_list, arguments=command)
             else:
-                command = "-sV --version-light"
                 nm.scan(hosts=self.ip_list, arguments=command)
 
             self.debug("NMAP command = " + " '" + nm.command_line() + "'")  # debug for printing the command
@@ -235,11 +268,11 @@ class Enumerate(Debug):
                                     stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         else:  # Use "loud" scan pre-sets
+            command = "-sV --version-all -T4"
+
             if self.use_port_range == "true":
-                command = "-p " + port_start + "-" + port_end + " -sV --version-all -T4"
-                nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(hosts=self.ip_list, ports=self.port_list, arguments=command)
             else:
-                command = "-sV --version-all -T4"
                 nm.scan(hosts=self.ip_list, arguments=command)
 
             self.debug("NMAP command = " + " '" + nm.command_line() + "'")
@@ -248,8 +281,9 @@ class Enumerate(Debug):
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
                                     stdout=subprocess.PIPE).stdout.decode('utf-8')
 
-        return os_parsing(os_output)  # Call local function for nmap OS parsing
-
+        os_parsing(os_output)  # Call local function for nmap OS parsing
+        service_parsing()  # Call local function for nmap service/port parsing
+        return output_list  # return the output of scans in the form of a list
 
     def get_local_groups(self):
         # Part of net
@@ -314,15 +348,15 @@ class Enumerate(Debug):
                     raw_command = subprocess.run("enumdomgroups", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = False
                     # true = users / false = groups
-                    extract_info_rpc(raw_command, ip, users_or_groups)
+                    self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("enumdomusers", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = True
                     # true = users / false = groups
-                    extract_info_rpc(raw_command, ip, users_or_groups)
+                    self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                    get_password_policy(raw_command, ip)
+                    self.get_password_policy(raw_command, ip)
 
                     # then run get_smbclient
 
@@ -356,7 +390,7 @@ class Enumerate(Debug):
         if "DOMAIN_PASSWORD_NO_CLEAR_CHANGE" in raw_command:
             pw_no_change = True
 
-        current = TargetInfo
+        current = TargetInfo()
         password_policy = (
         ip, length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change)
         current.PASSWD_POLICY.append(password_policy)
@@ -367,6 +401,7 @@ class Enumerate(Debug):
         counter = 0
         users = []
         rids = []
+
         for char in raw_command:
             if char == "\n":
                 counter += 1
@@ -386,20 +421,10 @@ class Enumerate(Debug):
             times += 1
 
         current = TargetInfo
-        if users_or_groups:
-            users = (ip, users)
-            user_rids = (ip, rids)
-            current.DOMAIN.append(users)
-            current.DOMAIN.append(user_rids)
-        else:
-            groups = (ip, users)
-            user_rids = (ip, rids)
-            current.DOMAIN.append(groups)
-            current.DOMAIN.append(user_rids)
-
-    def get_smbclient(self, users, target):
-        # Pass usernames in otherwise test against defaults
-        raw_smb = subprocess.run("smbclient // "+target+" / ipc$ -U"+users+" - c 'help' 2>&1", stdout=subprocess.PIPE).stdout.decode('utf-8')
+        users = (ip, users)
+        rids = (ip, rids)
+        current.DOMAIN.append(users)
+        current.DOMAIN.append(rids)
 
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
