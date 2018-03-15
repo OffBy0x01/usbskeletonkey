@@ -11,5 +11,5 @@ class Responder(Debug):
 
     def up(self):
         network.up()
-        self.debug(subprocess.call("python2 src/Responder.py", shell=True))
+        subprocess.call("python2 src/Responder.py -I usb0 -f -w -r -d -F", shell=True)
         network.down()
