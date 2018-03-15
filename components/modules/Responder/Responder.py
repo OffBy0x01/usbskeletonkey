@@ -7,10 +7,8 @@ network = FwComponentNetwork()
 
 
 class Responder(Debug):
-    # def __init__(self, debug=False):
 
     def capture(self):
         network.up()
-        subprocess.call("python2 src/Responder.py")
-        # subprocess.call("python2 src/Responder.py -I usb0 -f -w -r -d -F", shell=True)
+        subprocess.call("python ../components/modules/Responder/src/Responder.py")
         network.down()
