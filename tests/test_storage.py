@@ -81,7 +81,7 @@ TestTwo.mountbus(write_block=True)
 
 for current in range(0, 30):
     print(current.__str__() + " of 30 seconds")
-    time.sleep(current)
+    time.sleep(1)
 
 print("Unmounting from bus")
 TestTwo.unmountbus()
