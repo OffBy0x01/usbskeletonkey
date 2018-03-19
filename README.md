@@ -19,6 +19,9 @@ Install USB Skeleton Key by running:
 	git clone usbskeletonkey
 	run skeleton-key.py
 
+Any issues with networking require an understanding of wpa_supplicant and interfaces to resolve. The most common issue is with the static address that we set as part of our initial setup. A resolution to this is being worked on
+
+
 Contribute
 -----------
 
