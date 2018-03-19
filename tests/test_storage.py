@@ -19,7 +19,10 @@ print("This is an example run of specifically the storage class"
       bp + " Confirm the closure\n" +
       bp + " Reopen the file system\n" +
       bp + " Read from it\n" +
-      bp + " Close it again\n"
+      bp + " Close it again\n" +
+      bp + " Mount on the bus\n" +
+      bp + " Wait 30 Seconds\n" +
+      bp + " Unmount the bus (Forcefully)\n"
            "This will be done with two classes in debug mode")
 
 print("Starting Test One")
@@ -71,5 +74,19 @@ if not os.path.isfile(TestTwo.mounted_dir + file):
 
 TestTwo.unmount()
 
+print("Continuing into test Three")
+
+print("Mounting on bus for 30 seconds")
+TestTwo.mountbus(write_block=True)
+
+for current in range(0, 30):
+    print(current.__str__() + " of 30 seconds")
+    time.sleep(current)
+
+print("Unmounting from bus")
+TestTwo.unmountbus()
+
+print("Deleting Test two")
 del TestTwo
+
 exit(0)
