@@ -38,9 +38,9 @@ def monitor_responder(timer):  # "Stolen from PiKey"
 
     # Determine the last modified time of Responder.db
     timestamp_old = os.stat("../components/modules/Responder/src/Responder.db").st_mtime
-    time_to_run = time.time() + timer
+    time_to_run = time.time() + timer  # Set Responder "time to live"
 
-    while time.time() < time_to_run:  # Infinite loop
+    while time.time() < time_to_run:  # While running time < "time to live"
         timestamp_new = os.stat("../components/modules/Responder/src/Responder.db").st_mtime
         if timestamp_new > timestamp_old:  # if newer modification time is detected, sleep and return
             time.sleep(2)
