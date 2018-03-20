@@ -8,7 +8,6 @@ class IpValidator:
     def is_valid_ipv4_address(IP, iprange=False):
         """
         Checks that the string passed in entirely consists of an IPv4 address or a range of IP's
-        (fping has changed this from Tracert and arp. This will be checked)
 
         Args:
         :param IP:      string that is being checked as a valid IP
@@ -22,6 +21,7 @@ class IpValidator:
 
         an_ipv4_range = an_ipv4 + "\/[0-2][0-9]|" + an_ipv4 + "\/3[0-2]"  # This checks IP ranges such as 192.168.0.0/24
         # The checks with this one are more lax. Still error prone
+        # 192.168.0.0/24
 
         search = "\A" + an_ipv4 + "\Z"
 
