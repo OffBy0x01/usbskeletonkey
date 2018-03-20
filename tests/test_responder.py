@@ -9,4 +9,4 @@ from components.modules.Responder.Responder import *
 # For testing
 if __name__ == "__main__":
     test = Responder()
-    test.capture()
+    test.capture(30)
