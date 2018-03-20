@@ -11,6 +11,32 @@ network = FwComponentNetwork()
 
 
 class Responder(Debug):
+    """ Class for Responder Module
+
+                Args:
+
+               functions:
+                   capture              Run Spiderlabs' Responder on usb0 so password hashes can potentially
+                                        be obtained.
+
+                   network.up           Calls a method from the framework component "network.py" that enables usb0,
+                                        configures the DHCP server and IP routing for network traffic
+                                        capture.
+
+                   monitor_responder    Monitors "Responder.db" for file changes and returns when either the "time
+                                        to live" period has been reached or a password hash has been captured.
+
+                   process.kill         Kills the instance of Responder that has been running.
+
+                   network.down         Calls a method from the framework component "network.py" that disables usb0,
+                                        the DHCP server and removes IP routing for the interface.
+
+               Returns:
+                   boolean
+
+               Raises:
+
+           """
 
     # Constructor
     def __init__(self, debug=False):
