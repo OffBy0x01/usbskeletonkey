@@ -206,8 +206,8 @@ class SkeletonKey(ModuleManager, Debug):
             pass
 
     def move_module_by(self, module_index, move_to):
-        temporary_holder = []
-        temporary_holder = [self.module_list[module_index]]
+        #temporary_holder = []
+        temporary_holder = self.module_list[module_index]
         self.module_list.remove(self.module_list[module_index])
         self.module_list.insert(move_to, temporary_holder)
 
@@ -232,15 +232,14 @@ class SkeletonKey(ModuleManager, Debug):
                     #move item up 1
                     self.move_module_by(current_index, (current_index - 1))
                     pass
-                if change_order_command[2] == "down":
+                elif change_order_command[2] == "down":
                     self.move_module_by(current_index, (current_index + 1))
                     pass
-                if type(change_order_command[2]) is int:
-                    #move item to integer
-                    if int(change_order_command[2]) > len(self.module_order) or int(change_order_command[2]) < 1:
-                        print("Integer out of range")
-                    else:
+                elif int(change_order_command[2]) >= 0:
+                    if int(change_order_command[2]) < len(self.module_list):
                         self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
+                    else:
+                        print("Integer out of range")
                     pass
                 else:
                     print("Please enter a valid command")
