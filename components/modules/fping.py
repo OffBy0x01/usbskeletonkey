@@ -14,8 +14,8 @@ import subprocess
 import re
 
 
-def fping(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False, contain_random_data=True,
-          randomise_targets=False, source_address="self", verbose=False):
+def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False, contain_random_data=True,
+                          randomise_targets=False, source_address="self", verbose=False):
     """
 
 
@@ -31,7 +31,7 @@ def fping(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dn
     :return:
     """
 
-    command = ["fping", "-a", "--iface="+interface]
+    command = ["check_target_is_alive", "-a", "--iface="+interface]
 
     # Adding Flags
     if ping_count > 0:
@@ -60,15 +60,15 @@ def fping(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dn
                     return "Error: Target in list is not a valid IP or hostname (Does not accept ranges here)"
         else:
             for item in target:
-                if not ipIsValid(item):
+                if not is_valid_ipv4_address(item):
                     return "Error: Target in list is not a valid IP (Does not accept ranges here)"
 
         command += target
 
-    elif ipIsValid(str(target)):
+    elif is_valid_ipv4_address(str(target)):
         command += [target]
 
-    elif ipIsValid(str(target), iprange=True):
+    elif is_valid_ipv4_address(str(target), iprange=True):
         command += ["-g", target]
 
     elif re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*\Z", str(target).lower()) and all_ips_from_dns:
@@ -80,10 +80,10 @@ def fping(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dn
     return subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8")
 
 
-def ipIsValid(IP, iprange=False):
+def is_valid_ipv4_address(IP, iprange=False):
     """
     Checks that the string passed in entirely consists of an IPv4 address or a range of IP's
-    (fping has changed this from Tracert and arp. This will be checked)
+    (check_target_is_alive has changed this from Tracert and arp. This will be checked)
 
     Args:
     :param IP:      string that is being checked as a valid IP

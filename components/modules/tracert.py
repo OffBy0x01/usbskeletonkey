@@ -8,8 +8,8 @@ import subprocess
 import re
 
 
-def traceRoute(target, interface="usb0", bypass_routing_tables=False, hop_back_checks=True,
-               map_host_names=True, original_out=False):
+def get_route_to_target(target, interface="usb0", bypass_routing_tables=False, hop_back_checks=True,
+                        map_host_names=True, original_out=False):
     """
     Makes use of the traceroute command.
     No default flags are in use that the user cannot access via output
@@ -37,7 +37,7 @@ def traceRoute(target, interface="usb0", bypass_routing_tables=False, hop_back_c
         command += ["-n"]
 
     if type(target) is str:
-        if ipIsValid(target):
+        if is_valid_ipv4_address(target):
             command += [target]
     else:
         return "Error: Wrong type"  # Trace route is not able to target multiple hosts
@@ -66,7 +66,7 @@ def traceRoute(target, interface="usb0", bypass_routing_tables=False, hop_back_c
                 if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):  # Would compiling a re be better here?
                     results += [item.strip("\(\)")]  # Remove any brackets and add to results for this line
 
-            if ipIsValid(results[0]):  # If the "Host name" is an IP
+            if is_valid_ipv4_address(results[0]):  # If the "Host name" is an IP
                 results = results[::2]  # Grab every other variable
 
             output_out += [results]  # Add results from this line
@@ -78,14 +78,14 @@ def traceRoute(target, interface="usb0", bypass_routing_tables=False, hop_back_c
             del line[0]
 
             for item in line:
-                if ipIsValid(item):
+                if is_valid_ipv4_address(item):
                     results += [item]
             output_out += [results]
 
     return output_out
 
 
-def ipIsValid(IP, iprange=False):
+def is_valid_ipv4_address(IP, iprange=False):
     """
     Checks that the string passed in entirely consists of an IPv4 address or a range of IP's
 
