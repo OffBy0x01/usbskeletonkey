@@ -14,8 +14,8 @@ import subprocess
 import re
 
 
-def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False, contain_random_data=True,
-                          randomise_targets=False, source_address="self", verbose=False):
+def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
+                          contain_random_data=True, randomise_targets=False, source_address="self", verbose=False):
     """
 
 
@@ -28,10 +28,11 @@ def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_d
     :param randomise_targets: Will go through the targets provided in a random order
     :param source_address: Changes where the ping says it came from
     :param verbose: Only really effects the ping count command. Swaps output from RTTimes to Statistics
-    :return:
+
+    :return: list of IP's that were seen to be alive
     """
 
-    command = ["check_target_is_alive", "-a", "--iface="+interface]
+    command = ["fping", "-a", "--iface="+interface]
 
     # Adding Flags
     if ping_count > 0:
@@ -50,7 +51,10 @@ def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_d
         command += ["-R"]
 
     if source_address is not "self":
-        command += ["--src="+source_address]
+        if is_valid_ipv4_address(source_address):
+            command += ["--src="+source_address]
+        else:
+            return "Error: The redirection should be to a IPv4"
 
     # Adding Targets
     if type(target) is list:
@@ -72,13 +76,38 @@ def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_d
         command += ["-g", target]
 
     elif re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*\Z", str(target).lower()) and all_ips_from_dns:
-        command += ["-m"]
-        command += [target]
+        command += ["-m", target]
     else:
         return "Error: Target is not a valid IP, Range or list"
 
-    return subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8")
+    if ping_count > 0:
+        output = subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
+    else:
+        output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
 
+    if not output:
+        return None
+
+    if source_address is not "self":
+        return None
+
+    if ping_count > 0:
+        final_out = [[]]
+
+        if verbose:
+            # This is not working. It cuts the min/avg/max section of the out and I cant be arsed fixing it
+            for line in output:
+                final_out += [line.split(" : ")]
+        else:
+            for line in output:
+                temp = line.split(" : ")
+                temp[1] = temp[1].split()
+                final_out += [temp]
+
+        del final_out[0]
+        return final_out
+
+    return output
 
 def is_valid_ipv4_address(IP, iprange=False):
     """
