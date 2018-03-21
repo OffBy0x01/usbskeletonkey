@@ -42,6 +42,7 @@ class ModuleManager(Debug):
         self.module_path = self.main_path + "/../modules"
         self.module_list = []
         self.import_module_configs()
+        self.module_order = []
 
     def get_module_by_name(self, module):
         for m in self.module_list:
