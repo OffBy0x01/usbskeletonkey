@@ -1,49 +1,45 @@
- USB Skeleton Key
+USB Skeleton Key
 =================
-Skeleton Key is a physical pen-testing framework that makes use of a Raspberry Pi micro-controller to provide a portable and streamline Enumeration/Exploitation capabilities
+
+Skeleton Key is a physical pen-testing tool using a micro-controller
 
 Features
 ---------
-  * Enumeration
-  * Responder
-  * Keyboard Emulation
-  * Ducky Script Interpretation
 
-Setup
+- NMAP
+- Enumeration
+
+Installation 
 -------------
-When making use of the Pi we expect a specifically crafted Raspberry Pi Zero in order to provide status lights (Although this is optional).
-The HAT we make use of by default is the [Blinkt kit](https://shop.pimoroni.com/products/blinkt) and we also make use of a [USB Stem kit](https://shop.pimoroni.com/products/zero-stem-usb-otg-connector) to provide a USB stick look and feel.
 
 Install USB Skeleton Key by running:
 
 	git clone usbskeletonkey
 	run skeleton-key.py
 
-Any issues with networking require an understanding of wpa_supplicant and interfaces to resolve. The most common issue is with the static address that we set as part of our initial setup. A resolution to this is being worked on
-
-
 Contribute
 -----------
 
-- [Issue Tracker](github.com/AR-Calder/usbskeletonkey/usbskeletonkey/issues)
-- [Source Code](github.com/AR-Calder/usbskeletonkey/usbskeletonkey)
+- Issue Traker: github.com/usbskeletonkey/usbskeletonkey/issues
+- Source Code: github.com/usbskeletonkey/usbskeletonkey
 
 Support
 --------
 
-If you are having any issues, please create an issue with a detailed explanation of the encountered problem.
+If you are having any issues, please let us know.
+We have a mailing list located at: usbskeletonkey@
 
 License
 --------
 
-The project is licensed under the <LICENSE>
+The project is licensed under the 
 
-
+================
 skeleton-key.py
 ================
 
-This part of the project acts as the UI and allows the user to configure
-module settings prior to deployment on a target system.
+This part of the project acts as the UI and allows the user to configure 
+module setting before deployment on a target system.
 
 	#install project
 	run skeleton-key.py
@@ -51,28 +47,25 @@ module settings prior to deployment on a target system.
 		configure module
 	saved ready for deployment
 
-Interface Features
+Features
 ---------
 
-- View all installed modules 
-- Configure any installed module
+- View all available modules installed
+- Configure any module
 - Use keyword commands to perform actions
 
 Interface use
 --------------
  
-Modules are selected by a index number in the following form:
+Modules are selected by a index number i.e. 1 or 4 in the following form:
 
 --------------------
-1	Enumerate
-
-2	Ducky Script
-
-3	Responder
+1	NMAP
+2	Enumeration
 
 --------------------
 
-Once a module is selected, configuration mode for said module is entered.
+Once a module is selected - enter configuration mode of the selected module.
 The following commands can be used to interact with configuration mode:
 
 command				- Description of command
@@ -88,73 +81,31 @@ exit 				- exits configuration mode
 Examples
 ----------
 
-show Enumerate			- Shows all information on the module Enumerate
-show Enumerate options		- Shows all information on the options of Enumerate
-set port_targets  		- Enters input mode to enter a value for port_targets of current module
-set port_targets 55-1000	- Sets port_targets to the range 55-1000 on the current module
+show nmap			- Shows all information on the module NMAP
+show nmap options		- Shows all information on the options of NMAP
+set rhosts			- Enters input mode to enter a value for rhosts of current module
+set rhosts 192.168.0.1		- Sets rhosts to 192.168.0.1 on the current module
 
-Interface Bugs
+Bugs
 -----
 
 Interface is not perfect therefore, will at times, throw errors. Many of these errors have been fixed or altered
 but some may still creep in. For this, we ask that you report any bugs or even write a patch to fix them.
 
-If Skeleton Key does not act in the way you expect - please update to the [latest version](https://github.com/AR-Calder/usbskeletonkey). If the problem persists do some research to determine if the error has already 
+If Skeleton Key does not act in the way you expect - please update to the latest version available from
+https://github.com/usbskeletonkey. If the problem persists do some research to determine if the error has already 
 been discovered and addressed. Try seraching for the problem or error message on Google, if nothing comes up please
-feel free to create an [Issue](https://github.com/AR-Calder/usbskeletonkey)
+feel free to create an Issue on our tracker (https://github.com/usbskeletonkey) and/or may a bug report to
+<usbskeletonkey@ >
 
+If you are able to write a patch improving Nmap or fixing a bug, that is even better! Instructions for submitting 
+patches or git pull requests are available from https://github.com/nmap/usbskeletonkey 
 
-network.py
-================
-This framework component of Skeleton Key requries no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules to operate:
-
-
-Network Features
----------
-
-- Turns the rapsberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device)
-- can be used with the "Responder" project to allow the pi to act as a DHCP server and capture network traffic:
-	- Adds routes for all ipv4 addresses
-	- Starts DHCP server and enables ipv4 forwarding
-	- Binds port 80 to port 1337
-	- Starts dnsspoof on port 53
-
-Network Bugs
------
-As user interaction is pretty much non-existant with this componenent there is very little to worry about regarding bugs (that we have been able to find). Please note the following however:
-
-- Due to how Linux and Mac systems interact with network devices the capturing of network traffic is only possible on Windows systems currently. -NEED TO RE-TEST THIS
-
-- Windows systems prioritise "new" ethernet network devices over existing ones, so unfortunately it is only possible to use network emulation to capture network traffic once during an attack. This is due to fact that the target system won't automatically connect to the "ethernet" adapter as the device will be known to the system after its first use.   
-
-Keyboard.py
-===========
-This framework component of Skeleton Key requries ducky scripts to operate. The functionality of Keyboard can be accessed through the Ducky Script Module by Users, or directly by Module Developers.
-
-The way keyboard works is similar for both developers and users. Users will select a ducky script file through the interface which will then be used with keyboard.py, while developers can send a ducky script string containing their desired action to keyboard.
-
-Keyboard Features
----------
-
-- Turns the rapsberry pi into a USB Rubber Ducky (emulation of a Keyboard device)
-- Can be used to enter text or perform complex key insertions
-- Accepts ducky script and some things not supported in ducky script:
-	- WIN SHIFT S  performs the same as WIN-SHIFT S
-	- CTRL ALT DEL performs the same as CTRL-ALT-DELETE
-
-Keyboard Bugs
------
-The ducky interpreter currently doesn't support F Numbers
-
-
-Authors
+Author
 -------
-[Andrew Calder](https://github.com/AR-Calder) <1503321@uad.ac.uk>
 
-[Corey Forbes](https://github.com/yeroc-sebrof) <1500812@uad.ac.uk>
-
-[Ellis Richmond](https://github.com/EGRichmond) <1501363@uad.ac.uk>
-
-[Jonathan Ross](https://github.com/Joh98) <1500598@uad.ac.uk>
-
-[Michaela Stewart](https://github.com/muicheka) <1501125@uad.ac.uk>
+Andrew Calder 		<>
+Corey Forbes		<>
+Elis Richmond		<>
+Jonathan Ross		<>
+Michaela Stewart	<1501125@uad.ac.uk>
