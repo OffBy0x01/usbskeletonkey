@@ -65,6 +65,8 @@ class Enumerate(Debug):
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
         self.use_port_range = self.current_config.options["use_port_range"]
+        self.interface = "wlan0"  # Didn't ammend to the ini as Im not sure if its as simple as adding interface = "foo"
+                                  # under the option section but its something TODO
 
         ###############################################################################
         # The following  mappings for nmblookup (nbtstat) status codes to human readable
@@ -138,10 +140,10 @@ class Enumerate(Debug):
             current = TargetInfo()
 
             # check current IP responds to ICMP
-            # TODO FPING HERE
+            self.check_target_is_alive(current, interface=self.interface)
 
             # check current IP responds to ARP
-            arp_response = self.get_targets_via_arp(current)
+            arp_response = self.get_targets_via_arp(current, interface=self.interface)
 
             if arp_response is not None:
                 current.RESPONDS_ARP = True
@@ -149,7 +151,7 @@ class Enumerate(Debug):
                 current.ADAPTER_NAME = arp_response[2]
 
             # check route to this target
-            current.ROUTE = self.get_route_to_target(ip, map_host_names=False)
+            current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
 
             # use all port scanning tools against current ip
             for port in self.port_list:
@@ -445,6 +447,103 @@ class Enumerate(Debug):
         rids = (ip, rids)
         current.DOMAIN.append(users)
         current.DOMAIN.append(rids)
+
+    @staticmethod
+    def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
+                              contain_random_data=True, randomise_targets=False, source_address="self", verbose=False):
+        """
+        Uses ICMP pings to check that hosts are online/responsive. This makes use of the FPing command line tool so is
+        able to ping multiple hosts
+
+        :param target: Either target via IPv4, IPv4 range, list of IPv4's, DNS Name(s?!)
+        :param interface: Choose which interface the pings go from. Defaults to USB0
+        :param ping_count: Will ping as many times as the input asks for
+        :param all_ips_from_dns: Scans all IP address's relating to that DNS name
+        :param get_dns_name: Will return with the DNS name for the IP scanned
+        :param contain_random_data: Will not just send empty packets like the default
+        :param randomise_targets: Will go through the targets provided in a random order
+        :param source_address: Changes where the ping says it came from
+        :param verbose: Only really effects the ping count command. Swaps output from RTTimes to Statistics
+
+        :return: list of IP's that were seen to be alive
+        """
+
+        command = ["fping", "-a", "--iface=" + interface]
+
+        # Adding Flags
+        if ping_count > 0:
+            if verbose:
+                command += ["-D", "--count=" + str(ping_count)]
+            else:
+                command += ["--vcount=" + str(ping_count)]
+
+        if get_dns_name:
+            command += ["-n"]
+
+        if randomise_targets:
+            command += ["--random"]
+
+        if contain_random_data:
+            command += ["-R"]
+
+        if source_address is not "self":
+            if IpValidator.is_valid_ipv4_address(source_address):
+                command += ["--src=" + source_address]
+            else:
+                return "Error: The redirection should be to a IPv4"
+
+        # Adding Targets
+        if type(target) is list:
+            if all_ips_from_dns:
+                for item in target:
+                    if not re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
+                        return "Error: Target in list is not a valid IP or hostname (Does not accept ranges here)"
+            else:
+                for item in target:
+                    if not IpValidator.is_valid_ipv4_address(item):
+                        return "Error: Target in list is not a valid IP (Does not accept ranges here)"
+
+            command += target
+
+        elif IpValidator.is_valid_ipv4_address(str(target)):
+            command += [target]
+
+        elif IpValidator.is_valid_ipv4_address(str(target), iprange=True):
+            command += ["-g", target]
+
+        elif re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*\Z", str(target).lower()) and all_ips_from_dns:
+            command += ["-m", target]
+        else:
+            return "Error: Target is not a valid IP, Range or list"
+
+        if ping_count > 0:
+            output = subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
+        else:
+            output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
+
+        if not output:
+            return None
+
+        if source_address is not "self":
+            return None
+
+        if ping_count > 0:
+            final_out = [[]]
+
+            if verbose:
+                # This is not working. It cuts the min/avg/max section of the out and I cant be arsed fixing it
+                for line in output:
+                    final_out += [line.split(" : ")]
+            else:
+                for line in output:
+                    temp = line.split(" : ")
+                    temp[1] = temp[1].split()
+                    final_out += [temp]
+
+            del final_out[0]
+            return final_out
+
+        return output
 
     @staticmethod
     def get_route_to_target(target, interface="usb0", bypass_routing_tables=False, hop_back_checks=True,
