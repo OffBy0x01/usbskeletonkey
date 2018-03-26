@@ -57,7 +57,23 @@ class Responder(Debug):
 
         time_to_live = self.current_config.options["time_to_live"]  # Grab Responder's "time to live" from the .ini
 
-        def monitor_responder():  # "Stolen from PiKey"
+        def monitor_responder():
+
+            ##########################################################################################
+            # This method uses code adapted from the Pi-Key project's 'picracking.py' in order to
+            # monitor Responder's database for changes via file modification dates.
+
+            # PiKey Created by Jon Aubrey (@SecurityJon) and Trevor Shingles (@_tshingles), 2017
+            # This program is free software: you can redistribute it and/or modify it under
+            # the terms of the GNU General Public License as published by the Free Software Foundation,
+            # either version 3 of the License, or (at your option) any later version.
+            # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+            # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+            # See the GNU General Public License for more details.
+
+            # https://github.com/SecurityJon/PiKey
+            # https://github.com/SecurityJon/PiKey/blob/master/client/picracking.py
+            ##########################################################################################
 
             # Determine the last modified time of Responder.db
             timestamp_old = os.stat("../components/modules/Responder/src/Responder.db").st_mtime
@@ -70,6 +86,8 @@ class Responder(Debug):
                     return True
 
             return False
+
+            # ~end of Pi-Key derived code~
 
         network.up()  # Up usb0
         process = subprocess.Popen("exec python ../components/modules/Responder/src/Responder.py -I usb0 "
