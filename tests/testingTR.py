@@ -8,8 +8,8 @@ from components.modules.tracert import *
 # IPs = ["192.168.0.0/24", "192.168.1.0/24"]
 # IP = "127.0.0.1"
 
-#print(ipIsValid(<test>)
+#print(is_valid_ipv4_address(<test>)
 
-output = traceRoute("8.8.8.8", interface="wlp4s0b1", mapHostNames=False)
+output = get_route_to_target("8.8.8.8", interface="wlp4s0b1")
 
 print(output)

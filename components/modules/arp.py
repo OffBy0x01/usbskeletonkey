@@ -14,8 +14,8 @@ import subprocess
 import re
 
 
-def arpScan(target, interface="usb0", source_ip="self", target_is_file=False,
-            original_out=False, randomise_targets=False):
+def get_targets_via_arp(target, interface="usb0", source_ip="self", target_is_file=False,
+                        original_out=False, randomise_targets=False):
     """
     Makes use of the arp-scan command.
     By default makes use of the verbose and retry flags.
@@ -36,7 +36,7 @@ def arpScan(target, interface="usb0", source_ip="self", target_is_file=False,
     if randomise_targets:
         command += ['-R']
 
-    if source_ip is not "self" and ipIsValid(source_ip):
+    if source_ip is not "self" and is_valid_ipv4_address(source_ip):
         command += ["-s", source_ip]
 
     if target_is_file is True:
@@ -48,13 +48,13 @@ def arpScan(target, interface="usb0", source_ip="self", target_is_file=False,
     else:  # if target is not a file
         if type(target) is list:
             for current in target:
-                if not ipIsValid(current, iprange=True):
+                if not is_valid_ipv4_address(current, iprange=True):
                     return "Error: Target " + str(current) + " in list is not a valid IP"
 
             command += target
 
         elif type(target) is str:  # if target is just an IP
-            if not ipIsValid(target, iprange=True):
+            if not is_valid_ipv4_address(target, iprange=True):
                 return "Error: Target is not a valid IP or Range"
 
             command += [target]
@@ -82,7 +82,7 @@ def arpScan(target, interface="usb0", source_ip="self", target_is_file=False,
     return outlist  # Sorting via IP would be nice
 
 
-def ipIsValid(IP, iprange=False):
+def is_valid_ipv4_address(IP, iprange=False):
     """
     Checks that the string passed in entirely consists of an IPv4 address or a range of IP's
 
