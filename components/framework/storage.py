@@ -3,79 +3,57 @@ import subprocess
 from datetime import datetime
 
 from components.framework.FwComponentGadget import FwComponentGadget
-
+from components.framework.Debug import *
 
 class StorageAccess(FwComponentGadget):
-    """This allows for creation of mini file systems that can be used for storing locally or via the bus
-    If this is closed early it will fuck up pretty bad and will require a restart of the device
-
-    Args:
-        readable_size:  Input the size of the file system intended
-                            e.g 4M, 512K. This defaults to 2M
-        fs:             For new filesystems this will be the format to create with
-                            e.g fat, msdos
-                        For old filesystems this will be the name of the .img file
-                            e.g payloads.img, memes.dd
-        old_fs:         Boolean value to dictate wither the class is to create a new filesystem
-        directory:      String dictating the file system will exist within
-                            e.g "./", "/mnt/", "../fs/"
-        debug:          Boolean value for the state of Debug prints
-
-    functions:
-        alot:           Ill get back to this
-
-    Returns:
-        tbd
-
-    Raises:
-        tbd
-
-
-    TODO:
-        Add functionality to copy specific files from SkelKey to the target via OTG
-
-        Put disclaimers on scary bits of code
-
     """
-    '''
-    Notes:
-        Found a cool thing with g_mass_storage. It is capable of mounting multiple volumes but because of the time of 
-        discovery this feature will be ignored/left for now. A second version of storage could be created to bring the 
-        use of this discovery but it doesn't seem worth it for now.
-        Documentation -- http://www.linux-usb.org/gadget/file_storage.html
+    This allows for creation of mini file systems that can be used for storing locally or via the bus
+    If this is closed early it will fuck up pretty bad and should require a restart of the device
+            Super Class: FwComponentGadget
 
-        This classes intended use was to have the possibility of multiple instances. This is now open to change via
-        progression with the information above as instead of having multiple instances of storage devices that can
-        be mounted we could alternatively have a stripped back class and have it called by a handler. This would allow 
-        for less control from other modules directly however. This will be left open to later changes and classed as
-        'Gold Plating'
+            __init__ asks for:
+                :param readable_size: This will set the Size of a NEW file system. Default is 2M
+                :param fs: This will either be the name of a pre-existing file system or the new file system format.
+                             Defaults to "FAT"
+                :param old_fs: Binary value dictating whether to use a old file system. Defaults to False
+                :param directory: Directory of where the filesystem should work from. Either path to Filesystem or
+                                    where filesystem will rest. Defaults to "./"
+                :param debug: Whether to enable debug output for this module. This is passed to the superclass.
+                                Defaults to False
 
-        TODO I dont think the pi will be able to recognise when the file system is done with one the bus
-        This could pose a serious issue in regard to ensuring the Skeleton keys ability to run corruption free
-        This should be looked into further in testing
-        Documentation -- http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/mass-storage.txt
-                         http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/usbmon.txt
-    '''
+            Functions:
+                __init__: The class initialisation uses the above parameters to open the appropriate file system
+                __createfs: Hidden method that is called as and when relevant by the __init__ function
+                __del__: Called when the Class is closed simply pushes a debug that it has been closed
+                __convertsize: Hidden method used to convert the size of a file to a string ending in the
+                                appropriate suffix
+                __sizeof__: Returns the size of the current file system after running through convert where appropriate
+                mountlocal: Mounts the file system locally to the set directory
+                mountbus: Mounts the file system on the bus
+                unmountlocal: unmounts locally where applicable
+                unmountbus: unmounts the bus where applicable
+                unmount: Calls the appropriate unmount file system if mounted
+    """
 
     def __createfs(self):
         """
         Creates a file system: This action does not require sudo. This action does not have exit codes
         """
-        self.debug("    Creating a filesystem")
+        self.storage.debug("    Creating a filesystem")
 
         # Create device to store to
         self.file_name = datetime.now().strftime('%Y-%m-%d--%H:%M.img')
-        self.debug("    Naming file system " + self.file_name)
+        self.storage.debug("    Naming file system " + self.file_name)
 
         # Makes a file system. (This command accepts 1M and such)
         # These don't have output of note (I should look for error messages when you try to do stupid shit)
         subprocess.run(["fallocate", "-l", self.readable_size, self.directory + self.file_name])
-        self.debug("    Running command - 'fallocate -l " + self.readable_size
+        self.storage.debug("    Running command - 'fallocate -l " + self.readable_size
                       + " " + self.directory + self.file_name + "'")
 
         # Format file system to FAT ... for now
         subprocess.run(["mkfs." + self.fs.lower(), self.directory + self.file_name])
-        self.debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.directory + self.file_name + "'")
+        self.storage.debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.directory + self.file_name + "'")
         # Done
 
     def __init__(self, readable_size="2M", fs="fat", old_fs=False, directory="./", debug=False):
@@ -84,8 +62,12 @@ class StorageAccess(FwComponentGadget):
         self._type = "Component"
         self._name = "Storage"
 
+        # Start debuger
+        self.storage = Debug()
+
+
         # Inform the user on debug what module has started
-        self.debug("Starting Module: Storage Access")
+        self.storage.debug("Starting Module: Storage Access")
 
         # Variable init
         self.fs = fs
@@ -98,16 +80,16 @@ class StorageAccess(FwComponentGadget):
         if not old_fs:
             self.__createfs()
         else:
-            self.debug("Attempting to use existing filesystem")
+            self.storage.debug("Attempting to use existing filesystem")
 
             self.file_name = fs
-            self.debug("User specified to load " + fs)
+            self.storage.debug("User specified to load " + fs)
 
             # If file exists
             if os.path.isfile(self.file_name):
-                self.debug("File discovered")
+                self.storage.debug("File discovered")
             else:
-                self.debug("File" + self.file_name + "does not exist: 2.04")
+                self.storage.debug("File" + self.file_name + "does not exist: 2.04")
                 exit(2.04)
 
         self.local_mount = False
@@ -115,13 +97,11 @@ class StorageAccess(FwComponentGadget):
         return
 
     def __del__(self):
-        # TODO move the auto mount that I had here into exit
-        self.debug("Removed")
+        self.storage.debug("Removed")
         return
 
-    # This code is derived from code from dive into python. Thanks Mark <3
-    def convertsize(self):
-        # Copyright (c) 2009, Mark Pilgrim, All rights reserved.
+    def __convertsize(self):
+        # This code is derived from code from dive into python. Thanks Mark <3
 
         # This should never reach T unless the Pi is using external storage or we are in the year 2100
         suffixes = {1024: ['K', 'M', 'G', 'T']}
@@ -132,11 +112,12 @@ class StorageAccess(FwComponentGadget):
             if fs_size < multiple:
                 return '{0:.1f} {1}'.format(fs_size, suffix)
         raise ValueError('Filesystem out of bounds (Why is it over 1023 TB?!)')
+        # Copyright (c) 2009, Mark Pilgrim, All rights reserved.
 
     # Overwriting the default sizeof method
     def __sizeof__(self):
         if self.old_fs:
-            self.convertsize()  # size of old fs
+            self.__convertsize()  # size of old fs
 
         return self.readable_size  # size of current file system
 
@@ -152,18 +133,18 @@ class StorageAccess(FwComponentGadget):
 
         mount_loopback = mount_loopback + [self.loopback_device, (self.directory + self.file_name)]
 
-        self.debug("Attempting to mount on " + self.loopback_device)
+        self.storage.debug("Attempting to mount on " + self.loopback_device)
 
         loop_output = subprocess.run(mount_loopback, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
-            self.debug("Error mounting on loop back " + self.loopback_device + ": 2.04")
+            self.storage.debug("Error mounting on loop back " + self.loopback_device + ": 2.04")
             exit(2.04)
 
         # If the first loop back device available is still the one we should be mounted to
         if self.loopback_device == subprocess.run(["losetup", "-f"],
                                                   stdout=subprocess.PIPE).stdout.decode('utf-8'):
-            self.debug("Loop back setup Failed: 2.04")
+            self.storage.debug("Loop back setup Failed: 2.04")
             exit(2.04)
 
         # The directory we intend to mount to
@@ -171,7 +152,7 @@ class StorageAccess(FwComponentGadget):
 
         # When the user tries to mount us on a non existent directory
         if not os.path.exists(self.mounted_dir):
-            self.debug("Directory Traversal failure: No directory at " + directory + "\nCreating folder")
+            self.storage.debug("Directory Traversal failure: No directory at " + directory + "\nCreating folder")
             os.mkdir(self.mounted_dir)
 
         if read_only:
@@ -196,15 +177,15 @@ class StorageAccess(FwComponentGadget):
             self.product_id = "file=" + self.directory + self.file_name
 
         self.enable()
-        self.debug("Mounted over bus. RO: " + write_block.__str__())
+        self.storage.debug("Mounted over bus. RO: " + write_block.__str__())
         self.bus_mounted = True
         return
 
     def unmountlocal(self):
-        self.debug(subprocess.run(["umount", self.mounted_dir], stdout=subprocess.PIPE).stdout.decode('utf-8'))  # un-mount
-        self.debug("The filesystem was unmounted with command umount " + self.mounted_dir)
+        self.storage.debug(subprocess.run(["umount", self.mounted_dir], stdout=subprocess.PIPE).stdout.decode('utf-8'))  # un-mount
+        self.storage.debug("The filesystem was unmounted with command umount " + self.mounted_dir)
 
-        self.debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
+        self.storage.debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
         subprocess.run(["losetup", "-d", self.loopback_device])
 
         self.local_mount = False
@@ -215,22 +196,42 @@ class StorageAccess(FwComponentGadget):
     def unmountbus(self):
         self.disable()
 
-        self.debug("The bus was unmounted")
+        self.storage.debug("The bus was unmounted")
         self.bus_mounted = False
         return
 
     def unmount(self):
-        self.debug("Starting unmount")
+        self.storage.debug("Starting unmount")
 
         if self.local_mount:
-            self.debug("Filesystem is mounted on " + self.mounted_dir)
+            self.storage.debug("Filesystem is mounted on " + self.mounted_dir)
             self.unmountlocal()
             return
 
         if self.bus_mounted:
-            self.debug("Filesystem is mounted on the bus")
+            self.storage.debug("Filesystem is mounted on the bus")
             self.unmountbus()
             return
 
-        self.debug("Nothing was mounted")
+        self.storage.debug("Nothing was mounted")
         return
+
+    '''
+    Notes:
+        Found a cool thing with g_mass_storage. It is capable of mounting multiple volumes but because of the time of 
+        discovery this feature will be ignored/left for now. A second version of storage could be created to bring the 
+        use of this discovery but it doesn't seem worth it for now.
+        Documentation -- http://www.linux-usb.org/gadget/file_storage.html
+
+        This classes intended use was to have the possibility of multiple instances. This is now open to change via
+        progression with the information above as instead of having multiple instances of storage devices that can
+        be mounted we could alternatively have a stripped back class and have it called by a handler. This would allow 
+        for less control from other modules directly however. This will be left open to later changes and classed as
+        'Gold Plating'
+
+        TODO I dont think the pi will be able to recognise when the file system is done with one the bus
+        This could pose a serious issue in regard to ensuring the Skeleton keys ability to run corruption free
+        This should be looked into further in testing
+        Documentation -- http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/mass-storage.txt
+                         http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/usbmon.txt
+    '''
