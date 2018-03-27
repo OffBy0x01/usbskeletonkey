@@ -1,11 +1,13 @@
 import configparser
+import importlib
 import os
+import pickle
 
 from components.framework.Debug import Debug
 from components.helpers.ModuleManager import ModuleManager
 
 
-class SkeletonKey(ModuleManager, Debug):
+class SkeletonKey():
     # TODO update descriptor
     """
        Class for the Interface
@@ -29,10 +31,9 @@ class SkeletonKey(ModuleManager, Debug):
       """
 
     def __init__(self, debug=False):
-        super().__init__(debug=debug)
-        # Hack for network config (something ellis has placed in - its causing errors just now) TODO: Fix this code
-        # subprocess.call("cp dhcpd.conf /etc/dhcp/dhcpd.conf", shell=True)
-        # subprocess.call("echo -e 'iface usb0 inet static\naddress 10.10.10.10\nnetmask 128.0.0.0\ngateway 10.10.10.1' >> /etc/network/interfaces", shell=True)
+        self.main = Debug(debug=debug, name="Skeleton Key", type="Main")
+
+        self.module_manager = ModuleManager()
 
         self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
@@ -45,7 +46,7 @@ class SkeletonKey(ModuleManager, Debug):
 
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
-            self.debug("ERROR: " + self.module_path + " directory does not exist")
+            self.main.debug("ERROR: " + self.module_path + " directory does not exist")
 
         # TODO #3 clean up config parser calls
         '''Load or create config files'''
@@ -73,9 +74,11 @@ class SkeletonKey(ModuleManager, Debug):
 
             # Set debug state accordingly
             if self.config.get('interface', 'debug') == "True":
-                self.debug = True
-            else:
-                self.debug = False
+                pass
+            # TODO TEST
+            #     self._debug = True
+            # else:
+            #     self._debug = False
 
             # Set current run state (config | Armed)
             if self.config.get('general', 'config_mode') == "True":
@@ -88,23 +91,50 @@ class SkeletonKey(ModuleManager, Debug):
 
         # TODO WORK OUT WHAT HAPPENS IN ARMED MODE
 
+    def armed_mode(self):
+        """
+        Loads modules from the module load order and runs them
+        """
+        with open('module_load_order', 'rb') as fp:
+            unpickler = pickle.Unpickler(fp)
+            armed_module_list = unpickler.load()
+
+        for this_module in armed_module_list:
+            try:
+                imp_module = importlib.import_module("modules." + this_module + "." + this_module, this_module)
+            except ImportError as Err:
+                print(Err)
+            finally:
+                try:
+                    # This is why modules must stick to the naming convention
+                    # If this_module does not have ".run" tough luck, no gonna do it pal.
+
+                    module_class = getattr(imp_module, this_module)
+                    runnable = module_class()
+                    runnable.run()
+                except Exception as WTF:
+                    self.main.debug(WTF)
+
+    def config_mode(self):
+        pass
+
     def display_title(self):
         # displays title
         print(self.SK_title)
 
     def display_modules(self):
         # displays all module information.
-        if not self.module_list:
+        if not self.module_manager.module_list:
             # TODO REVIEW CAUSE OF ERROR HERE
             raise ValueError("There are no modules to display.")
         else:
             x = 1
-            for module in self.module_list:
+            for module in self.module_manager.module_list:
                 print(x, " ", module.module_name)
                 x += 1
 
-    def display_information_current_module(self, user_selection):
-        module = self.module_list[user_selection - 1]
+    def show_module_attributes(self, user_selection):
+        module = self.module_manager.module_list[user_selection - 1]
         print("Module Name: ", module.module_name)
         print("Module Description: ", module.module_desc)
         print("Framework Requirements: ", module.fw_requirements)
@@ -112,14 +142,8 @@ class SkeletonKey(ModuleManager, Debug):
         print("Module Help: ", module.module_help)
         print("Output Format: ", module.output_format)
 
-    # TODO review if need this
-    def bool_ask_question(self, question):
-        """ Desc:
-                Enables asking of y/n questions"""
-
-    # TODO 1: Review how to fix this
-    def show_with_att(self, config_selection, user_selection):
-        module = self.module_list[user_selection - 1]
+    def show_module_attribute(self, config_selection, user_selection):
+        module = self.module_manager.module_list[user_selection - 1]
         if "name" in config_selection[1]:
             print("Module Name: ", module.module_name)
         elif "desc" in config_selection[1]:
@@ -135,10 +159,10 @@ class SkeletonKey(ModuleManager, Debug):
         else:
             print("ERROR: Please enter a valid attribute")
 
-    def set_with_att(self, config_selection, user_selection):
+    def set_module_attribute(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
         flag = False
-        module = self.module_list[user_selection - 1]
+        module = self.module_manager.module_list[user_selection - 1]
         # if option[key] is equal to the second word
 
         for x in module.options:
@@ -155,21 +179,19 @@ class SkeletonKey(ModuleManager, Debug):
         else:
             print("ERROR: Please enter a valid attribute to set")
 
-    def show_select_option(self, config_selection, user_selection):
+    def show_module_option(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
         flag = False
-        module = self.module_list[user_selection - 1]
+        module = self.module_manager.module_list[user_selection - 1]
         # if option[key] is equal to the second word
 
         for x in module.options:
             if config_selection[1] == "option" and x == config_selection[2]:
                 print(x, " : ", module.options[x])
                 flag = True
-        if flag:
-            pass
-        else:
+        if not flag:
             print("ERROR: Please enter a valid option to show")
-            pass
+
 
     def display_help(self):
         # Displays help information for Skeleton Key
@@ -189,29 +211,29 @@ class SkeletonKey(ModuleManager, Debug):
         print("Leaving help...")
         return
 
-    def user_save(self, config_selection, user_choice):
+    def save_module_config(self, config_selection, user_choice):
         print("Confirm action: (Y/N)")
         print("WARNING: Any unsaved changes will be lost on exit")
         confirm_save = input(">")
         confirm_save = confirm_save.upper()
-        module = self.module_list[user_choice - 1]
+        module = self.module_manager.module_list[user_choice - 1]
         module_name = module.module_name
         if confirm_save == "Y":
             print("Saving...")
-            self.save_config(module_name, True)
-            pass
+            self.module_manager.save_config(module_name, True)
+
         elif confirm_save == "N":
             print("Discarding changes...")
-            self.save_config(module_name, False)
-            pass
+            self.module_manager.save_config(module_name, False)
+
 
     def move_module_by(self, module_index, move_to):
         #temporary_holder = []
-        temporary_holder = self.module_list[module_index]
-        self.module_list.remove(self.module_list[module_index])
-        self.module_list.insert(move_to, temporary_holder)
+        temporary_holder = self.module_manager.module_list[module_index]
+        self.module_manager.module_list.remove(self.module_manager.module_list[module_index])
+        self.module_manager.module_list.insert(move_to, temporary_holder)
 
-    def change_module_order(self, user_choice):
+    def edit_module_order(self, user_choice):
         print("Use the following commands to change the module load order")
         print("order [module index] [order placement]")
         print("order [module index] up")
@@ -222,25 +244,25 @@ class SkeletonKey(ModuleManager, Debug):
             print("Please enter a valid command")
         if len(change_order_command) is not 3:
             print("Please enter a valid command")
-        elif len(change_order_command) is 3:
+        else:
             if change_order_command[0] == "order":
                 try:
                     current_index = int(change_order_command[1])
                 except ValueError:
                     print("Module index is not in list")
                 if change_order_command[2] == "up":
-                    #move item up 1
+                    # move item up 1
                     self.move_module_by(current_index, (current_index - 1))
-                    pass
+
                 elif change_order_command[2] == "down":
                     self.move_module_by(current_index, (current_index + 1))
-                    pass
+
                 elif int(change_order_command[2]) >= 0:
-                    if int(change_order_command[2]) < len(self.module_list):
+                    if int(change_order_command[2]) < len(self.module_manager.module_list):
                         self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
                     else:
                         print("Integer out of range")
-                    pass
+
                 else:
                     print("Please enter a valid command")
             else:
@@ -248,11 +270,11 @@ class SkeletonKey(ModuleManager, Debug):
 
     def show_module_order(self, user_choice):
         print("Current module order")
-        if self.module_order == 0:
+        if self.module_manager.module_order == 0:
             print("There are currently no modules in line")
         else:
-            for x in range(0, len(self.module_order)):
-                module = self.module_list[x]
+            for x in range(0, len(self.module_manager.module_order)):
+                module = self.module_manager.module_list[x]
                 print(x, " ", module.module_name)
         try:
             change_order = input("Change module order? (Y/N)")
@@ -260,8 +282,8 @@ class SkeletonKey(ModuleManager, Debug):
             print("Please enter a valid input")
         change_order = change_order.upper()
         if change_order == "Y":
-            self.change_module_order(user_choice)
-            pass
+            self.edit_module_order(user_choice)
+
         elif change_order == "N":
             pass
         else:
@@ -270,7 +292,7 @@ class SkeletonKey(ModuleManager, Debug):
     def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
-        self.module_order.append(user_choice)
+        self.module_manager.module_order.append(user_choice)
         print("Entering Configuration mode")
         config_mode = True
         save_flag = False
@@ -296,7 +318,7 @@ class SkeletonKey(ModuleManager, Debug):
                             pass
                         elif confirm_exit == "N":
                             print("Ready to save.")
-                            self.user_save(config_selection, user_choice)
+                            self.save_module_config(config_selection, user_choice)
                             print("Exiting Configuration mode...")
                             config_mode = False
                             pass
@@ -306,7 +328,7 @@ class SkeletonKey(ModuleManager, Debug):
                         pass
                 elif config_selection[0] == "show":
                     # display all information to do with current module.
-                    self.display_information_current_module(user_choice)
+                    self.show_module_attributes(user_choice)
                     pass
                 elif config_selection[0] == "set":
                     print("Please select an attribute to set in the format 'set [attribute]'")
@@ -318,7 +340,7 @@ class SkeletonKey(ModuleManager, Debug):
                     pass
                 elif config_selection[0] == "save":
                     # run method to set selected attribute
-                    self.user_save(config_selection, user_choice)
+                    self.save_module_config(config_selection, user_choice)
                     save_flag = True
                     pass
                 elif config_selection[0] == "order":
@@ -330,21 +352,21 @@ class SkeletonKey(ModuleManager, Debug):
             elif len(config_selection) == 2:
                 if config_selection[0] == "show":
                     # run method to show selected attribute
-                    self.show_with_att(config_selection, user_choice)
+                    self.show_module_attribute(config_selection, user_choice)
                     pass
                 elif config_selection[0] == "set":
                     # run method to set selected attribute
-                    self.set_with_att(config_selection, user_choice)
+                    self.set_module_attribute(config_selection, user_choice)
                     pass
                 else:
                     print("Please enter a valid command")
             elif len(config_selection) == 3:
                 if config_selection[0] == 'set':
                     # run method to set selected attribute
-                    self.set_with_att(config_selection, user_choice)
+                    self.set_module_attribute(config_selection, user_choice)
                     pass
             elif config_selection[0] == 'show':
-                self.show_select_option(config_selection, user_choice)
+                self.show_module_option(config_selection, user_choice)
                 pass
             else:
                 print("Please enter a valid command.")
@@ -372,11 +394,14 @@ class SkeletonKey(ModuleManager, Debug):
                 if user_selection == 0:
                     print("Exiting Program...")
                     exit_flag = True
+
+                    # PICKLE
+                    with open('module_load_order', 'wb') as fp:
+                        pickle.dump(self.module_manager.module_order, fp)
+
                     return user_selection
-                    pass
-                elif user_selection < 0 or user_selection > len(self.module_list):
+                elif user_selection < 0 or user_selection > len(self.module_manager.module_list):
                     print("ERROR: Invalid index selection. Please enter a valid selection.")
-                    pass
                 else:
                     if not exit_flag:
                         return user_selection
@@ -399,11 +424,14 @@ class SkeletonKey(ModuleManager, Debug):
 if __name__ == '__main__':
     selection = -1
     begin = SkeletonKey(debug=True)
+    #begin.armed_mode()
+
     while selection == -1:
         selection = begin.input_choice()
         if selection == 0:
             print("Thanks for playing.")
             break
-        else:
+        # Crappy fix for "selection always leads to config mode"
+        elif 1 <= selection <= 99999:
             begin.module_configuration(selection)
             selection = -1
