@@ -1,12 +1,11 @@
-import subprocess
 import os
+import subprocess
 import time
 
 from components.framework.Debug import Debug
 from components.framework.network import FwComponentNetwork
 from components.helpers.ModuleManager import ModuleManager
 
-network = FwComponentNetwork()
 
 # TODO: FIX FILE PATHS FOR SUB-PROCESSES
 
@@ -41,8 +40,11 @@ class Responder(Debug):
 
     # Constructor
     def __init__(self, debug=False):
-        super().__init__(name="Responder", type="Module", debug=debug)
-        subprocess.run("mkdir -p ../hashes", shell=True)  # If the "hashes" directory doesn't exist, create it
+        super().__init__(debug=debug)
+        self._type = "Module"
+        self._name = "Responder"
+        if "aspian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
+            subprocess.run("mkdir -p ../hashes", shell=True)  # If the "hashes" directory doesn't exist, create it
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -52,8 +54,11 @@ class Responder(Debug):
         if not self.current_config:
             self.debug("Error: could not import config of " + self._name)
 
+        # Should not be global
+        self.network = FwComponentNetwork()
+
     # Method used to capture password hashes from target using Spiderlabs' Responder
-    def capture(self):
+    def run(self):
 
         time_to_live = self.current_config.options["time_to_live"]  # Grab Responder's "time to live" from the .ini
 
@@ -71,13 +76,13 @@ class Responder(Debug):
 
             return False
 
-        network.up()  # Up usb0
+        self.network.up()  # Up usb0
         process = subprocess.Popen("exec python ../components/modules/Responder/src/Responder.py -I usb0 "
                                    "-f - w - r - d - F", shell=True)  # Run Responder on usb0
 
         hash_success = monitor_responder()  # Call the method that will determine if hashes have been captured
         process.kill()  # Kill Responder
-        network.down()  # Down usb0
+        self.network.down()  # Down usb0
 
         # Move txt files that contain the hashes to a more central directory (hashes directory) if hashes were captured
         if hash_success:
