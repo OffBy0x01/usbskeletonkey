@@ -33,7 +33,7 @@ class TargetInfo:
 
 
 class Enumerate(Debug):
-    def __init__(self, debug=False):
+    def __init__(self, path, debug=False):
         super().__init__(name="Enumerate", type="Module", debug=debug)
 
         # Setup module manager
@@ -43,6 +43,9 @@ class Enumerate(Debug):
         self.current_config = self.module_manager.get_module_by_name(self._name)
         if not self.current_config:
             self.debug("Error: could not import config of " + self._name)
+
+        # Import default system path
+        self.path = path
 
         # ~Produce list of usable ip addresses~
         ip_targets = self.current_config.options["ip_targets"]

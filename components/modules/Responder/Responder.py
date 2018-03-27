@@ -39,7 +39,7 @@ class Responder(Debug):
            """
 
     # Constructor
-    def __init__(self, debug=False):
+    def __init__(self, path, debug=False):
         super().__init__(debug=debug)
         self._type = "Module"
         self._name = "Responder"
@@ -53,6 +53,9 @@ class Responder(Debug):
         self.current_config = self.module_manager.get_module_by_name(self._name)
         if not self.current_config:
             self.debug("Error: could not import config of " + self._name)
+
+        # All modules assumed to use it
+        self.path = path
 
         # Should not be global
         self.network = FwComponentNetwork()
