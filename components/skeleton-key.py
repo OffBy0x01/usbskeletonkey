@@ -33,7 +33,7 @@ class SkeletonKey():
     def __init__(self, debug=False):
         self.main = Debug(debug=debug, name="Skeleton Key", type="Main")
 
-        self.module_manager = ModuleManager()
+        self.module_manager = ModuleManager(debug=debug)
 
         self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
@@ -100,6 +100,8 @@ class SkeletonKey():
             armed_module_list = unpickler.load()
 
         for this_module in armed_module_list:
+            self.main.enable_module_debug(str(this_module))
+            self.main.debug("~~~Start of " + str(this_module) + "~~~")
             try:
                 imp_module = importlib.import_module("modules." + this_module + "." + this_module, this_module)
             except ImportError as Err:
@@ -109,11 +111,19 @@ class SkeletonKey():
                     # This is why modules must stick to the naming convention
                     # If this_module does not have ".run" tough luck, no gonna do it pal.
 
-                    module_class = getattr(imp_module, this_module)
-                    runnable = module_class()
-                    runnable.run()
+                    # import config data for this module
+                    current_config = self.module_manager.get_module_by_name(this_module)
+
+                    # Module needs to be enabled before it will run
+                    if current_config.options["enabled"] == "true":
+                        module_class = getattr(imp_module, this_module)
+                        runnable = module_class()
+                        runnable.run()
                 except Exception as WTF:
-                    self.main.debug(WTF)
+                    self.main.debug("ERROR: " + str(WTF))
+                self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n")
+
+
 
     def config_mode(self):
         pass
@@ -268,7 +278,7 @@ class SkeletonKey():
             else:
                 print("Please enter a valid command")
 
-    def show_module_order(self, user_choice):
+    def edit_module_order_question(self, user_choice):
         print("Current module order")
         if self.module_manager.module_order == 0:
             print("There are currently no modules in line")
@@ -344,7 +354,7 @@ class SkeletonKey():
                     save_flag = True
                     pass
                 elif config_selection[0] == "order":
-                    self.show_module_order(user_choice)
+                    self.edit_module_order_question(user_choice)
                     pass
                 else:
                     print("Please enter a valid keyword.")
@@ -397,7 +407,9 @@ class SkeletonKey():
 
                     # PICKLE
                     with open('module_load_order', 'wb') as fp:
-                        pickle.dump(self.module_manager.module_order, fp)
+                        modules_to_pickle = [mod.module_name for mod in self.module_manager.module_list]
+                        self.main.debug(modules_to_pickle)
+                        pickle.dump(modules_to_pickle, fp)
 
                     return user_selection
                 elif user_selection < 0 or user_selection > len(self.module_manager.module_list):
@@ -424,14 +436,15 @@ class SkeletonKey():
 if __name__ == '__main__':
     selection = -1
     begin = SkeletonKey(debug=True)
-    #begin.armed_mode()
-
-    while selection == -1:
-        selection = begin.input_choice()
-        if selection == 0:
-            print("Thanks for playing.")
-            break
-        # Crappy fix for "selection always leads to config mode"
-        elif 1 <= selection <= 99999:
-            begin.module_configuration(selection)
-            selection = -1
+    if input("Enter Armed Mode? 1 = y 0 = n") == "1":  # Also just for testing
+        begin.armed_mode()
+    else:
+        while selection == -1:
+            selection = begin.input_choice()
+            if selection == 0:
+                print("Thanks for playing.")
+                break
+            # Crappy fix for "selection always leads to config mode"
+            elif 1 <= selection <= 99999:
+                begin.module_configuration(selection)
+                selection = -1
