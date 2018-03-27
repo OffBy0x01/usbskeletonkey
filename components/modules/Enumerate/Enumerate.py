@@ -32,20 +32,29 @@ class TargetInfo:
 # -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
 
-class Enumerate(Debug):
-    def __init__(self, path, debug=False):
-        super().__init__(name="Enumerate", type="Module", debug=debug)
+class Enumerate():
+    def __init__(self, path, debug):
+        self.enumerate = Debug(name="Enumerate", type="Module", debug=debug)
+        self.enumerate.debug("initialized")
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
+        self.enumerate.debug("ModuleManager Created")
 
         # import config data for this module
-        self.current_config = self.module_manager.get_module_by_name(self._name)
+        self.current_config = self.module_manager.get_module_by_name(self.enumerate._name)
         if not self.current_config:
-            self.debug("Error: could not import config of " + self._name)
+            self.enumerate.debug("Error: could not import config of " + self.enumerate._name)
 
         # Import default system path
         self.path = path
+
+        # Import interface else use default
+        self.interface = self.current_config.options["interface"] if self.current_config.options[
+                                                                         "interface"] == "wlan0" or \
+                                                                     self.current_config.options[
+                                                                         "interface"] == "usb0" else "wlan0"
+        self.enumerate.debug("Using interface: " + self.interface)
 
         # ~Produce list of usable ip addresses~
         ip_targets = self.current_config.options["ip_targets"]
@@ -67,9 +76,6 @@ class Enumerate(Debug):
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
         self.use_port_range = self.current_config.options["use_port_range"]
-        self.interface = "wlan0"  # Didn't ammend to the ini as Im not sure if its as simple as adding interface = "foo"
-                                  # under the option section but its something TODO
-
         ###############################################################################
         # The following  mappings for nmblookup (nbtstat) status codes to human readable
         # format is taken from nbtscan 1.5.1 "statusq.c".  This file in turn
@@ -189,7 +195,8 @@ class Enumerate(Debug):
             return [raw_ports]
         # Bad entry
         else:
-            self.debug("Error: Invalid type, must be lower_port-upper_port, single port or p1, p2, p3, etc...")
+            self.enumerate.debug(
+                "Error: Invalid type, must be lower_port-upper_port, single port or p1, p2, p3, etc...")
             return None
 
     def get_ip_list(self, raw_ips):
@@ -208,7 +215,7 @@ class Enumerate(Debug):
             return [raw_ips]
         # Bad entry
         else:
-            self.debug("Error: Invalid type, must be lower_ip-upper_ip or ip1, ip2, ip3, etc...")
+            self.enumerate.debug("Error: Invalid type, must be lower_ip-upper_ip or ip1, ip2, ip3, etc...")
             return None
 
     # Just an example - This takes ages on windows but is actually really fast under linux (<1s vs 8s)
@@ -226,7 +233,7 @@ class Enumerate(Debug):
                                     " -U " + user +
                                     "  % " + password,
                                     stdout=subprocess.PIPE).stdout.decode('utf-8')
-        self.debug(raw_shares)
+        self.enumerate.debug(raw_shares)
 
     # NMAP scans for service and operating system detection
     def nmap(self):
@@ -285,7 +292,8 @@ class Enumerate(Debug):
             else:
                 nm.scan(hosts=self.ip_list, arguments=command)
 
-            self.debug("NMAP command = " + " '" + nm.command_line() + "'")  # debug for printing the command
+                self.enumerate.debug(
+                    "NMAP command = " + " '" + nm.command_line() + "'")  # debug for printing the command
 
             # Run "quiet" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
@@ -299,7 +307,7 @@ class Enumerate(Debug):
             else:
                 nm.scan(hosts=self.ip_list, arguments=command)
 
-            self.debug("NMAP command = " + " '" + nm.command_line() + "'")
+                self.enumerate.debug("NMAP command = " + " '" + nm.command_line() + "'")
 
             # Run "loud" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,

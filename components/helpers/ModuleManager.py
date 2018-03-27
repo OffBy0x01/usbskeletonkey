@@ -32,7 +32,7 @@ class ModuleManager(Debug):
 
     """
     def __init__(self, debug=False, save_needs_confirm=True):
-        super().__init__(name="ModuleManager", type="Framework", debug=debug)
+        super().__init__(name="ModuleManager", type="Helper", debug=debug)
 
         # Enables or disables the save confirmation feature
         self.save_needs_confirm = save_needs_confirm
