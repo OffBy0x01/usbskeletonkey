@@ -64,19 +64,25 @@ class ModuleManager(Debug):
             config = configparser.ConfigParser()
             module_config = self.module_path + '/%s/%s.ini' % (module_name, module_name)
             config.read(module_config)
-
+            # locate module that will be editing
             module = self.get_module_by_name(module=module_name)
 
             config.set("general", "module_name", module.module_name)
             config.set("general", "module_desc", module.module_desc)
             config.set("general", "version", module.version)
             config.set("general", "module_help", module.module_help)
-            for option in module.options:
+            for option in module.options.items():
+                self.debug("option: " + option[0] + " : " + option[1])
                 config.set("options", option[0], option[1])
-            for fw_requirements in module.fw_requirements:
+            for fw_requirements in module.fw_requirements.items():
                 config.set("fw_requirements", fw_requirements[0], fw_requirements[1])
-            for output_format in module.output_format:
+            for output_format in module.output_format.items():
                 config.set("output_format", output_format[0], output_format[1])
+
+            with open(module_config, 'w') as configfile:
+                config.write(configfile)
+                self.debug("Saved module options")
+
             return True
         return False
 
