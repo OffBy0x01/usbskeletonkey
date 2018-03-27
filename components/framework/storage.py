@@ -6,56 +6,34 @@ from components.framework.FwComponentGadget import FwComponentGadget
 from components.framework.Debug import *
 
 class StorageAccess(FwComponentGadget):
-    """This allows for creation of mini file systems that can be used for storing locally or via the bus
-    If this is closed early it will fuck up pretty bad and will require a restart of the device
-
-    Args:
-        readable_size:  Input the size of the file system intended
-                            e.g 4M, 512K. This defaults to 2M
-        fs:             For new filesystems this will be the format to create with
-                            e.g fat, msdos
-                        For old filesystems this will be the name of the .img file
-                            e.g payloads.img, memes.dd
-        old_fs:         Boolean value to dictate wither the class is to create a new filesystem
-        directory:      String dictating the file system will exist within
-                            e.g "./", "/mnt/", "../fs/"
-        debug:          Boolean value for the state of Debug prints
-
-    functions:
-        alot:           Ill get back to this
-
-    Returns:
-        tbd
-
-    Raises:
-        tbd
-
-
-    TODO:
-        Add functionality to copy specific files from SkelKey to the target via OTG
-
-        Put disclaimers on scary bits of code
-
     """
-    '''
-    Notes:
-        Found a cool thing with g_mass_storage. It is capable of mounting multiple volumes but because of the time of 
-        discovery this feature will be ignored/left for now. A second version of storage could be created to bring the 
-        use of this discovery but it doesn't seem worth it for now.
-        Documentation -- http://www.linux-usb.org/gadget/file_storage.html
+    This allows for creation of mini file systems that can be used for storing locally or via the bus
+    If this is closed early it will fuck up pretty bad and should require a restart of the device
+            Super Class: FwComponentGadget
 
-        This classes intended use was to have the possibility of multiple instances. This is now open to change via
-        progression with the information above as instead of having multiple instances of storage devices that can
-        be mounted we could alternatively have a stripped back class and have it called by a handler. This would allow 
-        for less control from other modules directly however. This will be left open to later changes and classed as
-        'Gold Plating'
+            __init__ asks for:
+                :param readable_size: This will set the Size of a NEW file system. Default is 2M
+                :param fs: This will either be the name of a pre-existing file system or the new file system format.
+                             Defaults to "FAT"
+                :param old_fs: Binary value dictating whether to use a old file system. Defaults to False
+                :param directory: Directory of where the filesystem should work from. Either path to Filesystem or
+                                    where filesystem will rest. Defaults to "./"
+                :param debug: Whether to enable debug output for this module. This is passed to the superclass.
+                                Defaults to False
 
-        TODO I dont think the pi will be able to recognise when the file system is done with one the bus
-        This could pose a serious issue in regard to ensuring the Skeleton keys ability to run corruption free
-        This should be looked into further in testing
-        Documentation -- http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/mass-storage.txt
-                         http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/usbmon.txt
-    '''
+            Functions:
+                __init__: The class initialisation uses the above parameters to open the appropriate file system
+                __createfs: Hidden method that is called as and when relevant by the __init__ function
+                __del__: Called when the Class is closed simply pushes a debug that it has been closed
+                __convertsize: Hidden method used to convert the size of a file to a string ending in the
+                                appropriate suffix
+                __sizeof__: Returns the size of the current file system after running through convert where appropriate
+                mountlocal: Mounts the file system locally to the set directory
+                mountbus: Mounts the file system on the bus
+                unmountlocal: unmounts locally where applicable
+                unmountbus: unmounts the bus where applicable
+                unmount: Calls the appropriate unmount file system if mounted
+    """
 
     def __createfs(self):
         """
@@ -122,9 +100,8 @@ class StorageAccess(FwComponentGadget):
         self.storage.debug("Removed")
         return
 
-    # This code is derived from code from dive into python. Thanks Mark <3
-    def convertsize(self):
-        # Copyright (c) 2009, Mark Pilgrim, All rights reserved.
+    def __convertsize(self):
+        # This code is derived from code from dive into python. Thanks Mark <3
 
         # This should never reach T unless the Pi is using external storage or we are in the year 2100
         suffixes = {1024: ['K', 'M', 'G', 'T']}
@@ -135,11 +112,12 @@ class StorageAccess(FwComponentGadget):
             if fs_size < multiple:
                 return '{0:.1f} {1}'.format(fs_size, suffix)
         raise ValueError('Filesystem out of bounds (Why is it over 1023 TB?!)')
+        # Copyright (c) 2009, Mark Pilgrim, All rights reserved.
 
     # Overwriting the default sizeof method
     def __sizeof__(self):
         if self.old_fs:
-            self.convertsize()  # size of old fs
+            self.__convertsize()  # size of old fs
 
         return self.readable_size  # size of current file system
 
@@ -237,3 +215,23 @@ class StorageAccess(FwComponentGadget):
 
         self.storage.debug("Nothing was mounted")
         return
+
+    '''
+    Notes:
+        Found a cool thing with g_mass_storage. It is capable of mounting multiple volumes but because of the time of 
+        discovery this feature will be ignored/left for now. A second version of storage could be created to bring the 
+        use of this discovery but it doesn't seem worth it for now.
+        Documentation -- http://www.linux-usb.org/gadget/file_storage.html
+
+        This classes intended use was to have the possibility of multiple instances. This is now open to change via
+        progression with the information above as instead of having multiple instances of storage devices that can
+        be mounted we could alternatively have a stripped back class and have it called by a handler. This would allow 
+        for less control from other modules directly however. This will be left open to later changes and classed as
+        'Gold Plating'
+
+        TODO I dont think the pi will be able to recognise when the file system is done with one the bus
+        This could pose a serious issue in regard to ensuring the Skeleton keys ability to run corruption free
+        This should be looked into further in testing
+        Documentation -- http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/mass-storage.txt
+                         http://elixir.free-electrons.com/linux/latest/source/Documentation/usb/usbmon.txt
+    '''
