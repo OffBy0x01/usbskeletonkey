@@ -1,5 +1,7 @@
-import socket
 import re
+import socket
+
+
 # From https://stackoverflow.com/a/4017219
 
 

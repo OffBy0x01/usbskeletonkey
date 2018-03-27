@@ -7,7 +7,7 @@ from components.framework.Debug import Debug
 from components.helpers.ModuleManager import ModuleManager
 
 
-class SkeletonKey():
+class SkeletonKey:
     # TODO update descriptor
     """
        Class for the Interface
@@ -32,8 +32,8 @@ class SkeletonKey():
 
     def __init__(self, debug=False):
         self.main = Debug(debug=debug, name="Skeleton Key", type="Main")
-
         self.module_manager = ModuleManager(debug=debug)
+        self.module_debug = debug
 
         self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
@@ -44,11 +44,11 @@ class SkeletonKey():
         self.module_path = self.main_path + "/modules"
         self.config_file = self.main_path + '/config.ini'
 
+
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
             self.main.debug("ERROR: " + self.module_path + " directory does not exist")
 
-        # TODO #3 clean up config parser calls
         '''Load or create config files'''
         self.config = configparser.ConfigParser()
 
@@ -68,6 +68,7 @@ class SkeletonKey():
             self.config.add_section('general')
             self.config.set('general', 'config_mode', 'True')
             self.config_mode = True
+
         else:
             # Config file exists, start importing
             self.config.read(self.config_file)
@@ -89,8 +90,7 @@ class SkeletonKey():
         with open('config.ini', 'w') as self.config_file:
             self.config.write(self.config_file)
 
-        # TODO WORK OUT WHAT HAPPENS IN ARMED MODE
-
+    # ARMED MODE
     def armed_mode(self):
         """
         Loads modules from the module load order and runs them
@@ -100,12 +100,12 @@ class SkeletonKey():
             armed_module_list = unpickler.load()
 
         for this_module in armed_module_list:
-            self.main.enable_module_debug(str(this_module))
-            self.main.debug("~~~Start of " + str(this_module) + "~~~")
             try:
+                self.main.enable_module_debug(str(this_module))
+                self.main.debug("~~~Start of " + str(this_module) + "~~~")
                 imp_module = importlib.import_module("modules." + this_module + "." + this_module, this_module)
-            except ImportError as Err:
-                print(Err)
+            except Exception as Err:
+                self.main.debug("ERROR: " + str(Err))
             finally:
                 try:
                     # This is why modules must stick to the naming convention
@@ -116,11 +116,16 @@ class SkeletonKey():
 
                     # Module needs to be enabled before it will run
                     if current_config.options["enabled"] == "true":
+                        self.main.debug(str(this_module) + " is enabled")
                         module_class = getattr(imp_module, this_module)
-                        runnable = module_class()
+                        runnable = module_class(self.main_path, debug=self.module_debug)
                         runnable.run()
+                    else:
+                        self.main.debug(str(this_module) + " is disabled")
+
                 except Exception as WTF:
                     self.main.debug("ERROR: " + str(WTF))
+
                 self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n")
 
 
