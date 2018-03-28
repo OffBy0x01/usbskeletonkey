@@ -1,6 +1,7 @@
 import configparser
 import importlib
 import os
+import subprocess
 import pickle
 from xmlrpc.client import Boolean
 
@@ -68,6 +69,7 @@ class SkeletonKey:
             # General options
             self.config.add_section('general')
             self.config.set('general', 'config_mode', 'True')
+            self.config.set('general', 'pin', 'False')
             self.config_mode = True
 
         else:
@@ -90,6 +92,13 @@ class SkeletonKey:
 
         with open('config.ini', 'w') as self.config_file:
             self.config.write(self.config_file)
+
+    # Check if 'pin' says go
+    def is_pin_armed(self):
+        if subprocess.run(["tvservice", "-s"], stdout=subprocess.PIPE).stdout.decode('utf-8')[6:14]\
+                is not "0x40001" and self.config.get('general', 'pin') == "True":
+            return True
+        return False
 
     # ARMED MODE
     def armed_mode(self):
@@ -128,8 +137,6 @@ class SkeletonKey:
                     self.main.debug("ERROR: " + str(WTF))
 
                 self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n")
-
-
 
     def config_mode(self):
         pass
