@@ -57,8 +57,8 @@ class Responder(Debug):
         # All modules assumed to use it
         self.path = path
 
-        # Should not be global
-        self.network = FwComponentNetwork()
+        # Should not be global and should register debug state
+        self.network = FwComponentNetwork(debug=debug)
 
     # Method used to capture password hashes from target using Spiderlabs' Responder
     def run(self):
