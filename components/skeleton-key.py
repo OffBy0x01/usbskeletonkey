@@ -2,6 +2,7 @@ import configparser
 import importlib
 import os
 import pickle
+from xmlrpc.client import Boolean
 
 from components.framework.Debug import Debug
 from components.helpers.ModuleManager import ModuleManager
@@ -191,6 +192,7 @@ class SkeletonKey:
                     flag = True
         if flag:
             print("Value changed")
+            print("Exiting Module setter...")
         else:
             print("ERROR: Please enter a valid attribute to set")
 
@@ -221,6 +223,14 @@ class SkeletonKey:
         print(
             "set [attribute]			        - allows the user to enter a value to set the specified attribute for the current module")
         print("set [attribute] [value]		    - sets the value for the specified attribute for the current module")
+        print("order				            - allows user to alter module load order")
+        print("ONCE IN MODULE LOADER:")
+        print("         module [module index] up		            - moves module up 1")
+        print("         module [module index] down		            - moves module down 1")
+        print("         module [module index] [index]		        - moves module to index")
+        print("\n")
+        print("save 				            - saves config")
+        print("help 				            - provides helpful commands")
         print("exit 				            - exits configuration mode")
         print("\n")
         print("Leaving help...")
@@ -268,20 +278,27 @@ class SkeletonKey:
                 if change_order_command[2] == "up":
                     # move item up 1
                     self.move_module_by(current_index, (current_index - 1))
-
                 elif change_order_command[2] == "down":
                     self.move_module_by(current_index, (current_index + 1))
-
-                elif int(change_order_command[2]) >= 0:
-                    if int(change_order_command[2]) < len(self.module_manager.module_list):
-                        self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
-                    else:
-                        print("Integer out of range")
-
                 else:
-                    print("Please enter a valid command")
-            else:
-                print("Please enter a valid command")
+                    check = self.check_order_is_number(change_order_command[2])
+                    if(check):
+                        if int(change_order_command[2]) < len(self.module_manager.module_list):
+                            self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
+                        else:
+                            print("Integer out of range")
+                    else:
+                        print("Please enter a valid command")
+        print("Exiting Module Order loader...")
+
+    def check_order_is_number(self, test_case):
+        try:
+            int(test_case)
+            return True
+        except ValueError:
+            return False
+
+
 
     def edit_module_order_question(self, user_choice):
         print("Current module order")
@@ -300,6 +317,7 @@ class SkeletonKey:
             self.edit_module_order(user_choice)
 
         elif change_order == "N":
+            print("Exiting Module Order loader...")
             pass
         else:
             print("Invalid response entered. Please try again.")
@@ -317,74 +335,73 @@ class SkeletonKey:
 
             # Whatever the user enters - convert it to lowercase and place each word in an array.
             config_selection = str(input(">")).lower().split()
-
-            # If the users enters one word - i.e. a keyword such as 'show', 'set' or 'exit' run
-            if len(config_selection) == 1:
-                if config_selection[0] == "exit":
-                    if not save_flag:
-                        try:
-                            confirm_exit = input("You are about to exit without saving, are you sure? (Y/N)")
-                        except ValueError:
-                            print("Please enter a valid input")
-                        confirm_exit = confirm_exit.upper()
-                        if confirm_exit == "Y":
-                            print("Exiting Configuration mode...")
-                            config_mode = False
-                            pass
-                        elif confirm_exit == "N":
-                            print("Ready to save.")
-                            self.save_module_config(config_selection, user_choice)
-                            print("Exiting Configuration mode...")
-                            config_mode = False
-                            pass
-                    elif save_flag:
-                        print("Exiting Configuration mode...")
-                        config_mode = False
-                        pass
-                elif config_selection[0] == "show":
-                    # display all information to do with current module.
-                    self.show_module_attributes(user_choice)
-                    pass
-                elif config_selection[0] == "set":
-                    print("Please select an attribute to set in the format 'set [attribute]'")
-                    # provide options on what is available to set
-                    pass
-                elif config_selection[0] == "help":
-                    # run method to set selected attribute
-                    self.display_help()
-                    pass
-                elif config_selection[0] == "save":
-                    # run method to set selected attribute
-                    self.save_module_config(config_selection, user_choice)
-                    save_flag = True
-                    pass
-                elif config_selection[0] == "order":
-                    self.edit_module_order_question(user_choice)
-                    pass
-                else:
-                    print("Please enter a valid keyword.")
-            # If the users enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
-            elif len(config_selection) == 2:
-                if config_selection[0] == "show":
-                    # run method to show selected attribute
-                    self.show_module_attribute(config_selection, user_choice)
-                    pass
-                elif config_selection[0] == "set":
-                    # run method to set selected attribute
-                    self.set_module_attribute(config_selection, user_choice)
-                    pass
-                else:
-                    print("Please enter a valid command")
-            elif len(config_selection) == 3:
-                if config_selection[0] == 'set':
-                    # run method to set selected attribute
-                    self.set_module_attribute(config_selection, user_choice)
-                    pass
-            elif config_selection[0] == 'show':
-                self.show_module_option(config_selection, user_choice)
-                pass
+            if len(config_selection) == 0:
+                print("Please enter a valid command")
+                self.display_help()
             else:
-                print("Please enter a valid command.")
+            # If the users enters one word - i.e. a keyword such as 'show', 'set' or 'exit' run
+                if len(config_selection) == 1:
+                    if config_selection[0] == "exit":
+                        if not save_flag:
+                            try:
+                                confirm_exit = input("You are about to exit without saving, are you sure? (Y/N)")
+                            except ValueError:
+                                print("Please enter a valid input")
+                            confirm_exit = confirm_exit.upper()
+                            if confirm_exit == "Y":
+                                print("Exiting Configuration mode...")
+                                config_mode = False
+                                pass
+                            elif confirm_exit == "N":
+                                pass
+                        elif save_flag:
+                            print("Exiting Configuration mode...")
+                            config_mode = False
+                            pass
+                    elif config_selection[0] == "show":
+                        # display all information to do with current module.
+                        self.show_module_attributes(user_choice)
+                        pass
+                    elif config_selection[0] == "set":
+                        print("Please select an attribute to set in the format 'set [attribute]'")
+                        # provide options on what is available to set
+                        pass
+                    elif config_selection[0] == "help":
+                        # run method to set selected attribute
+                        self.display_help()
+                        pass
+                    elif config_selection[0] == "save":
+                        # run method to set selected attribute
+                        self.save_module_config(config_selection, user_choice)
+                        save_flag = True
+                        pass
+                    elif config_selection[0] == "order":
+                        self.edit_module_order_question(user_choice)
+                        pass
+                    else:
+                        print("Please enter a valid keyword.")
+                # If the users enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
+                elif len(config_selection) == 2:
+                    if config_selection[0] == "show":
+                        # run method to show selected attribute
+                        self.show_module_attribute(config_selection, user_choice)
+                        pass
+                    elif config_selection[0] == "set":
+                        # run method to set selected attribute
+                        self.set_module_attribute(config_selection, user_choice)
+                        pass
+                    else:
+                        print("Please enter a valid command")
+                elif len(config_selection) == 3:
+                    if config_selection[0] == 'set':
+                        # run method to set selected attribute
+                        self.set_module_attribute(config_selection, user_choice)
+                        pass
+                elif config_selection[0] == 'show':
+                    self.show_module_option(config_selection, user_choice)
+                    pass
+                else:
+                    print("Please enter a valid command.")
 
     # Main menu for Interface, takes user input of which module they would like to use
     def input_choice(self):
