@@ -1,6 +1,7 @@
 import subprocess
 
 from components.framework.FwComponentGadget import FwComponentGadget
+from components.framework.Debug import Debug
 
 
 class FwComponentNetwork(FwComponentGadget):
@@ -35,6 +36,8 @@ class FwComponentNetwork(FwComponentGadget):
         self._type = "Component"
         self._name = "Network"
 
+        self.network = Debug(name="Network", type="Framework", debug=debug)
+
     # Destructor
     def __del__(self):
         if self.state == "usb0 down":
@@ -43,18 +46,17 @@ class FwComponentNetwork(FwComponentGadget):
             self.down()  # Ensure adapter is downed
             super().disable()  # Disable eth driver
 
-
     # Check for internet connectivity
     def test_internet(self):
         flag_success = False  # Flag set when connection successful
         for i in range(1, 3):  # Only attempt ping 3 times
             if subprocess.call("ping -c 1 -w 3 " + self.ping_address, shell=True) == 0:  # Ping to test connection
-                self.debug("Ping successful!")
+                self.network.debug("Ping successful!")
                 # Exit loop
                 flag_success = True
                 break
             else:  # If ping not successful
-                self.debug("Ping unsuccessful!")
+                self.network.debug("Ping unsuccessful!")
                 # Try again
         if not flag_success:  # If 3 ping attempts fail
             return self.kill("Connection failed!")
@@ -65,7 +67,7 @@ class FwComponentNetwork(FwComponentGadget):
         output = str(subprocess.run(["ifconfig"], stdout=subprocess.PIPE).stdout.decode())
         self.debug(output)
         if (output.count("usb0")) > 0:
-            self.debug("usb0 detected")
+            self.network.debug("usb0 detected")
             return True
         else:
             return self.kill("usb0 not detected")
@@ -73,37 +75,37 @@ class FwComponentNetwork(FwComponentGadget):
     # Turning on USB Ethernet adapter and enabling DHCP server
     def up(self):
         self.enable()
-        self.debug(subprocess.call("ifup usb0", shell=True))  # Up usb0 interface
-        self.debug(subprocess.call("ifconfig usb0 up", shell=True))  # Up networking on usb0
-        self.debug(subprocess.call("/sbin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
-        self.debug(subprocess.call("/etc/init.d/isc-dhcp-server start", shell=True))  # Start DHCP server
-        self.debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True))  # Enable IPv4 forwarding
-        self.debug(subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337", shell=True))  # Bind port 80 to port 1337
-        self.debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53", shell=True))  # Start dnsspoof on port 53
+        self.network.debug(subprocess.call("ifup usb0", shell=True))  # Up usb0 interface
+        self.network.debug(subprocess.call("ifconfig usb0 up", shell=True))  # Up networking on usb0
+        self.network.debug(subprocess.call("/sbin/route add -net 0.0.0.0/0 usb0", shell=True))  # Add route for all IPv4 addresses
+        self.network.debug(subprocess.call("/etc/init.d/isc-dhcp-server start", shell=True))  # Start DHCP server
+        self.network.debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=1", shell=True))  # Enable IPv4 forwarding
+        self.network.debug(subprocess.call("/sbin/iptables -t nat -A PREROUTING -i usb0 -p tcp --dport 80 -j REDIRECT --to-port 1337", shell=True))  # Bind port 80 to port 1337
+        self.network.debug(subprocess.call("/usr/bin/screen -dmS dnsspoof /usr/sbin/dnsspoof -i usb0 port 53", shell=True))  # Start dnsspoof on port 53
         self.state = "usb0 should be up"
-        if self.debug:  # Debug text
-            self.debug(self.state)
+        if self.network.debug:  # Debug text
+            self.network.debug(self.state)
         return self.test_local()  # Test connection
 
     # Turning off USB Ethernet adapter
     def down(self):
-        self.debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=0", shell=True))  # Disable IPv4 forwarding
-        self.debug(subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True))  # Stop DHCP server
-        self.debug(subprocess.call("/sbin/route del -net 0.0.0.0/0 usb0", shell=True))  # Remove route for all IPv4 addresses
+        self.network.debug(subprocess.call("/sbin/sysctl -w net.ipv4.ip_forward=0", shell=True))  # Disable IPv4 forwarding
+        self.network.debug(subprocess.call("/etc/init.d/isc-dhcp-server stop", shell=True))  # Stop DHCP server
+        self.network.debug(subprocess.call("/sbin/route del -net 0.0.0.0/0 usb0", shell=True))  # Remove route for all IPv4 addresses
 
         # Down adapter
-        self.debug(subprocess.call("ifconfig usb0 down", shell=True))
-        self.debug(subprocess.call("ifdown usb0", shell=True))
+        self.network.debug(subprocess.call("ifconfig usb0 down", shell=True))
+        self.network.debug(subprocess.call("ifdown usb0", shell=True))
 
         # Debug
         self.state = "usb0 down"
-        self.debug(self.state)
+        self.network.debug(self.state)
 
     # Removing USB Ethernet
     def disable(self):
         super().disable()  # Call parent class to remove the driver
         self.state = "uninitialised"
-        self.debug(self.state)
+        self.network.debug(self.state)
         return
 
     # Emergency Kill
