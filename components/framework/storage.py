@@ -13,9 +13,8 @@ class StorageAccess(FwComponentGadget):
 
             __init__ asks for:
                 :param readable_size: This will set the Size of a NEW file system. Default is 2M
-                :param fs: This will either be the name of a pre-existing file system or the new file system format.
-                             Defaults to "fat32". See parteds "help mkpart" command for other options
-                :param old_fs: Binary value dictating whether to use a old file system. Defaults to False
+                :param fs: This is used to mount a old file system. Fill this with a string of the name of the file
+                             system you wish to mount
                 :param directory: Directory of where the filesystem should work from. Either path to Filesystem or
                                     where filesystem will rest. Defaults to "./"
                 :param debug: Whether to enable debug output for this module. This is passed to the superclass.
@@ -46,41 +45,54 @@ class StorageAccess(FwComponentGadget):
         self.storage.debug("    Naming file system " + self.file_name)
 
         # Makes a file system. (This command accepts 1M and such)
-        # These don't have output of note (I should look for error messages when you try to do stupid shit)
-        subprocess.run(["fallocate", "-l", self.readable_size, self.directory + self.file_name])
-        self.storage.debug("    Running command - 'fallocate -l " + self.readable_size
-                      + " " + self.directory + self.file_name + "'")
+        falloc = ["fallocate", "-l", self.readable_size.upper(), self.directory + self.file_name]
+        self.storage.debug("    Running command - " + falloc.__str__())
+        subprocess.run(falloc)
 
         # Make a file system
-        subprocess.run(["parted", self.directory + self.file_name, "mklabel", "msdos"])
-        self.storage.debug("    Running command - 'parted " + self.directory + self.file_name + " mklabel msdos")
+        mklabel = ["parted", self.directory + self.file_name, "mklabel", "msdos"]
+        self.storage.debug("    Running command - " + mklabel.__str__())
+        subprocess.run(mklabel)
 
-        subprocess.run(["parted", self.directory + self.file_name, "mkpart", "primary", self.fs.lower(), "0%", "100%", "ignore"])
-        self.storage.debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.directory + self.file_name + "'")
+        mkpart = ["parted", self.directory + self.file_name, "mkpart", "primary", self.fs.lower(), "0%", "100%", "ignore"]
+        self.storage.debug("    Running command - " + mkpart.__str__())
+        subprocess.run(mkpart)
+
+        loopback_temp = self.__loopmount(False)
+
+        mkfs = ["mkfs." + self.fs[:3], loopback_temp + "p1"]
+        self.storage.debug("    Running command - " + mkfs.__str__())
+        subprocess.run(mkfs)
+
+        subprocess.run(["losetup", "-d", loopback_temp])
+
         # Done
 
-    def __init__(self, readable_size="2M", fs="fat32", old_fs=False, directory="./", debug=False):
+    def __init__(self, readable_size="4M", fs=None, directory="./", debug=False):
         # Initialise super class
         super().__init__("g_mass_storage", enabled=False, debug=debug)
         self._type = "Component"
         self._name = "Storage"
 
         # Start debuger
-        self.storage = Debug()
-
+        self.storage = Debug(debug=debug)
 
         # Inform the user on debug what module has started
         self.storage.debug("Starting Module: Storage Access")
 
         # Variable init
-        self.fs = fs
-        self.old_fs = old_fs
+        if fs is None:
+            self.fs = "fat32"
+        else:
+            self.fs = fs
+
+        self.old_fs = fs is None
         self.directory = directory
         self.mounted_dir = str(None)
         self.loopback_device = str(None)
         self.readable_size = readable_size
 
-        if not old_fs:
+        if fs is None:
             self.__createfs()
         else:
             self.storage.debug("Attempting to use existing filesystem")
@@ -124,31 +136,37 @@ class StorageAccess(FwComponentGadget):
 
         return self.readable_size  # size of current file system
 
-    def mountlocal(self, directory="./fs/", read_only=False):  # make this more unique for a default folder
-        # Mount the file system locally for amending of any desc (unless RO)
+    def __loopmount(self, read_only):
+        loopback_device = subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
 
-        self.loopback_device = subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
-
-        mount_loopback = ["losetup"]
+        mount_loopback = ["losetup", "-P"]
 
         if read_only:
             mount_loopback = mount_loopback + ["-r"]
 
-        mount_loopback = mount_loopback + [self.loopback_device, (self.directory + self.file_name)]
+        mount_loopback = mount_loopback + [loopback_device, (self.directory + self.file_name)]
 
-        self.storage.debug("Attempting to mount on " + self.loopback_device)
+        self.storage.debug("Attempting to mount on " + loopback_device)
 
         loop_output = subprocess.run(mount_loopback, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
-            self.storage.debug("Error mounting on loop back " + self.loopback_device + ": 2.04")
+            self.storage.debug("Error mounting on loop back " + loopback_device + ": 2.04")
             exit(2.04)
 
         # If the first loop back device available is still the one we should be mounted to
-        if self.loopback_device == subprocess.run(["losetup", "-f"],
+        if loopback_device == subprocess.run(["losetup", "-f"],
                                                   stdout=subprocess.PIPE).stdout.decode('utf-8'):
             self.storage.debug("Loop back setup Failed: 2.04")
             exit(2.04)
+
+        return loopback_device
+
+    def mountlocal(self, directory="./fs/", read_only=False):  # make this more unique for a default folder
+        # Mount the file system locally for amending of any desc (unless RO)
+
+        # Mount on LO device
+        self.loopback_device = self.__loopmount(read_only)
 
         # The directory we intend to mount to
         self.mounted_dir = directory
