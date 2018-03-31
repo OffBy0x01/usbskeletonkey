@@ -1,9 +1,8 @@
 import configparser
 import importlib
 import os
-import subprocess
 import pickle
-from xmlrpc.client import Boolean
+import subprocess
 
 from components.framework.Debug import Debug
 from components.helpers.ModuleManager import ModuleManager
@@ -69,7 +68,6 @@ class SkeletonKey:
             # General options
             self.config.add_section('general')
             self.config.set('general', 'config_mode', 'True')
-            self.config.set('general', 'pin', 'False')
             self.config_mode = True
 
         else:
@@ -325,7 +323,6 @@ class SkeletonKey:
             self.edit_module_order(user_choice)
 
         elif change_order == "N":
-            print("Exiting Module Order loader...")
             pass
         else:
             print("Invalid response entered. Please try again.")
