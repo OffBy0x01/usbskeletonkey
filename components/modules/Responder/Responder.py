@@ -39,12 +39,14 @@ class Responder(Debug):
            """
 
     # Constructor
-    def __init__(self, path, debug=False):
+    def __init__(self, path, debug):
         super().__init__(debug=debug)
         self._type = "Module"
         self._name = "Responder"
         if "aspian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
             subprocess.run("mkdir -p ../hashes", shell=True)  # If the "hashes" directory doesn't exist, create it
+
+        self.responder = Debug(name="Responder", type="Module", debug=debug)
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -52,7 +54,7 @@ class Responder(Debug):
         # import config data for this module
         self.current_config = self.module_manager.get_module_by_name(self._name)
         if not self.current_config:
-            self.debug("Error: could not import config of " + self._name)
+            self.responder.debug("Error: could not import config of " + self._name)
 
         # All modules assumed to use it
         self.path = path
@@ -91,6 +93,7 @@ class Responder(Debug):
                 timestamp_new = os.stat("../components/modules/Responder/src/Responder.db").st_mtime
                 if timestamp_new > timestamp_old:  # if newer modification time is detected, sleep and return
                     time.sleep(2)
+                    self.responder.debug("Hash detected!")
                     return True
 
             return False
@@ -100,6 +103,8 @@ class Responder(Debug):
         self.network.up()  # Up usb0
         process = subprocess.Popen("exec python ../components/modules/Responder/src/Responder.py -I usb0 "
                                    "-f - w - r - d - F", shell=True)  # Run Responder on usb0
+
+        self.responder.debug("Responder started")
 
         hash_success = monitor_responder()  # Call the method that will determine if hashes have been captured
         process.kill()  # Kill Responder
