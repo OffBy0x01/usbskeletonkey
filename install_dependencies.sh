@@ -50,7 +50,7 @@ fi
 
 # TODO Test this
 # Install python 3.6
-( cd ~ ;
-bash <(curl -S https://github.com/jjhelmus/berryconda/releases/download/v2.0.0/Berryconda3-2.0.0-Linux-armv6l.sh) ;
-./conda config --add channels rpi ;
-./conda install python=3.6)
+# ( cd ~ ;
+# bash <(curl -S https://github.com/jjhelmus/berryconda/releases/download/v2.0.0/Berryconda3-2.0.0-Linux-armv6l.sh) ;
+# ./conda config --add channels rpi ;
+# ./conda install python=3.6)
