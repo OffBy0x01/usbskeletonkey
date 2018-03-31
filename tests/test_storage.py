@@ -25,7 +25,7 @@ print("This is an example run of specifically the storage class"
       bp + " Unmount the bus (Forcefully)\n"
            "This will be done with two classes in debug mode")
 
-print("Starting Test One")
+print("Starting Test One -=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=--=")
 TestOne = StorageAccess(debug=True)
 
 print("Size " + TestOne.__sizeof__())
@@ -61,8 +61,8 @@ if os.path.exists(test_one_directory):
 
 time.sleep(3)
 
-print("Starting Test Two")
-TestTwo = StorageAccess(fs=test_one_file, old_fs=True, debug=True)
+print("Starting Test Two -=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=--=")
+TestTwo = StorageAccess(fs=test_one_file, debug=True)
 
 print("Size " + TestTwo.__sizeof__())
 
@@ -73,18 +73,6 @@ if not os.path.isfile(TestTwo.mounted_dir + file):
     exit(1)
 
 TestTwo.unmount()
-
-print("Continuing into test Three")
-
-print("Mounting on bus for 30 seconds")
-TestTwo.mountbus(write_block=True)
-
-for current in range(0, 30):
-    print(current.__str__() + " of 30 seconds")
-    time.sleep(1)
-
-print("Unmounting from bus")
-TestTwo.unmountbus()
 
 print("Deleting Test two")
 del TestTwo

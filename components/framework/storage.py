@@ -50,11 +50,11 @@ class StorageAccess(FwComponentGadget):
         subprocess.run(falloc)
 
         # Make a file system
-        mklabel = ["parted", self.directory + self.file_name, "mklabel", "msdos"]
+        mklabel = ["parted", "--script", self.directory + self.file_name, "mklabel", "msdos"]
         self.storage.debug("    Running command - " + mklabel.__str__())
         subprocess.run(mklabel)
 
-        mkpart = ["parted", self.directory + self.file_name, "mkpart", "primary", self.fs.lower(), "0%", "100%", "ignore"]
+        mkpart = ["parted", "--script", self.directory + self.file_name, "mkpart", "primary", self.fs.lower(), "0%", "100%"]
         self.storage.debug("    Running command - " + mkpart.__str__())
         subprocess.run(mkpart)
 
@@ -86,7 +86,7 @@ class StorageAccess(FwComponentGadget):
         else:
             self.fs = fs
 
-        self.old_fs = fs is None
+        self.old_fs = (fs is None)
         self.directory = directory
         self.mounted_dir = str(None)
         self.loopback_device = str(None)
