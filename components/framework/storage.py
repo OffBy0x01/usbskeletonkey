@@ -14,7 +14,7 @@ class StorageAccess(FwComponentGadget):
             __init__ asks for:
                 :param readable_size: This will set the Size of a NEW file system. Default is 2M
                 :param fs: This will either be the name of a pre-existing file system or the new file system format.
-                             Defaults to "FAT"
+                             Defaults to "fat32". See parteds "help mkpart" command for other options
                 :param old_fs: Binary value dictating whether to use a old file system. Defaults to False
                 :param directory: Directory of where the filesystem should work from. Either path to Filesystem or
                                     where filesystem will rest. Defaults to "./"
@@ -51,12 +51,15 @@ class StorageAccess(FwComponentGadget):
         self.storage.debug("    Running command - 'fallocate -l " + self.readable_size
                       + " " + self.directory + self.file_name + "'")
 
-        # Format file system to FAT ... for now
-        subprocess.run(["mkfs." + self.fs.lower(), self.directory + self.file_name])
+        # Make a file system
+        subprocess.run(["parted", self.directory + self.file_name, "mklabel", "msdos"])
+        self.storage.debug("    Running command - 'parted " + self.directory + self.file_name + " mklabel msdos")
+
+        subprocess.run(["parted", self.directory + self.file_name, "mkpart", "primary", self.fs.lower(), "0%", "100%", "ignore"])
         self.storage.debug("    Running command - 'mkfs." + self.fs.lower() + " " + self.directory + self.file_name + "'")
         # Done
 
-    def __init__(self, readable_size="2M", fs="fat", old_fs=False, directory="./", debug=False):
+    def __init__(self, readable_size="2M", fs="fat32", old_fs=False, directory="./", debug=False):
         # Initialise super class
         super().__init__("g_mass_storage", enabled=False, debug=debug)
         self._type = "Component"
@@ -156,9 +159,9 @@ class StorageAccess(FwComponentGadget):
             os.mkdir(self.mounted_dir)
 
         if read_only:
-            mount_command = ["mount", "-o", "ro", self.loopback_device, self.mounted_dir]  # mount RO
+            mount_command = ["mount", "-o", "ro", self.loopback_device + "p1", self.mounted_dir]  # mount RO
         else:
-            mount_command = ["mount", self.loopback_device, self.mounted_dir]  # mount norm
+            mount_command = ["mount", self.loopback_device + "p1", self.mounted_dir]  # mount norm
 
         subprocess.run(mount_command)
 
