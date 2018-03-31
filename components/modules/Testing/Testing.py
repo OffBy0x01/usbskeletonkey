@@ -1,4 +1,3 @@
-import re
 import struct
 import subprocess
 
@@ -161,7 +160,7 @@ class Enumerate(Debug):
             start, _, end = raw_ports.strip().partition('-')
             return [port for port in range(int(start), int(end))]
         # Single port
-        elif raw_ports >= 0 and raw_ports <= 65535:
+        elif 0 <= int(raw_ports) <= 65535:
             return [raw_ports]
         # Bad entry
         else:
@@ -430,7 +429,7 @@ class Enumerate(Debug):
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
     # e.g. def for nbtstat, def for nmap, def for net etc...
 
-e = Enumerate(debug=True)
-#e.nmap(str(1), str(100))
-#e.enumeration()
-e.get_nbt_stat()
+# e = Enumerate(debug=True)
+# #e.nmap(str(1), str(100))
+# #e.enumeration()
+# e.get_nbt_stat()
