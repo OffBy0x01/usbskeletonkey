@@ -148,7 +148,8 @@ class Enumerate():
             current = TargetInfo()
 
             # check current IP responds to ICMP
-            self.check_target_is_alive(current, interface=self.interface)
+            if self.check_target_is_alive(current, interface=self.interface):
+                current.RESPONDS_ICMP = True
 
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(current, interface=self.interface)
@@ -159,7 +160,8 @@ class Enumerate():
                 current.ADAPTER_NAME = arp_response[2]
 
             # check route to this target
-            current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+            if self.interface is "usb0":
+                current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
 
             # use all port scanning tools against current ip
             for port in self.port_list:
@@ -180,6 +182,9 @@ class Enumerate():
 
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
+
+        return  # End of run
+
 
     def get_port_list(self, raw_ports):
         # TODO 01/03/18 [1/2] Add error handling
@@ -556,7 +561,7 @@ class Enumerate():
         return output
 
     @staticmethod
-    def get_route_to_target(target, interface="usb0", bypass_routing_tables=False, hop_back_checks=True,
+    def get_route_to_target(target, interface="wlan0", bypass_routing_tables=False, hop_back_checks=True,
                             map_host_names=True, original_out=False):
         """
         Makes use of the traceroute command.
