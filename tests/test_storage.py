@@ -74,6 +74,17 @@ if not os.path.isfile(TestTwo.mounted_dir + file):
 
 TestTwo.unmount()
 
+print("Continuing into Test Three -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
+TestTwo.mountbus()
+
+print("Mounting for 15 seconds")
+
+for tick in range(0, 15):
+    print(tick)
+    time.sleep(1)
+
+TestTwo.unmount()
+
 print("Deleting Test two")
 del TestTwo
 
