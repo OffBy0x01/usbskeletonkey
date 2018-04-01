@@ -8,5 +8,5 @@ from components.modules.Responder.Responder import *
 
 # For testing
 if __name__ == "__main__":
-    test = Responder()
-    test.run(30)
+    test = Responder("", True)
+    test.run()
