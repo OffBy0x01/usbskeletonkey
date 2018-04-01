@@ -48,9 +48,12 @@ else
 	echo "dwc2" | tee --append /etc/modules > /dev/null
 fi
 
+mv /home/pi/usbskeletonkey/components/framework/shell_scripts/g_hid.ko /lib/modules/4.4.50+/kernel/drivers/usb/gadget/legacy/g_hid.ko
+chmod +x /home/pi/usbskeletonkey/components/framework/shell_scripts/hid-gadget-test
+
 # TODO Test this
 # Install python 3.6
-( cd ~ ;
-bash <(curl -S https://github.com/jjhelmus/berryconda/releases/download/v2.0.0/Berryconda3-2.0.0-Linux-armv6l.sh) ;
-./conda config --add channels rpi ;
-./conda install python=3.6)
+# ( cd ~ ;
+# bash <(curl -S https://github.com/jjhelmus/berryconda/releases/download/v2.0.0/Berryconda3-2.0.0-Linux-armv6l.sh) ;
+# ./conda config --add channels rpi ;
+# ./conda install python=3.6)

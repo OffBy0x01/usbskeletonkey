@@ -1,9 +1,8 @@
 import configparser
 import importlib
 import os
-import subprocess
 import pickle
-from xmlrpc.client import Boolean
+import subprocess
 
 from components.framework.Debug import Debug
 from components.helpers.ModuleManager import ModuleManager
@@ -42,7 +41,7 @@ class SkeletonKey:
                          "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
 
         # Define directory and module paths
-        self.main_path = os.path.dirname(os.path.realpath(__file__))
+        self.main_path = os.path.dirname(os.path.realpath(__file__)) + "/components"
         self.module_path = self.main_path + "/modules"
         self.config_file = self.main_path + '/config.ini'
 
@@ -69,7 +68,6 @@ class SkeletonKey:
             # General options
             self.config.add_section('general')
             self.config.set('general', 'config_mode', 'True')
-            self.config.set('general', 'pin', 'False')
             self.config_mode = True
 
         else:
@@ -113,9 +111,10 @@ class SkeletonKey:
             try:
                 self.main.enable_module_debug(str(this_module))
                 self.main.debug("~~~Start of " + str(this_module) + "~~~")
-                imp_module = importlib.import_module("modules." + this_module + "." + this_module, this_module)
+                imp_module = importlib.import_module("components.modules." + this_module + "." + this_module,
+                                                     this_module)
             except Exception as Err:
-                self.main.debug("ERROR: " + str(Err))
+                self.main.debug("LOAD ERROR: " + str(Err))
             finally:
                 try:
                     # This is why modules must stick to the naming convention
@@ -134,7 +133,7 @@ class SkeletonKey:
                         self.main.debug(str(this_module) + " is disabled")
 
                 except Exception as WTF:
-                    self.main.debug("ERROR: " + str(WTF))
+                    self.main.debug("RUN ERROR: " + str(WTF))
 
                 self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n")
 
@@ -324,7 +323,6 @@ class SkeletonKey:
             self.edit_module_order(user_choice)
 
         elif change_order == "N":
-            print("Exiting Module Order loader...")
             pass
         else:
             print("Invalid response entered. Please try again.")

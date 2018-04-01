@@ -27,17 +27,17 @@ class Keyboard(FwComponentGadget):
               ValueError on bad delay/string_delay
       """
 
-    def __init__(self, keyboard_layout="default.keyboard", language_layout="default.language", enabled=False,
+    def __init__(self, path, keyboard_layout="default.keyboard", language_layout="default.language", enabled=False,
                  debug=False):
+        super().__init__(driver_name="g_hid", enabled=enabled, debug=debug, name="keyboard", type="component")
 
         # Debug params
         self._debug = debug
         self._type = "Component"
         self._name = "Keyboard"
 
-        # set usb gadget properties only when not in debug
-        if not self._debug:
-            super().__init__(driver_name="g_hid", enabled=enabled, debug=debug, name="keyboard", type="component")
+        self.path = path
+        self.keyboard_path = path + "/framework/shell_scripts/hid-gadget-test"
 
         # TODO add language/layout support
         # stores .keyboard layout
@@ -47,7 +47,7 @@ class Keyboard(FwComponentGadget):
 
         # defaults
         self.default_delay = 1000  # 1000ms / 1s default
-        self.__keyboard = "/dev/hidg0 keyboard"
+        self.__keyboard = ""
 
         # dummy last commands
         self.command = ""
@@ -177,7 +177,7 @@ class Keyboard(FwComponentGadget):
 
         self.debug("SENDING DATA: " + data)
         try:
-            output = subprocess.call("%s | /home/pi/skeleton-key/hid-gadget /dev/hidg0 keyboard > /dev/null" % data)
+            output = subprocess.call("%s | " + self.keyboard_path + " /dev/hidg0 keyboard > /dev/null" % data)
             if "rror" in output:
                 raise IOError("Failure to send data")
         except IOError:
