@@ -62,6 +62,7 @@ _dhcpcd=/etc/dhcpcd.conf # File path
 sed -i -r "62,62{s,static ip_address=.*,static ip_address=$_address\/$_CIDRmask,g}" $_dhcpcd
 
 # Down and up adapter for new config to take effect
+ip addr flush dev wlan0
 ifdown wlan0
 ifup wlan0
 ifconfig wlan0 up
