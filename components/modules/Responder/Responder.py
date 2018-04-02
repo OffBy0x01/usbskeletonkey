@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import subprocess
 import time
 
@@ -7,6 +8,7 @@ from components.framework.network import FwComponentNetwork
 from components.helpers.ModuleManager import ModuleManager
 
 # TODO: Update Doc String and comments
+
 
 class Responder(Debug):
     """ Class for Responder Module
@@ -44,12 +46,11 @@ class Responder(Debug):
 
         # All modules assumed to use it
         self.path = path
+        self.responder = Debug(name="Responder", type="Module", debug=debug)
 
         if "aspbian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
             # If the "hashes" directory doesn't exist, create it
             subprocess.run("mkdir -p %s/modules/Responder/hashes" % (self.path), shell=True)
-
-        self.responder = Debug(name="Responder", type="Module", debug=debug)
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -62,13 +63,25 @@ class Responder(Debug):
         # Should not be global and should register debug state
         self.network = FwComponentNetwork(debug=debug)
 
+        # Adapted from /src/utils.py. Creates and populates Responder.db correctly
+        # (for some unknown reason Responder doesn't do this automatically)
+        if not os.path.exists("%s/modules/Responder/src/Responder.db"%(self.path)):
+            self.responder.debug("Creating Responder.db")
+            cursor = sqlite3.connect("%s/modules/Responder/src/Responder.db" % (self.path))
+            cursor.execute(
+                'CREATE TABLE responder (timestamp varchar(32), module varchar(16), '
+                'type varchar(16), client varchar(32), hostname varchar(32), user varchar(32), '
+                'cleartext varchar(128), hash varchar(512), fullhash varchar(512))')
+            cursor.commit()
+            cursor.close()
+
     # Method used to capture password hashes from target using Spiderlabs' Responder
     def run(self):
 
         # Try convert the "ttl" that the user entered to a float
         try:
             # Grab Responder's "time to live" from the .ini
-            time_to_live = float(self.current_config.options["time_to_live"])
+            time_to_live = float(self.current_config.options["ttl"])
 
         # If "ttl" cannot be converted to a float then set it to 60 seconds
         except Exception:
@@ -114,17 +127,18 @@ class Responder(Debug):
 
         self.responder.debug("Responder starting")
 
-        timestamp_before = os.stat("%s/modules/Responder/src/Responder.db" % (self.path)).st_mtime
+        timestamp_before = os.stat("%s/modules/Responder/src/Responder.db" % self.path).st_mtime
 
         try:
+            # Run Responder on usb0
             subprocess.run("exec python %s/modules/Responder/src/Responder.py -I usb0 "
-                                   "-f - w - r - d - F"%(self.path), shell=True, timeout=time_to_live)  # Run Responder on usb0
+                                   "-f - w - r - d - F"% self.path, shell=True, timeout=time_to_live)
         except Exception:
             pass
 
         self.responder.debug("Responder ended")
 
-        timestamp_after = os.stat("%s/modules/Responder/src/Responder.db" %(self.path)).st_mtime
+        timestamp_after = os.stat("%s/modules/Responder/src/Responder.db" % self.path).st_mtime
 
         # Call the method that will determine if hashes have been captured
         hash_success = check_for_hashes(timestamp_before, timestamp_after)
@@ -133,7 +147,7 @@ class Responder(Debug):
 
         # Move txt files that contain the hashes to a more central directory (hashes directory) if hashes were captured
         if hash_success:
-            subprocess.run("find %s/modules/Responder/src/logs -name '*.txt' -exec mv {} "
-                           "%s/modules/Responder/hashes\;"%(self.path), shell=True)
+            subprocess.run("find %s/modules/Responder/src/logs -name '*.txt' -exec mv {} %s/modules/Responder/hashes \;"
+                           "" % (self.path, self.path), shell=True)
 
         return True
