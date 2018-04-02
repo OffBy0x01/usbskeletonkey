@@ -178,7 +178,7 @@ class Keyboard(FwComponentGadget):
         self.debug("SENDING DATA: " + data)
         try:
             # Set timeout at 1s as it will otherwise expect more input
-            output = subprocess.call("echo "+data+" | " + self.keyboard_path + " /dev/hidg0 keyboard > /dev/null", timeout=1)
+            output = subprocess.call("echo "+data+" | " + self.keyboard_path + " /dev/hidg0 keyboard > /dev/null", timeout=0)
             # if "rror" in output:
             #     self.debug("ERROR: "+output)
             #     raise IOError("Failure to send data")
@@ -317,17 +317,14 @@ class Keyboard(FwComponentGadget):
         elif command.count("-") == 1:  # TODO - Implement similar interpreter for multi - commands
             command_1, unused, command_2 = command.partition("-")
             self.__send_data(
-                self.__key_equivalent.get(command_1, '') + " " + self.__key_equivalent.get(command_2,
-                                                                                       '') + self.__resolve_args(args))
+                self.__key_equivalent.get(command_1, '') + " " + self.__key_equivalent.get(command_2, '') + self.__resolve_args(args))
 
         elif command == "MENU":
             if not args:
                 return ""
             else:
                 self.__send_data(
-                    self.__key_equivalent.get("GUI", '') + " " + self.__key_equivalent.get("ALT",
-                                                                                           '') + self.__resolve_args(
-                        args))
+                    self.__key_equivalent.get("GUI", '') + " " + self.__key_equivalent.get("ALT", '') + self.__resolve_args(args))
 
         elif command == "REPEAT":
             # Repeat last command
