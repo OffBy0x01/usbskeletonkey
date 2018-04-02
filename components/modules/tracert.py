@@ -22,7 +22,7 @@ def get_route_to_target(target, interface="usb0", bypass_routing_tables=False, h
     :param map_host_names: In the event that mapping host names to IP makes noise this can be disabled
     :param original_out: If the user wants the original command output this should be changed to true
 
-    :return: list of ip lists for each hop. Often single item list but keeps consistent for accessing
+    :return: list of ip lists for each hop. Then a list of lists containing IPS that have been used on way back
     """
     command = ["traceroute", "-i", interface]  # start with command items that are required
 
@@ -53,36 +53,38 @@ def get_route_to_target(target, interface="usb0", bypass_routing_tables=False, h
 
     del output[0]
 
-    output_out = []
+    route_out = []
+    route_back = []
 
-    if map_host_names:
-        for line in output:
-            results = []  # init var to store current results
-            line = line.split()
-            del line[0]
+    for line in output:
+        line = line.split()
+        del line[0]
 
+        results = []  # init var to store current results
+        if map_host_names:
             for item in line:
                 # If item looks like a domain or the first three octets of an IP address
                 if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):  # Would compiling a re be better here?
                     results += [item.strip("\(\)")]  # Remove any brackets and add to results for this line
-
-            if is_valid_ipv4_address(results[0]):  # If the "Host name" is an IP
-                results = results[::2]  # Grab every other variable
-
-            output_out += [results]  # Add results from this line
-
-    else:
-        for line in output:
-            results = []  # init var to store current results
-            line = line.split()
-            del line[0]
-
+        else:
             for item in line:
                 if is_valid_ipv4_address(item):
                     results += [item]
-            output_out += [results]
 
-    return output_out
+        if len(results) is 1:
+            route_out += [results]  # Add results from this line
+            route_back += []
+        elif len(results) is not 0:
+            route_out += [results[0]]
+            route_back += [results[1:]]
+        else:
+            route_out += ["*"]
+            route_back += [["*"]]
+
+    if type(route_out[0]) is list:
+        route_out[0] = route_out[0][0]
+
+    return [route_out, route_back]
 
 
 def is_valid_ipv4_address(IP, iprange=False):
