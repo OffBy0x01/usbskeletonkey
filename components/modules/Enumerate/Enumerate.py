@@ -1,5 +1,7 @@
+import random
 import struct
 import subprocess
+from collections import defaultdict
 
 from components.framework.Debug import Debug
 from components.helpers.IpValidator import *
@@ -60,6 +62,10 @@ class Enumerate():
         ip_targets = self.current_config.options["ip_targets"]
         ip_exclusions = self.current_config.options["ip_exclusions"]
         self.ip_list = [ip for ip in self.get_ip_list(ip_targets) if ip not in self.get_ip_list(ip_exclusions)]
+
+        # have to do it this way to avoid actions happening to both lists
+        self.ip_list_shuffled = [ip for ip in self.ip_list]
+        random.shuffle(self.ip_list_shuffled)
 
         # ~Produce list of usable ports~
         ports = self.current_config.options["port_targets"]
@@ -142,9 +148,10 @@ class Enumerate():
     def run(self):
         # ~Runs all the things~
         # ---------------------
-        targets = ()  # Init of dictionary
+        target_ips = defaultdict() # Init of dictionary
 
-        for ip in self.ip_list:
+        for ip in self.ip_list_shuffled:  # Make it less obvious
+
             current = TargetInfo()
 
             # check current IP responds to ICMP
@@ -181,8 +188,13 @@ class Enumerate():
 
             # self.other things that just uses IPs
 
-            # Add target information TODO Evaluate less memory intensive methods
-            targets += (ip, current)
+            # NBT STAT
+            current.NBT_STAT = self.get_nbt_stat(ip)
+
+            # Add target information to dict
+            target_ips[ip] = current
+
+        # TODO use target_ips with Result2Html
 
         return  # End of run
 
