@@ -102,8 +102,8 @@ class StorageAccess(FwComponentGadget):
             if os.path.isfile(self.file_name):
                 self.storage.debug("File discovered")
             else:
-                self.storage.debug("File" + self.file_name + "does not exist: 2.04")
-                exit(2.04)
+                self.storage.debug("File" + self.file_path + self.file_name + "does not exist: 2.04")
+                raise 2.04
 
         self.local_mount = False
         self.bus_mounted = False
@@ -148,13 +148,15 @@ class StorageAccess(FwComponentGadget):
         loop_output = subprocess.run(mount_loop_back, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
-            self.storage.debug("Error mounting on loop back " + loop_back_device + ": 2.04")
-            exit(2.04)
+            error = "Error mounting on loop back " + loop_back_device + ": 2.04"
+            self.storage.debug(error)
+            raise ValueError(error)
 
         # If the first loop back device available is still the one we should be mounted to
         if loop_back_device == subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8'):
-            self.storage.debug("Loop back setup Failed: 2.04")
-            exit(2.04)
+            error = "Loop back setup Failed: 2.04"
+            self.storage.debug(error)
+            raise ValueError(error)
 
         return loop_back_device
 
