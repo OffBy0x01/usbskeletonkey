@@ -4,7 +4,7 @@ auto lo
 
 # wlan0
 allow-hotplug wlan0
-iface wlan0 inet static  # Static address
+iface wlan0 inet static
     address 192.168.0.237
     netmask 255.255.255.0
     network 192.168.0.0
@@ -15,6 +15,6 @@ iface wlan0 inet static  # Static address
 
 # usb0
 allow-hotplug usb0
-iface usb0 inet static  # Static address
+iface usb0 inet static
     address 1.0.0.1
     netmask 0.0.0.0
