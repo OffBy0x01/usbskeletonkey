@@ -41,7 +41,13 @@ class Responder(Debug):
 
         if "aspbian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
             # If the "hashes" directory doesn't exist, create it
-            subprocess.run("mkdir -p %s/modules/Responder/hashes" % self.path, shell=True)
+            hash_directory = subprocess.call("mkdir -p %s/modules/Responder/hashes" % self.path, shell=True)
+
+            # Debug
+            if hash_directory:
+                self.responder.debug("The hashes directory already exists, skipping creation!")
+            else:
+                self.responder.debug("Creating hashes directory")
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
