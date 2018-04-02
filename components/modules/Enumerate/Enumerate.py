@@ -248,16 +248,13 @@ class Enumerate():
 
         def service_parsing():  # local function for parsing service and port info
 
-            parsed_output = ''
+            parsed_output = []
 
             for protocol in nm[self.ip_list].all_protocols():
 
                 for port in nm[self.ip_list][protocol]:
                     nmap_results = nm[self.ip_list][protocol][port]
-
-                    #  Add output to variable
-                    parsed_output += (('PORT: ' + str(port) + ': ' + "SERVICE: " + nmap_results['product']
-                                + " VERSION: " + nmap_results['version'] + " STATE: " + nmap_results['state']) + '\n')
+                    parsed_output.append([str(port), nmap_results['product'], nmap_results['version'], nmap_results['state']])
 
             output_list.append(parsed_output)  # Add parsed data to the output list
 
@@ -266,24 +263,19 @@ class Enumerate():
         def os_parsing(output):  # Local function for parsing OS information
             # (required as python NMAP OS isn't working correctly)
 
-            parsed_output = ''
+            parsed_output = []
 
             # Separating OS info and appending it to the output list
             for line in output.splitlines():
-
                 if "OS" in line and "detection" not in line and "matches" not in line:
 
                     if "Aggressive OS guesses" in line:
-                        new_line = line.replace(',', '\n')
-                        new_line = new_line.replace('Aggressive OS guesses:', '')
-                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
+                        new_line = line.strip('Aggressive OS guesses:').split(', ')
+                        parsed_output.append(new_line)
 
-                    elif "OS CPE" in line or "OS details":
-                        new_line = line.strip('OS CPE:')
-                        new_line = new_line.strip('OS details: ')
-                        parsed_output = (parsed_output + '\n' + new_line)  # Save output to a variable
-
-            super().debug(parsed_output)  # Debug
+                    elif "OS details" in line:
+                        new_line = line.strip('OS details:')
+                        parsed_output.append(new_line)
 
             output_list.append(parsed_output)
 
