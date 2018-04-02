@@ -60,4 +60,4 @@ class Storage:
                 time.sleep(self.wait / 8)
 
         current_storage.unmount()
-        return
+        return True
