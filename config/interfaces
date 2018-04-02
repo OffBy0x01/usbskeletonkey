@@ -10,7 +10,9 @@ iface wlan0 inet static  # Static address
     network 192.168.0.0
     broadcast 192.168.0.255
     gateway 192.168.0.1
-    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+	wpa-ssid
+	wpa-psk
+#    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
 
 # usb0
 allow-hotplug usb0

@@ -53,24 +53,51 @@ class NMAP:
         self.targets = ""
         self.list = []
 
+    def os_detection(self, target):
+
+        self.targets = target
+        # self.loud_scan = scan_loud
+        # self.save_output = save_output
+        output = subprocess.run("nmap 45.33.32.156 -O", shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        print(output)
+        print("----------------------------------")
+        parsed_output = []
+
+        for line in output.splitlines():
+            if "OS" in line and "detection" not in line and "matches" not in line:
+
+                if "Aggressive OS guesses" in line:
+                    new_line = line.strip('Aggressive OS guesses:').split(', ')
+                    parsed_output.append(new_line)
+
+                elif "OS details" in line:
+                    new_line = line.strip('OS details:')
+                    parsed_output.append(new_line)
+
+        self.list.append(parsed_output)
+        print(self.list[0])
+        print(self.list[1])
+
+        return
+
     def output(self):  # Quick "mockup" for output
 
-        output = ''
+        output = []
 
         for protocol in self.nm[self.targets].all_protocols():
 
             for port in self.nm[self.targets][protocol]:
                 nmap_results = self.nm[self.targets][protocol][port]
 
-                output += (('PORT: ' + str(port) + ': ' + "SERVICE: " + nmap_results['product']
-                      + " VERSION: " + nmap_results['version'] + " STATE: " + nmap_results['state']) + '\n')
+                output.append([str(port), nmap_results['product'], nmap_results['version'], nmap_results['state']])
 
             # TODO - Sort output for OS detection.
             # For outputting -sV info use the keys: product and version (Service running and version)
             # For outputting -O info I HAVE NO CLUE on the keys. "osclass" should work but it doesn't
 
         self.list.append(output)
-        return
+        return self.os_detection("a")
 
     def output_to_file(self):
 
@@ -97,7 +124,7 @@ class NMAP:
                 command = "-sV --version-light"
                 self.nm.scan(hosts=self.targets, arguments=command)
 
-       # print(self.nm.command_line())  # debug
+       # print(self.nm.command_line())  # debugclea
 
         return self.output()
 
@@ -105,33 +132,4 @@ class NMAP:
 
 
 
-    def os_detection(self, target, scan_loud):
 
-        self.targets = target
-        self.loud_scan = scan_loud
-        #self.save_output = save_output
-        output = subprocess.run("nmap 45.33.32.156 -O -T5 ", shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
-
-        print(output)
-        print("----------------------------------")
-        parsed_output = ''
-
-        for line in output.splitlines():
-            if "OS" in line and "detection" not in line and "matches" not in line:
-
-                if "Aggressive OS guesses" in line:
-                    new_line = line.replace(',', '\n')
-                    new_line = new_line.replace('Aggressive OS guesses:', '')
-                    parsed_output = (parsed_output + new_line)
-
-                elif "OS CPE" in line or "OS details":
-                    new_line = line.strip('OS CPE:')
-                    new_line = new_line.strip('OS details: ')
-                    parsed_output = (parsed_output + '\n' + new_line)
-
-        # print(parsed_output)
-        self.list.append(parsed_output)
-        print (self.list[0])
-        print (self.list[1])
-
-        return
