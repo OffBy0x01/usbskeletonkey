@@ -139,10 +139,10 @@ class Enumerate():
         ]
         # ~end of enum4linux.pl-derived code~
 
-    # ~Runs all the things~
-    # ---------------------
     def run(self):
-        targets = ()  # Init of Dictionary?
+        # ~Runs all the things~
+        # ---------------------
+        targets = ()  # Init of dictionary
 
         for ip in self.ip_list:
             current = TargetInfo()
@@ -163,28 +163,28 @@ class Enumerate():
             if self.interface is "usb0":
                 current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
 
+
             # use all port scanning tools against current ip
             for port in self.port_list:
                 # run things that use ports
-                current.PORTS.append(self.get_port_state())
                 pass
 
             for user in self.user_list:
                 # things that need users
                 pass
 
-            #  self.other things that just uses IPs
 
-            # Use nmap to determine OS, port and service info then save to a list
+            # Use nmap to determine OS, port and service info then save to our current TargetInfo
             nmap_output = self.nmap()  # TODO portsCSV
-            current.OS_INFO.append(nmap_output[0])
-            current.PORTS.append(nmap_output[1])
+            current.PORTS += (nmap_output[0])
+            current.OS_INFO += (nmap_output[1])
+
+            # self.other things that just uses IPs
 
             # Add target information TODO Evaluate less memory intensive methods
             targets += (ip, current)
 
         return  # End of run
-
 
     def get_port_list(self, raw_ports):
         # TODO 01/03/18 [1/2] Add error handling
@@ -198,11 +198,11 @@ class Enumerate():
         # Single port
         elif 0 <= int(raw_ports) <= 65535:
             return [raw_ports]
-        # Bad entry
-        else:
-            self.enumerate.debug(
-                "Error: Invalid type, must be lower_port-upper_port, single port or p1, p2, p3, etc...")
-            return None
+
+        # Else Bad entry
+        self.enumerate.debug(
+            "Error: Invalid type, must be lower_port-upper_port, single port or p1, p2, p3, etc...")
+        return None
 
     def get_ip_list(self, raw_ips):
         # TODO 01/03/18 [2/2] Add error handling
@@ -223,14 +223,7 @@ class Enumerate():
             self.enumerate.debug("Error: Invalid type, must be lower_ip-upper_ip or ip1, ip2, ip3, etc...")
             return None
 
-    # Just an example - This takes ages on windows but is actually really fast under linux (<1s vs 8s)
-    def get_port_state(self, target, port):
-        # NMap
-        nm = nmap.PortScanner()
-        nm.scan(target, port)
-        protocol = nm[target].all_protocols()[0]
-        return [port, protocol, nm[target][protocol][port]['state']]
-
+    # This is not being called so I don't have usage example to work with
     def get_share(self, target, user, password, work_group):
         raw_shares = subprocess.run("net rpc share " +
                                     " -W " + work_group +
@@ -316,11 +309,11 @@ class Enumerate():
 
     def get_local_groups(self):
         # Part of net
-        pass
+        return
 
     def get_domain_groups(self):
         # Also part of net
-        pass
+        return
 
     def get_nbt_stat(self, target="127.0.0.1"):
         raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
@@ -358,30 +351,41 @@ class Enumerate():
 
         return output
 
+    # This function isn't even being called? -Corey
     def get_rpcclient(self, user_list, password_list, target, ip):
-        # Pass usernames in otherwise test against defaults
+        # Pass usernames in otherwise test against defaults  # What defaults? -Corey
         for user in user_list:
             for password in password_list:
-                subprocess.run("rpcclient -U " + user + " " + target + " -c 'lsaquery' 2>&1",
-                               stdout=subprocess.PIPE).stdout.decode('utf-8')
+                subprocess.run("rpcclient -U " + user + " " + target + " -c 'lsaquery'")
+                # , stdout=subprocess.PIPE).stdout.decode('utf-8' I dont think this is required so I commented it out
+                # If Im wrong uncomment and remove the ) Easy fix -Corey
+
                 # enter password
                 raw_rpc = subprocess.run(password).stdout.decode('utf-8')
 
+                # Why are you checking for fails? (If Successful: Do thing; else: debug out why) -Corey
                 if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
                     # Unable to connect
                     print("Connection refused under - " + user + ":" + password)
+                    # Why are you printing? We wont see the screen -Corey
+
                 elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
                     # Incorrect username or password
                     print("Incorrect username or password under -  " + user + ":" + password)
+                    # Why are you printing? We wont see the screen -Corey
+
                 elif "rpcclient $>" in raw_rpc:
                     raw_command = subprocess.run("enumdomgroups", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = False
                     # true = users / false = groups
+                    # Why is this being called here? and why doesnt it return anything? -Corey
                     self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("enumdomusers", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = True
                     # true = users / false = groups
+
+                    # Why is this being called twice? See Line 380 -Corey
                     self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -389,9 +393,9 @@ class Enumerate():
 
                     # then run get_smbclient
 
-
                 else:
-                    print("No reply")
+                    print("No reply")  # Why are you printing? -Corey
+    # Where is the return for this function? -Corey
 
     def get_password_policy(self, raw_command, ip):
         length = 0
@@ -434,6 +438,7 @@ class Enumerate():
         for char in raw_command:
             if char == "\n":
                 counter += 1
+        # Is this a diy regex? -Corey
         for times in range(0, counter + 1):
             start = index
             start = raw_command.find('[', index)
@@ -553,7 +558,7 @@ class Enumerate():
         return output
 
     @staticmethod
-    def get_route_to_target(target, interface="wlan0", bypass_routing_tables=False, hop_back_checks=True,
+    def get_route_to_target(target, interface="usb0", bypass_routing_tables=False, hop_back_checks=True,
                             map_host_names=True, original_out=False):
         """
         Makes use of the traceroute command.
@@ -567,7 +572,7 @@ class Enumerate():
         :param map_host_names: In the event that mapping host names to IP makes noise this can be disabled
         :param original_out: If the user wants the original command output this should be changed to true
 
-        :return: list of ip lists for each hop. Often single item list but keeps consistent for accessing
+        :return: list of ip lists for each hop. Then a list of lists containing IPS that have been used on way back
         """
         command = ["traceroute", "-i", interface]  # start with command items that are required
 
@@ -598,37 +603,39 @@ class Enumerate():
 
         del output[0]
 
-        output_out = []
+        route_out = []
+        route_back = []
 
-        if map_host_names:
-            for line in output:
-                results = []  # init var to store current results
-                line = line.split()
-                del line[0]
+        for line in output:
+            line = line.split()
+            del line[0]
 
+            results = []  # init var to store current results
+            if map_host_names:
                 for item in line:
                     # If item looks like a domain or the first three octets of an IP address
                     if re.search("[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*",
                                  item.lower()):  # Would compiling a re be better here?
                         results += [item.strip("\(\)")]  # Remove any brackets and add to results for this line
-
-                if IpValidator.is_valid_ipv4_address(results[0]):  # If the "Host name" is an IP
-                    results = results[::2]  # Grab every other variable
-
-                output_out += [results]  # Add results from this line
-
-        else:
-            for line in output:
-                results = []  # init var to store current results
-                line = line.split()
-                del line[0]
-
+            else:
                 for item in line:
                     if IpValidator.is_valid_ipv4_address(item):
                         results += [item]
-                output_out += [results]
 
-        return output_out
+            if len(results) is 1:
+                route_out += [results]  # Add results from this line
+                route_back += []
+            elif len(results) is not 0:
+                route_out += [results[0]]
+                route_back += [results[1:]]
+            else:
+                route_out += ["*"]
+                route_back += [["*"]]
+
+        if type(route_out[0]) is list:
+            route_out[0] = route_out[0][0]
+
+        return [route_out, route_back]
 
     @staticmethod
     def get_targets_via_arp(target, interface="usb0", source_ip="self", target_is_file=False,
@@ -640,13 +647,22 @@ class Enumerate():
         Target can be a list of IP's or a single IP.
             This allows for passing in the lists (such as that which the configs stores)
         :param target: IPv4 address(s) e.g "192.168.0.1", "192.168.0.0/24", ["192.168.0.1", "192.168.0.2"]
-        :param interface: String value for interface, defaults to usb0 but can make use of any interface that is available
-        :param source_ip: String value that defaults to self but can be changed send packets with source being another address
-        :param target_is_file: Binary value for when the user wishes to use a file containing addresses. Defaults False
-        :param original_out: Binary value for whether the command gives out the command output without parsing. Defaults False
-        :param randomise_targets: Binary Value for targets where they should not be scanned in the order given. Defaults False
 
-        :return: output of the command to be parsed
+        :param interface: String value for interface, can make use of any interface that is available
+                Defaults to "usb0"
+        :param source_ip: String value that can be changed send packets with source being another address.
+                Defaults to "self"
+        :param target_is_file: Binary value for when the user wishes to use a file containing addresses.
+                Defaults False
+        :param original_out: Binary value for whether the command gives out the command output without parsing.
+                Defaults False
+        :param randomise_targets: Binary Value for targets where they should not be scanned in the order given.
+                Defaults False
+
+        :return: list with IP, MAC address and Adapter name
+                 (Unless its multiple targets in which case it's a list of the prior)
+
+
         """
         command = ["arp-scan", "-v", "-I", interface, "-r", "3"]
 
@@ -690,8 +706,7 @@ class Enumerate():
         del output[0:2]
         del output[-3:]
 
-        outlist = [
-            []]  # was unable to change each line from a string to a list so moving each line as it becomes a list
+        outlist = [[]]  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
         for line in output:
             # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
