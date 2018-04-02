@@ -8,5 +8,5 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from components.framework.keyboard import Keyboard
 
 if __name__ == '__main__':
-    test = Keyboard(debug=True)
-    test.resolve("test.txt")
+    test = Keyboard(debug=True, path="~/usbskeletonkey/components")
+    test.run("test.txt")
