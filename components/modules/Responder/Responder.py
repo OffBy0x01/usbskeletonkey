@@ -12,30 +12,21 @@ from components.helpers.ModuleManager import ModuleManager
 
 class Responder(Debug):
     """ Class for Responder Module
-
                 Args:
-
                functions:
                    capture              Run Spiderlabs' Responder on usb0 so password hashes can potentially
                                         be obtained.
-
                    network.up           Calls a method from the framework component "network.py" that enables usb0,
                                         configures the DHCP server and IP routing for network traffic
                                         capture.
-
                    monitor_responder    Monitors "Responder.db" for file changes and returns when either the "time
                                         to live" period has been reached or a password hash has been captured.
-
                    process.kill         Kills the instance of Responder that has been running.
-
                    network.down         Calls a method from the framework component "network.py" that disables usb0,
                                         the DHCP server and removes IP routing for the interface.
-
                Returns:
                    boolean
-
                Raises:
-
            """
 
     # Constructor
@@ -50,7 +41,7 @@ class Responder(Debug):
 
         if "aspbian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
             # If the "hashes" directory doesn't exist, create it
-            subprocess.run("mkdir -p %s/modules/Responder/hashes" % (self.path), shell=True)
+            subprocess.run("mkdir -p %s/modules/Responder/hashes" % self.path, shell=True)
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -65,9 +56,9 @@ class Responder(Debug):
 
         # Adapted from /src/utils.py. Creates and populates Responder.db correctly
         # (for some unknown reason Responder doesn't do this automatically)
-        if not os.path.exists("%s/modules/Responder/src/Responder.db"%(self.path)):
+        if not os.path.exists("%s/modules/Responder/src/Responder.db"%self.path):
             self.responder.debug("Creating Responder.db")
-            cursor = sqlite3.connect("%s/modules/Responder/src/Responder.db" % (self.path))
+            cursor = sqlite3.connect("%s/modules/Responder/src/Responder.db" % self.path)
             cursor.execute(
                 'CREATE TABLE responder (timestamp varchar(32), module varchar(16), '
                 'type varchar(16), client varchar(32), hostname varchar(32), user varchar(32), '
@@ -123,7 +114,17 @@ class Responder(Debug):
 
             # ~end of Pi-Key derived code~
 
-        self.network.up()  # Up usb0
+        # Enable and disable g_ether (Required due to some unknown bug)
+        subprocess.call("modprobe 'g_ether' '0x04b3' '0x4010'", shell=True)
+        subprocess.run("modprobe -r g_ether", shell=True)
+
+        time.sleep(1)  # Sleep required due to issues with modprobe usage with subprocess
+
+        network_success = self.network.up()  # Up usb0
+
+        if not network_success: # If networking.py has failed, don't run Responder and exit
+            self.responder.debug("Exiting as networking.py has failed!")
+            return False
 
         self.responder.debug("Responder starting")
 
