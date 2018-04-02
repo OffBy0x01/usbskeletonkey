@@ -17,11 +17,40 @@ apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
 
 # Network set up
-cp config/interfaces /etc/network/interfaces  # Set interfaces for usb0
-cp config/dhcpcd.conf /etc/dhcpcd.conf  # Set static IPs for wlan0 and usb0
-cp config/resolv.conf /etc/resolv.conf  # Set DNS server
-cp config/dhcpd.conf /etc/dhcp/dhcpd.conf  # Set subnet for the DHCP server
-cp config/isc-dhcp-server /etc/default/isc-dhcp-server  # Set interface for DHCP server
+# Copy default network configs
+cp ../../../config/interfaces /etc/network/interfaces  # Set interfaces for usb0
+cp ../../../config/dhcpcd.conf /etc/dhcpcd.conf  # Set static IPs for wlan0 and usb0
+cp ../../../config/resolv.conf /etc/resolv.conf  # Set DNS server
+cp ../../../config/dhcpd.conf /etc/dhcp/dhcpd.conf  # Set subnet for the DHCP server
+cp ../../../config/isc-dhcp-server /etc/default/isc-dhcp-server  # Set interface for DHCP server
+
+# Prompt user for config
+echo "Config wlan0"
+read -p "Enter IP address for device: " _address
+read -p "Enter netmask: " _netmask
+read -p "Enter network address: " _network
+read -p "Enter broadcast address: " _broadcast
+read -p "Enter network gateway: " _gateway
+read -p "Enter SSID: " _ssid
+read -p "Enter Passkey: " _psk
+
+# Convert netmask into CIDR notation
+_CIDRmask=$(mask2cidr $_netmask)
+
+# Apply config
+# Interfaces
+_interfaces=/etc/network/interfaces # File path
+sed -i -r "1,16{s,address .*,address $_address,g}" $_interfaces
+sed -i -r "1,16{s,netmask .*,netmask $_netmask,g}" $_interfaces
+sed -i -r "1,16{s,network .*,network $_network,g}" $_interfaces
+sed -i -r "1,16{s,broadcast .*,broadcast $_broadcast,g}" $_interfaces
+sed -i -r "1,16{s,gateway .*,gateway $_gateway,g}" $_interfaces
+sed -i -r "1,16{s,wpa-ssid .*,wpa-ssid $_ssid,g}" $_interfaces
+sed -i -r "1,16{s,wpa-psk .*,wpa-psk $_psk,g}" $_interfaces
+
+#dhcpcd.conf
+_dhcpcd=/etc/dhcpcd.conf # File path
+sed -i -r "62,62{s,static ip_address=.*,static ip_address=$_address\/$_CIDRmask,g}" $_dhcpcd
 
 # TODO Comments
 if ! uname -a | grep -q "4.4.50+"; then

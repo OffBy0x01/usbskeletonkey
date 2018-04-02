@@ -30,10 +30,10 @@ TestOne = StorageAccess(debug=True)
 
 print("Size " + TestOne.__sizeof__())
 
-TestOne.mountlocal()
+TestOne.mount_local()
 
-if not os.path.exists(TestOne.directory):
-    print("TEST ONE: The file system did not make a directory correctly")
+if not os.path.exists(TestOne.file_path):
+    print("TEST ONE: The file system did not make a file_path correctly")
     exit(1)
 
 file = "Test.txt"
@@ -62,11 +62,11 @@ if os.path.exists(test_one_directory):
 time.sleep(3)
 
 print("Starting Test Two -=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=--=")
-TestTwo = StorageAccess(fs=test_one_file, debug=True)
+TestTwo = StorageAccess(file_name=test_one_file, debug=True)
 
 print("Size " + TestTwo.__sizeof__())
 
-TestTwo.mountlocal("./TestTwo/")
+TestTwo.mount_local("./TestTwo/")
 
 if not os.path.isfile(TestTwo.mounted_dir + file):
     print("TEST TWO: Could not see file")
@@ -75,7 +75,7 @@ if not os.path.isfile(TestTwo.mounted_dir + file):
 TestTwo.unmount()
 
 print("Continuing into Test Three -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
-TestTwo.mountbus()
+TestTwo.mount_bus()
 
 print("Mounting for 15 seconds")
 

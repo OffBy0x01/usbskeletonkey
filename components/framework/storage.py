@@ -5,6 +5,7 @@ from datetime import datetime
 from components.framework.FwComponentGadget import FwComponentGadget
 from components.framework.Debug import *
 
+
 class StorageAccess(FwComponentGadget):
     """
     This allows for creation of mini file systems that can be used for storing locally or via the bus
@@ -13,28 +14,28 @@ class StorageAccess(FwComponentGadget):
 
             __init__ asks for:
                 :param readable_size: This will set the Size of a NEW file system. Default is 2M
-                :param fs: This is used to mount a old file system. Fill this with a string of the name of the file
-                             system you wish to mount
-                :param directory: Directory of where the filesystem should work from. Either path to Filesystem or
+                :param file_name: This is used to mount a old file system. Fill this with a string of the name of the
+                                    file system you wish to mount
+                :param file_path: Directory of where the filesystem should work from. Either path to Filesystem or
                                     where filesystem will rest. Defaults to "./"
                 :param debug: Whether to enable debug output for this module. This is passed to the superclass.
                                 Defaults to False
 
             Functions:
                 __init__: The class initialisation uses the above parameters to open the appropriate file system
-                __createfs: Hidden method that is called as and when relevant by the __init__ function
+                __create_fs: Hidden method that is called as and when relevant by the __init__ function
                 __del__: Called when the Class is closed simply pushes a debug that it has been closed
-                __convertsize: Hidden method used to convert the size of a file to a string ending in the
+                __convert_size: Hidden method used to convert the size of a file to a string ending in the
                                 appropriate suffix
                 __sizeof__: Returns the size of the current file system after running through convert where appropriate
-                mountlocal: Mounts the file system locally to the set directory
-                mountbus: Mounts the file system on the bus
-                unmountlocal: unmounts locally where applicable
-                unmountbus: unmounts the bus where applicable
+                mount_local: Mounts the file system locally to the set file_path
+                mount_bus: Mounts the file system on the bus
+                unmount_local: Will unmount locally where applicable
+                unmount_bus: Will unmount the bus where applicable
                 unmount: Calls the appropriate unmount file system if mounted
     """
 
-    def __createfs(self):
+    def __create_fs(self):
         """
         Creates a file system: This action does not require sudo. This action does not have exit codes
         """
@@ -45,60 +46,57 @@ class StorageAccess(FwComponentGadget):
         self.storage.debug("    Naming file system " + self.file_name)
 
         # Makes a file system. (This command accepts 1M and such)
-        falloc = ["fallocate", "-l", self.readable_size.upper(), self.directory + self.file_name]
-        self.storage.debug("    Running command - " + falloc.__str__())
-        subprocess.run(falloc)
+        file_allocate = ["fallocate", "-l", self.readable_size.upper(), self.file_path + self.file_name]
+        self.storage.debug("    Running command - " + file_allocate.__str__())
+        subprocess.run(file_allocate)
 
         # Make a file system
-        mklabel = ["parted", "--script", self.directory + self.file_name, "mklabel", "msdos"]
-        self.storage.debug("    Running command - " + mklabel.__str__())
-        subprocess.run(mklabel)
+        make_label = ["parted", "--script", self.file_path + self.file_name, "mklabel", "msdos"]
+        self.storage.debug("    Running command - " + make_label.__str__())
+        subprocess.run(make_label)
 
-        mkpart = ["parted", "--script", self.directory + self.file_name, "mkpart", "primary", self.fs.lower(), "0%", "100%"]
-        self.storage.debug("    Running command - " + mkpart.__str__())
-        subprocess.run(mkpart)
+        make_partition = ["parted", "--script",
+                          self.file_path + self.file_name, "mkpart", "primary", "fat32", "0%", "100%"]
 
-        loopback_temp = self.__loopmount(False)
+        self.storage.debug("    Running command - " + make_partition.__str__())
+        subprocess.run(make_partition)
 
-        mkfs = ["mkfs." + self.fs[:3], loopback_temp + "p1"]
-        self.storage.debug("    Running command - " + mkfs.__str__())
-        subprocess.run(mkfs)
+        loop_back_temp = self.__loop_mount(False)
 
-        subprocess.run(["losetup", "-d", loopback_temp])
+        make_file_system = ["mkfs.fat", loop_back_temp + "p1"]
+        self.storage.debug("    Running command - " + make_file_system.__str__())
+        subprocess.run(make_file_system)
+
+        subprocess.run(["losetup", "-d", loop_back_temp])
 
         # Done
 
-    def __init__(self, readable_size="4M", fs=None, directory="./", debug=False):
+    def __init__(self, readable_size="4M", file_name=None, file_path="./", debug=False):
         # Initialise super class
         super().__init__("g_mass_storage", enabled=False, debug=debug)
         self._type = "Component"
         self._name = "Storage"
 
-        # Start debuger
+        # Start debugger
         self.storage = Debug(debug=debug)
 
         # Inform the user on debug what module has started
         self.storage.debug("Starting Module: Storage Access")
 
         # Variable init
-        if fs is None:
-            self.fs = "fat32"
-        else:
-            self.fs = fs
-
-        self.old_fs = (fs is None)
-        self.directory = directory
+        self.old_fs = (file_name is None)
+        self.file_path = file_path
         self.mounted_dir = str(None)
-        self.loopback_device = str(None)
+        self.loop_back_device = str(None)
         self.readable_size = readable_size
 
-        if fs is None:
-            self.__createfs()
+        if file_name is None:
+            self.__create_fs()
         else:
             self.storage.debug("Attempting to use existing filesystem")
 
-            self.file_name = fs
-            self.storage.debug("User specified to load " + fs)
+            self.file_name = file_name
+            self.storage.debug("User specified to load " + file_name)
 
             # If file exists
             if os.path.isfile(self.file_name):
@@ -115,13 +113,13 @@ class StorageAccess(FwComponentGadget):
         self.storage.debug("Removed")
         return
 
-    def __convertsize(self):
+    def __convert_size(self):
         # This code is derived from code from dive into python. Thanks Mark <3
 
         # This should never reach T unless the Pi is using external storage or we are in the year 2100
         suffixes = {1024: ['K', 'M', 'G', 'T']}
         multiple = 1024
-        fs_size = int(os.path.getsize(self.directory + self.file_name))
+        fs_size = int(os.path.getsize(self.file_path + self.file_name))
         for suffix in suffixes[multiple]:
             fs_size /= multiple
             if fs_size < multiple:
@@ -132,89 +130,89 @@ class StorageAccess(FwComponentGadget):
     # Overwriting the default sizeof method
     def __sizeof__(self):
         if self.old_fs:
-            self.__convertsize()  # size of old fs
+            self.__convert_size()  # size of old fs
 
         return self.readable_size  # size of current file system
 
-    def __loopmount(self, read_only):
-        loopback_device = subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    def __loop_mount(self, read_only):
+        loop_back_device = subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
 
-        mount_loopback = ["losetup", "-P"]
+        mount_loop_back = ["losetup", "-P"]  # -P checks for partitions
 
         if read_only:
-            mount_loopback = mount_loopback + ["-r"]
+            mount_loop_back += ["-r"]
 
-        mount_loopback = mount_loopback + [loopback_device, (self.directory + self.file_name)]
+        mount_loop_back += [loop_back_device, (self.file_path + self.file_name)]
 
-        self.storage.debug("Attempting to mount on " + loopback_device)
-
-        loop_output = subprocess.run(mount_loopback, stdout=subprocess.PIPE).stdout.decode('utf-8')
+        self.storage.debug("Attempting to mount on " + loop_back_device)
+        loop_output = subprocess.run(mount_loop_back, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if "failed to set up loop device" in loop_output:
-            self.storage.debug("Error mounting on loop back " + loopback_device + ": 2.04")
+            self.storage.debug("Error mounting on loop back " + loop_back_device + ": 2.04")
             exit(2.04)
 
         # If the first loop back device available is still the one we should be mounted to
-        if loopback_device == subprocess.run(["losetup", "-f"],
-                                                  stdout=subprocess.PIPE).stdout.decode('utf-8'):
+        if loop_back_device == subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8'):
             self.storage.debug("Loop back setup Failed: 2.04")
             exit(2.04)
 
-        return loopback_device
+        return loop_back_device
 
-    def mountlocal(self, directory="./fs/", read_only=False):  # make this more unique for a default folder
+    def mount_local(self, directory="./fs/", read_only=False):  # make this more unique for a default folder
         # Mount the file system locally for amending of any desc (unless RO)
-
+        mount_command = ["mount"]
         # Mount on LO device
-        self.loopback_device = self.__loopmount(read_only)
+        self.loop_back_device = self.__loop_mount(read_only)
 
-        # The directory we intend to mount to
+        # The file_path we intend to mount to
         self.mounted_dir = directory
 
-        # When the user tries to mount us on a non existent directory
+        # When the user tries to mount us on a non existent file_path
         if not os.path.exists(self.mounted_dir):
-            self.storage.debug("Directory Traversal failure: No directory at " + directory + "\nCreating folder")
+            self.storage.debug("Directory Traversal failure: No file_path at " + directory + "\nCreating folder")
             os.mkdir(self.mounted_dir)
 
         if read_only:
-            mount_command = ["mount", "-o", "ro", self.loopback_device + "p1", self.mounted_dir]  # mount RO
+            mount_command += ["-o", "ro", self.loop_back_device + "p1", self.mounted_dir]  # mount RO
         else:
-            mount_command = ["mount", self.loopback_device + "p1", self.mounted_dir]  # mount norm
+            mount_command += [self.loop_back_device + "p1", self.mounted_dir]  # mount norm
 
         subprocess.run(mount_command)
 
         self.local_mount = True
         return
 
-    def mountbus(self, write_block=False):
+    def mount_bus(self, write_block=False):
         # Mount over USB
         if write_block:
             # modprobe g_mass_storage ro=1 file=./foo.bar
             self.vendor_id = "ro=1"  # This only accepts y or 1 for true
-            self.product_id = "file=" + self.directory + self.file_name
+            self.product_id = "file=" + self.file_path + self.file_name
         else:
             # modprobe g_mass_storage ro=0 file=./foo.bar
-            self.vendor_id = "ro=0"
-            self.product_id = "file=" + self.directory + self.file_name
+            self.vendor_id = "ro=0"  # Read Only = 0
+            self.product_id = "file=" + self.file_path + self.file_name
 
         self.enable()
         self.storage.debug("Mounted over bus. RO: " + write_block.__str__())
         self.bus_mounted = True
         return
 
-    def unmountlocal(self):
-        self.storage.debug(subprocess.run(["umount", self.mounted_dir], stdout=subprocess.PIPE).stdout.decode('utf-8'))  # un-mount
-        self.storage.debug("The filesystem was unmounted with command umount " + self.mounted_dir)
+    def unmount_local(self):
+        unmount = ["umount", self.mounted_dir]
+        self.storage.debug(subprocess.run(unmount, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+        self.storage.debug("The filesystem was unmounted with command - " + unmount.__str__())
 
-        self.storage.debug("Now removing from loopback device with command - losetup -d " + self.loopback_device)
-        subprocess.run(["losetup", "-d", self.loopback_device])
+        del_loop_device = ["losetup", "-d", self.loop_back_device]
+        subprocess.run(del_loop_device)
+        self.storage.debug("Loop back device removed with command - " + del_loop_device.__str__())
 
         self.local_mount = False
-        self.loopback_device = str(None)
+        self.loop_back_device = str(None)
         self.mounted_dir = str(None)
         return
 
-    def unmountbus(self):
+    def unmount_bus(self):
         self.disable()
 
         self.storage.debug("The bus was unmounted")
@@ -226,12 +224,12 @@ class StorageAccess(FwComponentGadget):
 
         if self.local_mount:
             self.storage.debug("Filesystem is mounted on " + self.mounted_dir)
-            self.unmountlocal()
+            self.unmount_local()
             return
 
         if self.bus_mounted:
             self.storage.debug("Filesystem is mounted on the bus")
-            self.unmountbus()
+            self.unmount_bus()
             return
 
         self.storage.debug("Nothing was mounted")
