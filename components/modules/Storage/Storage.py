@@ -32,7 +32,7 @@ class Storage:
 
         self.file_path = self.current_config.options["file_path"].strip() + path
         self.file_name = self.current_config.options["file_name"].strip()
-        self.read_only = "True" == self.current_config.options["read_only"].strip()
+        self.read_only = "true" == self.current_config.options["read_only"].strip()
         self.wait = int(self.current_config.options["wait"].strip())
 
     def run(self):
