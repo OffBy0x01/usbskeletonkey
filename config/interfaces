@@ -10,8 +10,8 @@ iface wlan0 inet static  # Static address
     network 192.168.0.0
     broadcast 192.168.0.255
     gateway 192.168.0.1
-    wpa-ssid
-    wpa-psk
+    wpa-ssid a
+    wpa-psk a
 
 # usb0
 allow-hotplug usb0
