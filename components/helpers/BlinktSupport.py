@@ -1,4 +1,9 @@
-from blinkt import set_brightness, set_pixel, show, clear
+try:
+    import blinkt
+except ImportError:
+    import pip
+    pip.main(['install', '--user', 'blinkt'])
+    from blinkt import set_brightness, set_pixel, show, clear
 
 
 class Blinkt:

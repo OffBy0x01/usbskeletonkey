@@ -1,7 +1,14 @@
-from yattag import Doc, indent
+try:
+    import yattag
+except ImportError:
+    import pip
+    pip.main(['install', '--user', 'yattag'])
+    from yattag import indent, Doc
 
 
-def generate_output(targets):
+from components.modules.Enumerate.TargetInfo import TargetInfo
+
+def result2html(targets):
     """
     Description:
                 Converts Enumerate output to human-readable form
@@ -9,6 +16,26 @@ def generate_output(targets):
     :param targets:     List containing TargetInfo Objects
     :return:            Bootstrap-based HTML5 page of results
     """
+    ip, info = targets[0]
+    print(ip)
+    print(info.RESPONDS_ICMP)
+    print(info.RESPONDS_ARP)
+    print(info.MAC_ADDRESS)
+    print(info.ADAPTER_NAME)
+    print(info.ROUTE)
+    print(info.OS_INFO)
+    print(info.SOFTWARE_INFO)
+    print(info.WORKGROUP)
+    print(info.DOMAIN)
+    print(info.LOCAL)
+    print(info.SESSIONS)
+    print(info.NBT_STAT)
+    print(info.SHARE_INFO)
+    print(info.PASSWD_POLICY)
+    print(info.PRINTER_INFO)
+    print(info.PORTS)
+
+    return False
 
     doc, tag, text = Doc().tagtext()
     doc.asis('<!DOCTYPE html>')
