@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # MUST BE RUN AS ROOT!
 
+# Network set up
+./components/framework/shell_scripts/network_setup.sh
+
 # Install Dependencies
 apt-get update
 apt-get --assume-yes install rpi-update
@@ -15,9 +18,6 @@ apt-get --assume-yes install inotify-tools
 apt-get --assume-yes install isc-dhcp-server
 apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
-
-# Network set up
-./components/framework/shell_scripts/network_setup.sh
 
 # TODO Comments
 if ! uname -a | grep -q "4.4.50+"; then
