@@ -65,19 +65,23 @@ class SkeletonKey:
 
             # Interface options
             self.config.add_section('interface')
-            self.config.set('interface', 'debug', 'False')
+            self.config.set('interface', 'debug', 'false')
 
             # General options
             self.config.add_section('general')
-            self.config.set('general', 'config_mode', 'True')
-            self.config_mode = True
+            self.config.set('general', 'config_mode', 'true')
+            self.config.set('general', 'pin_armed', 'false')
+            self.config.set('general', 'first_run', 'true')
+
+            with open('config.ini', 'w') as self.config_file:
+                self.config.write(self.config_file)
 
         else:
             # Config file exists, start importing
             self.config.read(self.config_file)
 
             # Set debug state accordingly
-            if self.config.get('interface', 'debug') == "True":
+            if self.config.get('interface', 'debug') == "true":
                 pass
             # TODO TEST
             #     self._debug = True
@@ -85,18 +89,19 @@ class SkeletonKey:
             #     self._debug = False
 
             # Set current run state (config | Armed)
-            if self.config.get('general', 'config_mode') == "True":
+            if self.config.get('general', 'config_mode') == "true":
                 self.config_mode = True
             else:
                 self.config_mode = False
-
-        with open('config.ini', 'w') as self.config_file:
-            self.config.write(self.config_file)
+        finally:
+            if self.config.get('general', 'first_run') == "true":
+                subprocess.run("bash install_dependencies.sh", shell=True)
+                exit()
 
     # Check if 'pin' says go
     def is_pin_armed(self):
         if subprocess.run(["tvservice", "-s"], stdout=subprocess.PIPE).stdout.decode('utf-8')[6:14]\
-                is not "0x40001" and self.config.get('general', 'pin') == "True":
+                is not "0x40001" and self.config.get('general', 'pin') == "true":
             return True
         return False
 
