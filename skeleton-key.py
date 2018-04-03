@@ -305,7 +305,7 @@ class SkeletonKey:
         except ValueError:
             return False
 
-    def edit_module_order_question(self):  # TODO Check this
+    def edit_module_order_question(self, user_choice):  # TODO Check this
         print("Current module order")
         if self.module_manager.module_order == 0:
             print("There are currently no modules in line")
