@@ -5,7 +5,7 @@ import pickle
 import subprocess
 
 from components.framework.Debug import Debug
-from components.helpers.Color import Colors
+from components.helpers.Color import Color
 from components.helpers.ModuleManager import ModuleManager
 
 
@@ -112,7 +112,7 @@ class SkeletonKey:
         for this_module in armed_module_list:
             try:
                 self.main.enable_module_debug(str(this_module))
-                self.main.debug(txt="~~~Start of " + str(this_module) + "~~~", Color=Colors.INFOBLUE)
+                self.main.debug(txt="~~~Start of " + str(this_module) + "~~~", Color=Color.OKGREEN)
                 imp_module = importlib.import_module("components.modules." + this_module + "." + this_module,
                                                      this_module)
             except Exception as Err:
@@ -127,17 +127,17 @@ class SkeletonKey:
 
                     # Module needs to be enabled before it will run
                     if current_config.options["enabled"] == "true":
-                        self.main.debug(txt=str(this_module) + " is enabled", Color=Colors.OKGREEN)
+                        self.main.debug(txt=str(this_module) + " is enabled", Color=Color.DEFAULT)
                         module_class = getattr(imp_module, this_module)
                         runnable = module_class(self.main_path, debug=self.module_debug)
                         runnable.run()
                     else:
-                        self.main.debug(txt=str(this_module) + " is disabled", Color=Colors.WARNING)
+                        self.main.debug(txt=str(this_module) + " is disabled", Color=Color.FAIL)
 
                 except Exception as WTF:
                     self.main.debug("RUN ERROR: " + str(WTF))
 
-                self.main.debug(txt="~~~~End of " + str(this_module) + "~~~~\n\n", Color=Colors.INFOBLUE)
+                self.main.debug(txt="~~~~End of " + str(this_module) + "~~~~\n\n", Color=Color.INFOBLUE)
 
     def config_mode(self):
         pass
