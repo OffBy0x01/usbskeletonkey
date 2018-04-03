@@ -158,13 +158,12 @@ class SkeletonKey:
 
     def show_module_attributes(self, user_selection):
         module = self.module_manager.module_list[user_selection - 1]
-        module = self.module_manager.module_list[user_selection - 1]
         print("\nModule Name: ", module.module_name, "\n")
         print("Module Description: ", module.module_desc, "\n")
         print("Framework Requirements: ", module.fw_requirements, "\n")
         print("Options: ", module.options, "\n")
         print("Module Help: ", module.module_help, "\n")
-        print("Output Format: ", module.output_format, "\n")
+        print("Output Format: ", module.output_format)
 
     def show_module_attribute(self, config_selection, user_selection):
         module = self.module_manager.module_list[user_selection - 1]
