@@ -151,10 +151,11 @@ class Enumerate():
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(current, interface=self.interface)
 
+            # Check if arp generated valid data
             arp_response_valid = False  # Flag for valid data
             if arp_response:  # If list of data exists
-                for x in arp_response:  # Check each item in list for valid data
-                    if x:  # If data exists
+                for item in arp_response:  # Check each item in list for valid data
+                    if item:  # If data exists
                         arp_response_valid = True  # Set flag to true
                         break
 
@@ -169,6 +170,25 @@ class Enumerate():
             # check route to this target
             if self.interface is "usb0":
                 current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+
+            # Check to see if trace route generated valid data
+            current_route_valid = False  # Flag for valid data
+            if current.ROUTE:  # If list exists
+                if current.ROUTE[0]:  # Check first list for data
+                    for item in current.ROUTE[0]:
+                        if item:
+                            current_route_valid = True
+                            break
+                if current.ROUTE[1]:  # Check second list of lists
+                    for item in current.ROUTE[1]:  # Check each list of lists
+                        if item:  # If data exists
+                            for sub_item in item:  # Check each list
+                                if sub_item:  # If data exists
+                                    current_route_valid = True
+                                    break
+
+            if not current_route_valid:  # If no valid data was found
+                current.ROUTE = False  # Set value to false
 
             # use all port scanning tools against current ip
             for port in self.port_list:
