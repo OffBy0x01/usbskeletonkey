@@ -217,7 +217,6 @@ class SkeletonKey:
         if not flag:
             print(Color.WARNING+"ERROR: Please enter a valid option to show"+Color.DEFAULT)
 
-
     def display_help(self):
         # Displays help information for Skeleton Key
         print("Displaying help...")
@@ -259,75 +258,76 @@ class SkeletonKey:
             print("Discarding changes...")
             self.module_manager.save_config(module_name, False)
 
-
     def move_module_by(self, module_index, move_to):
-        #temporary_holder = []
         temporary_holder = self.module_manager.module_list[module_index]
         self.module_manager.module_list.remove(self.module_manager.module_list[module_index])
         self.module_manager.module_list.insert(move_to, temporary_holder)
+        return
 
-    def edit_module_order(self, user_choice):
+    def edit_module_order(self):
         print("Use the following commands to change the module load order")
         print("order [module index] [order placement]")
         print("order [module index] up")
         print("order [module index] down")
-        try:
-            change_order_command = str(input(">")).lower().split()
-        except ValueError:
-            print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
-        if len(change_order_command) is not 3:
-            print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
-        else:
-            if change_order_command[0] == "order":
-                try:
-                    current_index = int(change_order_command[1])
-                except ValueError:
-                    print(Color.WARNING+"Module index is not in list"+Color.DEFAULT)
-                if change_order_command[2] == "up":
-                    # move item up 1
-                    self.move_module_by(current_index, (current_index - 1))
-                elif change_order_command[2] == "down":
-                    self.move_module_by(current_index, (current_index + 1))
-                else:
-                    check = self.check_order_is_number(change_order_command[2])
-                    if(check):
-                        if int(change_order_command[2]) < len(self.module_manager.module_list):
-                            self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
-                        else:
-                            print("Integer out of range")
-                    else:
-                        print("Please enter a valid command")
-        print(Color.FAIL+"Exiting Module Order loader..."+Color.DEFAULT)
 
-    def check_order_is_number(self, test_case):
+        change_order_command = str(input(">")).lower().split()
+
+        if (len(change_order_command) is not 3) or (change_order_command[0] is not "order"):
+            print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
+
+        else:
+
+            # check the command out [1] is an int
+            try:
+                int(change_order_command[1])
+
+            except ValueError:
+                print(Color.WARNING+"Module index is not in list"+Color.DEFAULT)
+
+            if change_order_command[2] == "up":
+                # move item up 1
+                self.move_module_by(int(change_order_command[1]), (int(change_order_command[1]) - 1))
+
+            elif change_order_command[2] == "down":
+                self.move_module_by(int(change_order_command[1]), (int(change_order_command[1]) + 1))
+
+            else:
+                if self.check_int(change_order_command[2]):
+                    if int(change_order_command[2]) < len(self.module_manager.module_list):
+                        self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
+
+                    else:
+                        print("Integer out of range")
+
+                else:
+                    print("Please enter a valid command")
+
+        print(Color.FAIL+"Exiting Module Order loader..."+Color.DEFAULT)
+        return
+
+    @staticmethod
+    def check_int(test_case):
         try:
             int(test_case)
             return True
         except ValueError:
             return False
 
-
-
-    def edit_module_order_question(self, user_choice):
+    def edit_module_order_question(self):  # TODO Check this
         print("Current module order")
         if self.module_manager.module_order == 0:
             print("There are currently no modules in line")
         else:
-            for x in range(0, len(self.module_manager.module_order)):
-                module = self.module_manager.module_list[x]
-                print(x, " ", module.module_name)
-        try:
-            change_order = input("Change module order? (Y/N)")
-        except ValueError:
-            print(Color.WARNING+"Please enter a valid input"+Color.DEFAULT)
-        change_order = change_order.upper()
-        if change_order == "Y":
-            self.edit_module_order(user_choice)
+            for item in range(1, len(self.module_manager.module_order)):
+                print(item, " ", self.module_manager.module_list[item - 1].module_name)
 
-        elif change_order == "N":
-            pass
+        if self.yorn("Change module order? (Y/N)", "Y"):
+            self.edit_module_order()
+
         else:
-            print("Invalid response entered. Please try again.")
+            print("Response was not y")
+
+        return
 
     def module_configuration(self, user_choice):
         # mainly for debug
@@ -383,7 +383,7 @@ class SkeletonKey:
                         save_flag = True
                         pass
                     elif config_selection[0] == "order":
-                        self.edit_module_order_question(user_choice)
+                        self.edit_module_order_question()
                         pass
                     else:
                         print("Please enter a valid keyword.")
@@ -450,6 +450,29 @@ class SkeletonKey:
                         # Ending program
                         print(Color.OKGREEN+"Thank you for using 'Skeleton Key'."+Color.DEFAULT)
                         exit(0)
+
+    @staticmethod
+    def yorn(output, expected):
+        """
+        Yes or No style query
+
+        Example:
+        >>>if self.yorn("Please say Y? (Y/N)", "Y"):
+        >>>  print("entered Y")
+        >>>else:
+        >>>  print("You didnt enter Y")
+
+        :param output: What to ask the user and waiting for a response
+        :param expected: A string that should match your yes case
+
+        :return: Binary did response match expected user input
+        """
+        response = input(output).__str__().strip()
+
+        if response.upper() == expected.upper():
+            return True
+
+        return False
 
     def __exit__(self):
         print("Killing Interface...")
