@@ -86,3 +86,5 @@ chmod +x /home/pi/usbskeletonkey/components/framework/shell_scripts/hid-gadget-t
 # bash <(curl -S https://github.com/jjhelmus/berryconda/releases/download/v2.0.0/Berryconda3-2.0.0-Linux-armv6l.sh) ;
 # ./conda config --add channels rpi ;
 # ./conda install python=3.6)
+
+sed -i -r "1,16{s,first_run .*,first_run = false,g}" ./config.ini
