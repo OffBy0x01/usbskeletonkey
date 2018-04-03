@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from components.framework.Debug import Debug
+from components.helpers.Color import Color
 from components.helpers.ModuleDescriptor import ModuleDescriptor
 
 
@@ -72,7 +73,7 @@ class ModuleManager(Debug):
             config.set("general", "version", module.version)
             config.set("general", "module_help", module.module_help)
             for option in module.options.items():
-                self.debug("option: " + option[0] + " : " + option[1])
+                self.debug("option: " + option[0] + " : " + option[1], color=Color.DEFAULT)
                 config.set("options", option[0], option[1])
             for fw_requirements in module.fw_requirements.items():
                 config.set("fw_requirements", fw_requirements[0], fw_requirements[1])
@@ -81,7 +82,7 @@ class ModuleManager(Debug):
 
             with open(module_config, 'w') as configfile:
                 config.write(configfile)
-                self.debug("Saved module options")
+            self.debug("Saved module options", color=Color.OKGREEN)
 
             return True
         return False
@@ -95,7 +96,7 @@ class ModuleManager(Debug):
         """
 
         # get the module paths from modules directory
-        self.debug("discover_modules: Looking for modules...")
+        self.debug("discover_modules: Looking for modules...", color=Color.UNDERLINE, formatting=Color.BOLD)
         module_paths = os.listdir(self.module_path)
 
         # identify module name from file path
@@ -103,6 +104,7 @@ class ModuleManager(Debug):
         return [m for m in module_paths if os.path.isdir(self.module_path + "/" + m)]
 
     def import_module_configs(self):
+        # print("Import Module Configs:")
         config = configparser.ConfigParser()
 
         # (Import | Freak out over) module config
@@ -112,18 +114,18 @@ class ModuleManager(Debug):
 
             try:
                 # Attempt to read current module's config file
-                self.debug(module_config)
                 Path(module_config).resolve()
 
             except FileNotFoundError:
 
                 # Was unable to read this module, log an error then skip
-                self.debug(module + " config file not found!")
+                self.debug(module + " config file not found!", color=Color.WARNING)
+                self.debug(module_config)
                 continue
 
             else:
                 # Module config exists, start importing datas
-                self.debug(module + " config file found, importing data")
+                self.debug(module + " config file found, importing data", color=Color.DEFAULT)
                 config.read(module_config)
 
             try:
@@ -142,6 +144,6 @@ class ModuleManager(Debug):
                 self.module_list.append(current_module)
 
             except configparser.Error:
-                self.debug("Error: Unable to import module from file")
-            else:
-                self.debug("modules loaded: " + str([module.module_name for module in self.module_list]))
+                self.debug("Error: Unable to import module from file", color=Color.WARNING)
+
+        self.debug("modules loaded: " + str([module.module_name for module in self.module_list]), color=Color.INFOBLUE if len(self.module_list) else Color.FAIL)

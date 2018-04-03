@@ -1,5 +1,5 @@
 class Color:
-    DEFAULT = ''
+    DEFAULT = '\033[97m'
     HEADER = '\033[95m'
     INFOBLUE = '\033[94m'
     OKGREEN = '\033[92m'

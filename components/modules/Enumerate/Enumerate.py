@@ -1,35 +1,21 @@
+try:
+    import nmap
+except ImportError:
+    import pip
+    pip.main(['install', '--user', 'nmap'])
+    from nmap import nmap
+
 import random
 import struct
 import subprocess
 from collections import defaultdict
 
 from components.framework.Debug import Debug
+from components.helpers.Color import Color
+from components.modules.Enumerate.Result2Html import result2html
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
-from components.helpers.nmap import nmap  # TODO Find a fix on Pi that doesn't require local storage of import
-
-
-class TargetInfo:
-    """
-    To be used with Run to create a tuple of (TargetIP, TargetInfo) for each target ip
-    """
-    def __init__(self):
-        self.RESPONDS_ICMP = False
-        self.RESPONDS_ARP = False
-        self.MAC_ADDRESS = ""
-        self.ADAPTER_NAME = ""
-        self.ROUTE = []
-        self.OS_INFO = []
-        self.SOFTWARE_INFO = []
-        self.WORKGROUP = []
-        self.DOMAIN = []  # USERS + GROUPS
-        self.LOCAL = []  # USERS + GROUPS
-        self.SESSIONS = []
-        self.NBT_STAT = []
-        self.SHARE_INFO = []  # include SMB info?
-        self.PASSWD_POLICY = []
-        self.PRINTER_INFO = []
-        self.PORTS = []  # prolly formatted like this "PORT_NUMBER, SERVICE, STATUS"
+from components.modules.Enumerate.TargetInfo import TargetInfo
 
 # -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
@@ -37,16 +23,14 @@ class TargetInfo:
 class Enumerate():
     def __init__(self, path, debug):
         self.enumerate = Debug(name="Enumerate", type="Module", debug=debug)
-        self.enumerate.debug("initialized")
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
-        self.enumerate.debug("ModuleManager Created")
 
         # import config data for this module
         self.current_config = self.module_manager.get_module_by_name(self.enumerate._name)
         if not self.current_config:
-            self.enumerate.debug("Error: could not import config of " + self.enumerate._name)
+            self.enumerate.debug("Error: could not import config of " + self.enumerate._name, color=Color.FAIL)
 
         # Import default system path
         self.path = path
@@ -72,12 +56,14 @@ class Enumerate():
         port_exclusions = self.current_config.options["port_exclusions"]
         self.port_list = [port for port in self.get_port_list(ports) if port not in self.get_port_list(port_exclusions)]
 
-        # # ~Produce list of usable users~
-        # self.user_list = []
-        # with open("user_list.txt") as user_file:
-        #     for line in user_file:
-        #         user, _, password = line.strip().partition(":")
-        #         self.user_list.append({user: password})
+        # ~Produce list of usable users~
+        self.user_list = []
+        with open(self.path+"/modules/Enumerate/users.txt") as user_file:
+            for line in user_file:
+                user, _, password = line.strip().partition(":")
+                self.user_list.append([user, password])
+
+
 
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
@@ -188,6 +174,9 @@ class Enumerate():
 
             # self.other things that just uses IPs
 
+            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
+            current.DOMAIN
+
             # NBT STAT
             current.NBT_STAT = self.get_nbt_stat(ip)
 
@@ -195,6 +184,8 @@ class Enumerate():
             target_ips[ip] = current
 
         # TODO use target_ips with Result2Html
+        with open(self.path+"/modules/enumerate/output.html") as out:
+            out.write(result2html(target_ips))
 
         return  # End of run
 
@@ -363,50 +354,61 @@ class Enumerate():
 
         return output
 
+
+
     # This function isn't even being called? -Corey
     def get_rpcclient(self, user_list, password_list, target, ip):
         # Pass usernames in otherwise test against defaults  # What defaults? -Corey
         for user in user_list:
             for password in password_list:
-                subprocess.run("rpcclient -U " + user + " " + target + " -c 'lsaquery'")
-                # , stdout=subprocess.PIPE).stdout.decode('utf-8' I dont think this is required so I commented it out
-                # If Im wrong uncomment and remove the ) Easy fix -Corey
 
-                # enter password
-                raw_rpc = subprocess.run(password).stdout.decode('utf-8')
+                # Exception handling - Andrew
+                raw_rpc = subprocess.Popen("rpcclient -U " + user + " " + target + " -c 'lsaquery'", stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
+                try:
+                    raw_rpc.stdin.write(password)
+                except IOError as e:
+                    self.enumerate.debug("Error: get_rpcclient: %s" % e)
+
+                raw_rpc.stdin.close()
+                raw_rpc.wait()
+                # Exception handling - Andrew
 
                 # Why are you checking for fails? (If Successful: Do thing; else: debug out why) -Corey
                 if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
                     # Unable to connect
                     print("Connection refused under - " + user + ":" + password)
                     # Why are you printing? We wont see the screen -Corey
-
+                    return None
                 elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
                     # Incorrect username or password
                     print("Incorrect username or password under -  " + user + ":" + password)
                     # Why are you printing? We wont see the screen -Corey
 
+                    return None
                 elif "rpcclient $>" in raw_rpc:
                     raw_command = subprocess.run("enumdomgroups", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = False
                     # true = users / false = groups
                     # Why is this being called here? and why doesnt it return anything? -Corey
-                    self.extract_info_rpc(raw_command, ip, users_or_groups)
+                    domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("enumdomusers", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = True
                     # true = users / false = groups
 
                     # Why is this being called twice? See Line 380 -Corey
-                    self.extract_info_rpc(raw_command, ip, users_or_groups)
+                    userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                    self.get_password_policy(raw_command, ip)
+                    passwdinfo = self.get_password_policy(raw_command, ip)
 
+                    return domaininfo, userinfo, passwdinfo
                     # then run get_smbclient
 
                 else:
                     print("No reply")  # Why are you printing? -Corey
+                    return None
+
     # Where is the return for this function? -Corey
 
     def get_password_policy(self, raw_command, ip):
@@ -435,10 +437,7 @@ class Enumerate():
         if "DOMAIN_PASSWORD_NO_CLEAR_CHANGE" in raw_command:
             pw_no_change = True
 
-        current = TargetInfo()
-        password_policy = (
-        ip, length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change)
-        current.PASSWD_POLICY.append(password_policy)
+        return length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change
 
     def extract_info_rpc(self, raw_command, ip, users_or_groups):
         index = 0
@@ -467,10 +466,11 @@ class Enumerate():
             times += 1
 
         current = TargetInfo
-        users = (ip, users)
-        rids = (ip, rids)
-        current.DOMAIN.append(users)
-        current.DOMAIN.append(rids)
+        #users = (ip, users)
+        #rids = (ip, rids)
+        #current.DOMAIN.append(users)
+        #current.DOMAIN.append(rids)
+        return users, rids
 
     @staticmethod
     def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
@@ -647,7 +647,7 @@ class Enumerate():
         if type(route_out[0]) is list:
             route_out[0] = route_out[0][0]
 
-        return [route_out, route_back]
+        return route_out, route_back
 
     @staticmethod
     def get_targets_via_arp(target, interface="usb0", source_ip="self", target_is_file=False,

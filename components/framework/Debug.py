@@ -14,9 +14,9 @@ class Debug(object):
     def __exit__(self):
         self.debug(str(self._successful_operations) + "/" + str(self._operations) + " succeeded")
 
-    def debug(self, Color=Color.DEFAULT, txt=""):
+    def debug(self, txt="", color=Color.DEFAULT, formatting=Color.DEFAULT):
         if self._debug:
-            print(Color, self._type, '/', self._name, self._module, ': ', txt, sep="")
+            print(self._type, '/', self._name, self._module, ': ', formatting, color,  txt, Color.ENDC, sep="")
 
     def enable_module_debug(self, module_name):
         self._module = "/" + module_name
