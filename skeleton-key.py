@@ -253,6 +253,26 @@ class SkeletonKey:
             print("Saving...")
             self.module_manager.save_config(module_name, True)
 
+            if "true" == module.options["enabled"].lower():
+                try:
+                    # If it already exists it needs to be removed first
+                    self.module_manager.module_order.remove(module)
+                except Exception:
+                    # Easier to ask for forgiveness
+                    pass
+
+                # Add module to order
+                self.module_manager.module_order.append(module)
+                self.main.debug("% added to module_order", color=Color.OKGREEN)
+
+            else:
+                try:
+                    self.module_manager.module_order.remove(module)
+                except Exception as rem:
+                    self.main.debug("Unable to remove %s from module_order" % rem, color=Color.WARNING)
+                else:
+                    self.main.debug("% removed from module_order", color=Color.OKGREEN)
+
         elif confirm_save == "N":
             print("Discarding changes...")
             self.module_manager.save_config(module_name, False)
@@ -473,6 +493,9 @@ class SkeletonKey:
 
         return False
 
+    def run(self):
+        pass
+
     def __exit__(self):
         print("Killing Interface...")
         # if component interface is unresponsive this method provides a kill switch
@@ -481,6 +504,10 @@ class SkeletonKey:
 
 
 # TODO #ATSOMEPOINT implement new testing methods
+
+if __name__ == '__main__':
+    skeleton_key = SkeletonKey()
+    skeleton_key.run()
 
 
 # debugging
