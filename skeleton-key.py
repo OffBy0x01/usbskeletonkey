@@ -317,16 +317,21 @@ class SkeletonKey:
         if self.module_manager.module_order == 0:
             print("There are currently no modules in line")
         else:
-            for item in range(1, len(self.module_manager.module_order)):
-                print(item, " ", self.module_manager.module_list[item - 1].module_name)
-
-        if self.yorn("Change module order? (Y/N)", "Y"):
+            for x in range(0, len(self.module_manager.module_order)):
+                module = self.module_manager.module_list[x]
+                print(x, " ", module.module_name)
+        try:
+            change_order = input("Change module order? (Y/N)")
+        except ValueError:
+            print(Color.WARNING+"Please enter a valid input"+Color.DEFAULT)
+        change_order = change_order.upper()
+        if change_order == "Y":
             self.edit_module_order()
 
+        elif change_order == "N":
+            pass
         else:
-            print("Response was not y")
-
-        return
+            print("Invalid response entered. Please try again.")
 
     def module_configuration(self, user_choice):
         # mainly for debug

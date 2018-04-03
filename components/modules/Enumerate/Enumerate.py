@@ -63,7 +63,11 @@ class Enumerate():
                 user, _, password = line.strip().partition(":")
                 self.user_list.append([user, password])
 
-
+        # ~Produce list of default passwords~
+        self.default_passwords = []
+        with open(self.path+"/modules/Enumerate/default_passwords.txt") as password_file:
+            for line in password_file:
+                self.default_passwords.append(line)
 
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
