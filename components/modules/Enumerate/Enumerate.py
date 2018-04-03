@@ -148,7 +148,7 @@ class Enumerate:
         current_ip_in_list = 0
         for ip in self.ip_list_shuffled:  # Make it less obvious
 
-            blinkt.progressive_pixels(1, self.ip_list_shuffled.__sizeof__())
+            blinkt.progressive_pixels(1, len(self.ip_list_shuffled))
 
             current = TargetInfo()
 
