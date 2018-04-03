@@ -317,8 +317,8 @@ class SkeletonKey:
         if self.module_manager.module_order == 0:
             print("There are currently no modules in line")
         else:
-            for item in range(1, len(self.module_manager.module_order)):
-                print(item, " ", self.module_manager.module_list[item - 1].module_name)
+            for item in range(1, len(self.module_manager.module_list)):
+                print(item, " ", self.module_manager.module_list[item].module_name)
 
         if self.yorn("Change module order? (Y/N)", "Y"):
             self.edit_module_order()

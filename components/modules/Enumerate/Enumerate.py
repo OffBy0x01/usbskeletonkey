@@ -371,9 +371,6 @@ class Enumerate():
 
         return output
 
-
-
-    # This function isn't even being called? -Corey
     def get_rpcclient(self, user_list, password_list, target, ip):
         """
         :param user_list:
@@ -384,9 +381,8 @@ class Enumerate():
         """
         # Pass usernames in otherwise test against defaults  # What defaults? -Corey
         for user in user_list:
-            for password in password_list:
+            for password in user_list:
 
-                # Exception handling - Andrew
                 raw_rpc = subprocess.Popen("rpcclient -U " + user + " " + target + " -c 'lsaquery'", stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
                 try:
                     raw_rpc.stdin.write(password)
@@ -395,32 +391,25 @@ class Enumerate():
 
                 raw_rpc.stdin.close()
                 raw_rpc.wait()
-                # Exception handling - Andrew
 
-                # Why are you checking for fails? (If Successful: Do thing; else: debug out why) -Corey
                 if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
                     # Unable to connect
-                    print("Connection refused under - " + user + ":" + password)
-                    # Why are you printing? We wont see the screen -Corey
+                    self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % password)
                     return None
                 elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
                     # Incorrect username or password
-                    print("Incorrect username or password under -  " + user + ":" + password)
-                    # Why are you printing? We wont see the screen -Corey
+                    self.enumerate.debug("Error: get_rpcclient: Incorrect username or password under - %s : %s " % user % password)
 
                     return None
                 elif "rpcclient $>" in raw_rpc:
                     raw_command = subprocess.run("enumdomgroups", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = False
                     # true = users / false = groups
-                    # Why is this being called here? and why doesnt it return anything? -Corey
                     domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("enumdomusers", stdout =subprocess.PIPE).stdout.decode('utf-8')
                     users_or_groups = True
                     # true = users / false = groups
-
-                    # Why is this being called twice? See Line 380 -Corey
                     userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                     raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -430,10 +419,8 @@ class Enumerate():
                     # then run get_smbclient
 
                 else:
-                    print("No reply")  # Why are you printing? -Corey
+                    self.enumerate.debug("Error: get_rpcclient: No reply from target")
                     return None
-
-    # Where is the return for this function? -Corey
 
     def get_password_policy(self, raw_command, ip):
         """
