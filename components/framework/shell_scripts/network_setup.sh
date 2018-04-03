@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Function calculates number of bit in a netmask
-# Source from post 2
+# Function to convert netmask to CODR notation
+# Source:
 # https://www.linuxquestions.org/questions/programming-9/bash-cidr-calculator-646701/
 mask2cidr() {
     nbits=0
