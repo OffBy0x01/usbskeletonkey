@@ -63,7 +63,11 @@ class Enumerate():
                 user, _, password = line.strip().partition(":")
                 self.user_list.append([user, password])
 
-
+        # ~Produce list of default passwords~
+        self.default_passwords = []
+        with open(self.path+"/modules/Enumerate/default_passwords.txt") as password_file:
+            for line in password_file:
+                self.default_passwords.append(line)
 
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
@@ -147,6 +151,16 @@ class Enumerate():
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(current, interface=self.interface)
 
+            arp_response_valid = False  # Flag for valid data
+            if arp_response:  # If list of data exists
+                for x in arp_response:  # Check each item in list for valid data
+                    if x:  # If data exists
+                        arp_response_valid = True  # Set flag to true
+                        break
+
+            if not arp_response_valid:  # If no valid data was found
+                arp_response = False  # Set value to false
+
             if arp_response is not None:
                 current.RESPONDS_ARP = True
                 current.MAC_ADDRESS = arp_response[1]
@@ -156,7 +170,6 @@ class Enumerate():
             if self.interface is "usb0":
                 current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
 
-
             # use all port scanning tools against current ip
             for port in self.port_list:
                 # run things that use ports
@@ -165,7 +178,6 @@ class Enumerate():
             for user in self.user_list:
                 # things that need users
                 pass
-
 
             # Use nmap to determine OS, port and service info then save to our current TargetInfo
             nmap_output = self.nmap()  # TODO portsCSV
