@@ -12,17 +12,18 @@ import subprocess
 from collections import defaultdict
 
 from components.framework.Debug import Debug
-from components.helpers.Color import Color
 from components.modules.Enumerate.Result2Html import result2html
+from components.modules.Enumerate.TargetInfo import TargetInfo
+from components.helpers.Color import Color
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
-from components.modules.Enumerate.TargetInfo import TargetInfo
+from components.helpers.BlinktSupport import Blinkt
 
 
 # -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
 
-class Enumerate():
+class Enumerate:
     def __init__(self, path, debug):
         self.enumerate = Debug(name="Enumerate", type="Module", debug=debug)
 
@@ -142,7 +143,12 @@ class Enumerate():
         # ---------------------
         target_ips = defaultdict()  # Init of dictionary
 
+        blinkt = Blinkt(255, 0, 0)
+
+        current_ip_in_list = 0
         for ip in self.ip_list_shuffled:  # Make it less obvious
+
+            blinkt.progressive_pixels(current_ip_in_list, len(self.ip_list_shuffled))
 
             current = TargetInfo()
 
@@ -218,6 +224,8 @@ class Enumerate():
 
             # Add target information to dict
             target_ips[ip] = current
+
+            current_ip_in_list += 1
 
         # TODO use target_ips with Result2Html
         with open(self.path + "/modules/enumerate/output.html") as out:
