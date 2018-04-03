@@ -190,6 +190,11 @@ class Enumerate():
         return  # End of run
 
     def get_port_list(self, raw_ports):
+        """
+        :param raw_ports:
+        :return list string?:
+        :return none:
+        """
         # TODO 01/03/18 [1/2] Add error handling
         # Comma separated list of Ports
         if "," in raw_ports:
@@ -208,6 +213,11 @@ class Enumerate():
         return None
 
     def get_ip_list(self, raw_ips):
+        """
+        :param raw_ips:
+        :return list string:
+        :return none:
+        """
         # TODO 01/03/18 [2/2] Add error handling
         # Comma separated list of IPs
         if "," in raw_ips:
@@ -238,6 +248,10 @@ class Enumerate():
 
     # NMAP scans for service and operating system detection
     def nmap(self):
+        """
+        :return list of list of list of strings:
+        :return none:
+        """
 
         nm = nmap.PortScanner()  # Declare python NMAP object
         output_list = []  # List for saving the output of the commands to
@@ -319,6 +333,9 @@ class Enumerate():
         return
 
     def get_nbt_stat(self, target="127.0.0.1"):
+        """
+        :return list string:
+        """
         raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
 
@@ -358,6 +375,13 @@ class Enumerate():
 
     # This function isn't even being called? -Corey
     def get_rpcclient(self, user_list, password_list, target, ip):
+        """
+        :param user_list:
+        :param password_list:
+        :param target:
+        :param ip:
+        :return none:
+        """
         # Pass usernames in otherwise test against defaults  # What defaults? -Corey
         for user in user_list:
             for password in password_list:
@@ -412,6 +436,11 @@ class Enumerate():
     # Where is the return for this function? -Corey
 
     def get_password_policy(self, raw_command, ip):
+        """
+        :param raw_command:
+        :param ip:
+        :return int, bool, bool, bool, bool, bool, bool:
+        """
         length = 0
         clear_text_pw = False
         refuse_pw_change = False
@@ -440,6 +469,12 @@ class Enumerate():
         return length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change
 
     def extract_info_rpc(self, raw_command, ip, users_or_groups):
+        """
+        :param raw_command:
+        :param ip:
+        :param users_or_groups:
+        :return list, list:
+        """
         index = 0
         start = 0
         counter = 0
