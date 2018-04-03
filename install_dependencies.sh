@@ -33,6 +33,15 @@ read -p "Keep current network configuration (Y/N): " -n 1 -r
 echo
 if ! [[ $REPLY =~ ^[Yy]$ ]]
 then
+    # Get source dir
+    srcdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+    # Copy default network configs
+    cp srcdir/config/interfaces /etc/network/interfaces  # Set interfaces for usb0
+    cp srcdir/config/dhcpcd.conf /etc/dhcpcd.conf  # Set static IPs for wlan0 and usb0
+    cp srcdir/config/resolv.conf /etc/resolv.conf  # Set DNS server
+    cp srcdir/config/dhcpd.conf /etc/dhcp/dhcpd.conf  # Set subnet for the DHCP server
+    cp srcdir/config/isc-dhcp-server /etc/default/isc-dhcp-server  # Set interface for DHCP server
     # Ensure DHCP server is stopped
     /etc/init.d/isc-dhcp-server stop
 
