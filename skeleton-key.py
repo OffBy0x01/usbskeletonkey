@@ -334,7 +334,7 @@ class SkeletonKey:
             print("There are currently no modules in line")
         else:
             for x in range(0, len(self.module_manager.module_order)):
-                module = self.module_manager.module_list[x]
+                module = self.module_manager.module_list[self.module_manager.module_order[x]]
                 print(x, " ", module.module_name)
         try:
             change_order = input("Change module order? (Y/N)")
@@ -352,7 +352,7 @@ class SkeletonKey:
     def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
-        self.module_manager.module_order.append(user_choice)
+        self.module_manager.module_order.append(user_choice-1)
         print("Entering Configuration mode")
         config_mode = True
         save_flag = False
