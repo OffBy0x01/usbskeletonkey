@@ -54,8 +54,8 @@ sed -i -r "1,16{s,netmask .*,netmask $_netmask,g}" $_interfaces
 sed -i -r "1,16{s,network .*,network $_network,g}" $_interfaces
 sed -i -r "1,16{s,broadcast .*,broadcast $_broadcast,g}" $_interfaces
 sed -i -r "1,16{s,gateway .*,gateway $_gateway,g}" $_interfaces
-sed -i -r "1,16{s,wpa-ssid .*,wpa-ssid $_ssid,g}" $_interfaces
-sed -i -r "1,16{s,wpa-psk .*,wpa-psk $_psk,g}" $_interfaces
+sed -i -r "1,16{s,wpa-ssid .*,wpa-ssid \"$_ssid\",g}" $_interfaces
+sed -i -r "1,16{s,wpa-psk .*,wpa-psk \"$_psk\",g}" $_interfaces
 
 #dhcpcd.conf
 _dhcpcd=/etc/dhcpcd.conf # File path
