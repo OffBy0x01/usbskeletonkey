@@ -60,7 +60,7 @@ sed -i -r "1,16{s,gateway .*,gateway $_gateway,g}" $_interfaces
 sed -i -r "1,16{s,wpa-ssid .*,wpa-ssid \"$_ssid\",g}" $_interfaces
 sed -i -r "1,16{s,wpa-psk .*,wpa-psk \"$_psk\",g}" $_interfaces
 
-#dhcpcd.conf
+# dhcpcd.conf
 _dhcpcd=/etc/dhcpcd.conf # File path
 sed -i -r "62,62{s,static ip_address=.*,static ip_address=$_address\/$_CIDRmask,g}" $_dhcpcd
 
@@ -69,6 +69,15 @@ ip addr flush dev wlan0
 ifdown wlan0
 ifup wlan0
 ifconfig wlan0 up
+
+# Test for connection
+wget -q --tries=10 --timeout=20 --spider http://google.com
+if [[ $? -eq 0 ]]; then
+        echo "Connection Successful!"
+else
+        echo "Error connecting to internet - check configuration!"
+        exit 0
+fi
 
 # Install Dependencies
 apt-get update
