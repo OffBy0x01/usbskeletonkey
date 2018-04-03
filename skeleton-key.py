@@ -143,7 +143,6 @@ class SkeletonKey:
         pass
 
     def display_title(self):
-        # displays title
         print(Color.FAIL +self.SK_title + Color.ENDC)
 
     def display_modules(self):
@@ -246,7 +245,7 @@ class SkeletonKey:
 
     def save_module_config(self, config_selection, user_choice):
         print("Confirm action: (Y/N)")
-        print("WARNING: Any unsaved changes will be lost on exit")
+        print(Color.WARNING+"WARNING: Any unsaved changes will be lost on exit"+Color.DEFAULT)
         confirm_save = input(">")
         confirm_save = confirm_save.upper()
         module = self.module_manager.module_list[user_choice - 1]
@@ -305,8 +304,6 @@ class SkeletonKey:
             return True
         except ValueError:
             return False
-
-
 
     def edit_module_order_question(self, user_choice):
         print("Current module order")
