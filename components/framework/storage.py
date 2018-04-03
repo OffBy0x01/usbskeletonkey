@@ -99,10 +99,10 @@ class StorageAccess(FwComponentGadget):
             self.storage.debug("User specified to load " + file_name)
 
             # If file exists
-            if os.path.isfile(self.file_name):
+            if os.path.isfile(self.file_path + self.file_name):
                 self.storage.debug("File discovered")
             else:
-                self.storage.debug("File" + self.file_path + self.file_name + "does not exist: 2.04")
+                self.storage.debug("File " + self.file_path + self.file_name + " does not exist: 2.04")
                 raise 2.04
 
         self.local_mount = False
