@@ -166,6 +166,20 @@ class Enumerate():
             if self.interface is "usb0":
                 current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
 
+            current_route_valid = False  # Flag for valid data
+            if current.ROUTE:  # If list exists
+                if current.ROUTE[0]:  # Check first list for data
+                    current_route_valid = True
+                    break
+                if current.ROUTE[1]:  # Check second list of lists
+                    for x in current.ROUTE[1]:  # Check each list
+                        if x:  # If data exists
+                            current_route_valid = True
+                            break
+
+            if not current_route_valid:
+                current.ROUTE = False
+
             # use all port scanning tools against current ip
             for port in self.port_list:
                 # run things that use ports
