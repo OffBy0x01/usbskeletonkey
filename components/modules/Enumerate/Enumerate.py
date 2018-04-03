@@ -671,8 +671,7 @@ class Enumerate():
         :param randomise_targets: Binary Value for targets where they should not be scanned in the order given.
                 Defaults False
 
-        :return: list with IP, MAC address and Adapter name
-                 (Unless its multiple targets in which case it's a list of the prior)
+        :return: list of lists containing IP, MAC address and Adapter name
 
 
         """
@@ -718,7 +717,7 @@ class Enumerate():
         del output[0:2]
         del output[-3:]
 
-        outlist = [[]]  # was unable to change each line from a string to a list so moving each line as it becomes a list
+        outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
         for line in output:
             # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
