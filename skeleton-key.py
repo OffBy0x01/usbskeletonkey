@@ -71,7 +71,6 @@ class SkeletonKey:
             self.config.add_section('general')
             self.config.set('general', 'config_mode', 'true')
             self.config.set('general', 'pin_armed', 'false')
-            self.config.set('general', 'first_run', 'true')
 
             with open('config.ini', 'w') as self.config_file:
                 self.config.write(self.config_file)
@@ -93,10 +92,6 @@ class SkeletonKey:
                 self.config_mode = True
             else:
                 self.config_mode = False
-        finally:
-            if self.config.get('general', 'first_run') == "true":
-                subprocess.run("bash install_dependencies.sh", shell=True)
-                exit()
 
     # Check if 'pin' says go
     def is_pin_armed(self):
