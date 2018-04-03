@@ -315,6 +315,7 @@ class SkeletonKey:
                     else:
                         print("Please enter a valid command")
         print(Color.FAIL+"Exiting Module Order loader..."+Color.DEFAULT)
+        return
 
     @staticmethod
     def check_order_is_number(test_case):
@@ -324,9 +325,7 @@ class SkeletonKey:
         except ValueError:
             return False
 
-
-
-    def edit_module_order_question(self, user_choice):
+    def edit_module_order_question(self, user_choice):  # TODO Check this
         print("Current module order")
         if self.module_manager.module_order == 0:
             print("There are currently no modules in line")

@@ -2,6 +2,7 @@ try:
     import nmap
 except ImportError:
     import pip
+
     pip.main(['install', '--user', 'nmap'])
     from nmap import nmap
 
@@ -17,6 +18,7 @@ from components.helpers.Color import Color
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
 from components.helpers.BlinktSupport import Blinkt
+
 
 # -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
 
@@ -59,14 +61,14 @@ class Enumerate:
 
         # ~Produce list of usable users~
         self.user_list = []
-        with open(self.path+"/modules/Enumerate/users.txt") as user_file:
+        with open(self.path + "/modules/Enumerate/users.txt") as user_file:
             for line in user_file:
                 user, _, password = line.strip().partition(":")
                 self.user_list.append([user, password])
 
         # ~Produce list of default passwords~
         self.default_passwords = []
-        with open(self.path+"/modules/Enumerate/default_passwords.txt") as password_file:
+        with open(self.path + "/modules/Enumerate/default_passwords.txt") as password_file:
             for line in password_file:
                 self.default_passwords.append(line)
 
@@ -212,7 +214,9 @@ class Enumerate:
 
             # self.other things that just uses IPs
 
-            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
+            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list,
+                                                                               password_list=self.default_passwords,
+                                                                               target=ip, ip=ip)
             current.DOMAIN
 
             # NBT STAT
@@ -224,7 +228,7 @@ class Enumerate:
             current_ip_in_list += 1
 
         # TODO use target_ips with Result2Html
-        with open(self.path+"/modules/enumerate/output.html") as out:
+        with open(self.path + "/modules/enumerate/output.html") as out:
             out.write(result2html(target_ips))
 
         return  # End of run
@@ -267,7 +271,9 @@ class Enumerate:
             start, _, end = raw_ips.strip().partition('-')
 
             # If you are looking at this line wondering wtf give this a go: socket.inet_ntoa(struct.pack('>I', 5))
-            return [socket.inet_ntoa(struct.pack('>I', i)) for i in range(struct.unpack('>I', socket.inet_aton(start))[0], struct.unpack('>I', socket.inet_aton(end))[0])]
+            return [socket.inet_ntoa(struct.pack('>I', i)) for i in
+                    range(struct.unpack('>I', socket.inet_aton(start))[0],
+                          struct.unpack('>I', socket.inet_aton(end))[0])]
         # Single IP
         elif IpValidator.is_valid_ipv4_address(raw_ips):
             return [raw_ips]
@@ -304,7 +310,8 @@ class Enumerate:
 
                 for port in nm[self.ip_list][protocol]:
                     nmap_results = nm[self.ip_list][protocol][port]
-                    parsed_output.append([str(port), nmap_results['product'], nmap_results['version'], nmap_results['state']])
+                    parsed_output.append(
+                        [str(port), nmap_results['product'], nmap_results['version'], nmap_results['state']])
 
             output_list.append(parsed_output)  # Add parsed data to the output list
 
@@ -344,7 +351,7 @@ class Enumerate:
 
             # Run "quiet" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
-                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                       stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         else:  # Use "loud" scan pre-sets
             command = "-sV --version-all -T4"
@@ -358,7 +365,7 @@ class Enumerate:
 
             # Run "loud" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
-                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                       stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         os_parsing(os_output)  # Call local function for nmap OS parsing
         service_parsing()  # Call local function for nmap service/port parsing
@@ -376,7 +383,8 @@ class Enumerate:
         """
         :return list string:
         """
-        raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+        raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode(
+            'utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
 
         # Fixing that output
@@ -411,9 +419,6 @@ class Enumerate:
 
         return output
 
-
-
-    # This function isn't even being called? -Corey
     def get_rpcclient(self, user_list, password_list, target, ip):
         """
         :param user_list:
@@ -423,57 +428,49 @@ class Enumerate:
         :return none:
         """
         # Pass usernames in otherwise test against defaults  # What defaults? -Corey
-        for user in user_list:
-            for password in password_list:
+        for user in user_list.keys():
+            raw_rpc = subprocess.Popen("rpcclient -U " + + " " + target + " -c 'lsaquery'", stdin=subprocess.PIPE,stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
+            try:
+                raw_rpc.stdin.write(user_list[user])
+                if user_list[user] == "":
+                    #password list is empty - use default
 
-                # Exception handling - Andrew
-                raw_rpc = subprocess.Popen("rpcclient -U " + user + " " + target + " -c 'lsaquery'", stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
-                try:
-                    raw_rpc.stdin.write(password)
-                except IOError as e:
-                    self.enumerate.debug("Error: get_rpcclient: %s" % e)
+            except IOError as e:
+                self.enumerate.debug("Error: get_rpcclient: %s" % e)
 
-                raw_rpc.stdin.close()
-                raw_rpc.wait()
-                # Exception handling - Andrew
+            raw_rpc.stdin.close()
+            raw_rpc.wait()
 
-                # Why are you checking for fails? (If Successful: Do thing; else: debug out why) -Corey
-                if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
-                    # Unable to connect
-                    print("Connection refused under - " + user + ":" + password)
-                    # Why are you printing? We wont see the screen -Corey
-                    return None
-                elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
-                    # Incorrect username or password
-                    print("Incorrect username or password under -  " + user + ":" + password)
-                    # Why are you printing? We wont see the screen -Corey
+            if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
+                # Unable to connect
+                self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % user_list[user])
+                return None
+            elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
+                # Incorrect username or password
+                self.enumerate.debug(
+                    "Error: get_rpcclient: Incorrect username or password under - %s : %s " % user % user_list[user])
 
-                    return None
-                elif "rpcclient $>" in raw_rpc:
-                    raw_command = subprocess.run("enumdomgroups", stdout =subprocess.PIPE).stdout.decode('utf-8')
-                    users_or_groups = False
-                    # true = users / false = groups
-                    # Why is this being called here? and why doesnt it return anything? -Corey
-                    domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+                return None
+            elif "rpcclient $>" in raw_rpc:
+                raw_command = subprocess.run("enumdomgroups", stdout=subprocess.PIPE).stdout.decode('utf-8')
+                users_or_groups = False
+                # true = users / false = groups
+                domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
-                    raw_command = subprocess.run("enumdomusers", stdout =subprocess.PIPE).stdout.decode('utf-8')
-                    users_or_groups = True
-                    # true = users / false = groups
+                raw_command = subprocess.run("enumdomusers", stdout=subprocess.PIPE).stdout.decode('utf-8')
+                users_or_groups = True
+                # true = users / false = groups
+                userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
-                    # Why is this being called twice? See Line 380 -Corey
-                    userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+                raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
+                passwdinfo = self.get_password_policy(raw_command, ip)
 
-                    raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                    passwdinfo = self.get_password_policy(raw_command, ip)
+                return domaininfo, userinfo, passwdinfo
+                # then run get_smbclient
 
-                    return domaininfo, userinfo, passwdinfo
-                    # then run get_smbclient
-
-                else:
-                    print("No reply")  # Why are you printing? -Corey
-                    return None
-
-    # Where is the return for this function? -Corey
+            else:
+                self.enumerate.debug("Error: get_rpcclient: No reply from target")
+                return None
 
     def get_password_policy(self, raw_command, ip):
         """
@@ -541,10 +538,10 @@ class Enumerate:
             times += 1
 
         current = TargetInfo
-        #users = (ip, users)
-        #rids = (ip, rids)
-        #current.DOMAIN.append(users)
-        #current.DOMAIN.append(rids)
+        # users = (ip, users)
+        # rids = (ip, rids)
+        # current.DOMAIN.append(users)
+        # current.DOMAIN.append(rids)
         return users, rids
 
     @staticmethod
