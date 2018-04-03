@@ -627,7 +627,9 @@ class Enumerate():
         :param map_host_names: In the event that mapping host names to IP makes noise this can be disabled
         :param original_out: If the user wants the original command output this should be changed to true
 
-        :return: list of ip lists for each hop. Then a list of lists containing IPS that have been used on way back
+        :return: 2 list of max 30 items with ips for each hop to the target and returning
+                 List to target is a list of strings and List from target containing lists of strings
+                 Bad hops / no information is signaled as '*'
         """
         command = ["traceroute", "-i", interface]  # start with command items that are required
 
@@ -714,8 +716,7 @@ class Enumerate():
         :param randomise_targets: Binary Value for targets where they should not be scanned in the order given.
                 Defaults False
 
-        :return: list with IP, MAC address and Adapter name
-                 (Unless its multiple targets in which case it's a list of the prior)
+        :return: list of lists containing IP, MAC address and Adapter name
 
 
         """
@@ -761,7 +762,7 @@ class Enumerate():
         del output[0:2]
         del output[-3:]
 
-        outlist = [[]]  # was unable to change each line from a string to a list so moving each line as it becomes a list
+        outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
         for line in output:
             # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
