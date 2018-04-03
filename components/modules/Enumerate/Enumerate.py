@@ -619,7 +619,9 @@ class Enumerate():
         :param map_host_names: In the event that mapping host names to IP makes noise this can be disabled
         :param original_out: If the user wants the original command output this should be changed to true
 
-        :return: list of ip lists for each hop. Then a list of lists containing IPS that have been used on way back
+        :return: 2 list of max 30 items with ips for each hop to the target and returning
+                 List to target is a list of strings and List from target containing lists of strings
+                 Bad hops / no information is signaled as '*'
         """
         command = ["traceroute", "-i", interface]  # start with command items that are required
 
