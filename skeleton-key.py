@@ -505,7 +505,7 @@ class SkeletonKey:
 
 # TODO #ATSOMEPOINT implement new testing methods
 
-if __name__ == '__main__':
+if __name__ == '__main__2':
     skeleton_key = SkeletonKey()
     skeleton_key.run()
 
