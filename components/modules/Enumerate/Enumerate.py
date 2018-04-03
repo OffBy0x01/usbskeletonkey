@@ -151,6 +151,16 @@ class Enumerate():
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(current, interface=self.interface)
 
+            arp_response_valid = False  # Flag for valid data
+            if arp_response:  # If list of data exists
+                for x in arp_response:  # Check each item in list for valid data
+                    if x:  # If data exists
+                        arp_response_valid = True  # Set flag to true
+                        break
+
+            if not arp_response_valid:  # If no valid data was found
+                arp_response = False  # Set value to false
+
             if arp_response is not None:
                 current.RESPONDS_ARP = True
                 current.MAC_ADDRESS = arp_response[1]
@@ -160,7 +170,6 @@ class Enumerate():
             if self.interface is "usb0":
                 current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
 
-
             # use all port scanning tools against current ip
             for port in self.port_list:
                 # run things that use ports
@@ -169,7 +178,6 @@ class Enumerate():
             for user in self.user_list:
                 # things that need users
                 pass
-
 
             # Use nmap to determine OS, port and service info then save to our current TargetInfo
             nmap_output = self.nmap()  # TODO portsCSV
@@ -194,6 +202,11 @@ class Enumerate():
         return  # End of run
 
     def get_port_list(self, raw_ports):
+        """
+        :param raw_ports:
+        :return list string?:
+        :return none:
+        """
         # TODO 01/03/18 [1/2] Add error handling
         # Comma separated list of Ports
         if "," in raw_ports:
@@ -212,6 +225,11 @@ class Enumerate():
         return None
 
     def get_ip_list(self, raw_ips):
+        """
+        :param raw_ips:
+        :return list string:
+        :return none:
+        """
         # TODO 01/03/18 [2/2] Add error handling
         # Comma separated list of IPs
         if "," in raw_ips:
@@ -242,6 +260,10 @@ class Enumerate():
 
     # NMAP scans for service and operating system detection
     def nmap(self):
+        """
+        :return list of list of list of strings:
+        :return none:
+        """
 
         nm = nmap.PortScanner()  # Declare python NMAP object
         output_list = []  # List for saving the output of the commands to
@@ -323,6 +345,9 @@ class Enumerate():
         return
 
     def get_nbt_stat(self, target="127.0.0.1"):
+        """
+        :return list string:
+        """
         raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
 
@@ -362,6 +387,13 @@ class Enumerate():
 
     # This function isn't even being called? -Corey
     def get_rpcclient(self, user_list, password_list, target, ip):
+        """
+        :param user_list:
+        :param password_list:
+        :param target:
+        :param ip:
+        :return none:
+        """
         # Pass usernames in otherwise test against defaults  # What defaults? -Corey
         for user in user_list:
             for password in password_list:
@@ -416,6 +448,11 @@ class Enumerate():
     # Where is the return for this function? -Corey
 
     def get_password_policy(self, raw_command, ip):
+        """
+        :param raw_command:
+        :param ip:
+        :return int, bool, bool, bool, bool, bool, bool:
+        """
         length = 0
         clear_text_pw = False
         refuse_pw_change = False
@@ -444,6 +481,12 @@ class Enumerate():
         return length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change
 
     def extract_info_rpc(self, raw_command, ip, users_or_groups):
+        """
+        :param raw_command:
+        :param ip:
+        :param users_or_groups:
+        :return list, list:
+        """
         index = 0
         start = 0
         counter = 0
@@ -588,7 +631,9 @@ class Enumerate():
         :param map_host_names: In the event that mapping host names to IP makes noise this can be disabled
         :param original_out: If the user wants the original command output this should be changed to true
 
-        :return: list of ip lists for each hop. Then a list of lists containing IPS that have been used on way back
+        :return: 2 list of max 30 items with ips for each hop to the target and returning
+                 List to target is a list of strings and List from target containing lists of strings
+                 Bad hops / no information is signaled as '*'
         """
         command = ["traceroute", "-i", interface]  # start with command items that are required
 
@@ -675,8 +720,7 @@ class Enumerate():
         :param randomise_targets: Binary Value for targets where they should not be scanned in the order given.
                 Defaults False
 
-        :return: list with IP, MAC address and Adapter name
-                 (Unless its multiple targets in which case it's a list of the prior)
+        :return: list of lists containing IP, MAC address and Adapter name
 
 
         """
@@ -722,7 +766,7 @@ class Enumerate():
         del output[0:2]
         del output[-3:]
 
-        outlist = [[]]  # was unable to change each line from a string to a list so moving each line as it becomes a list
+        outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
         for line in output:
             # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
