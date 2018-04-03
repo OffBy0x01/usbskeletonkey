@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 # MUST BE RUN AS ROOT!
 
+# ~Run First~
+# Install Dependencies
+apt-get update
+apt-get --assume-yes install rpi-update
+apt-get --assume-yes install python
+apt-get --assume-yes install git
+apt-get --assume-yes install python-dev
+apt-get --assume-yes install python-pip
+apt-get --assume-yes install sqlite3
+apt-get --assume-yes install isc-dhcp-server
+apt-get --assume-yes install python-crypto
+apt-get --assume-yes install inotify-tools
+apt-get --assume-yes install isc-dhcp-server
+apt-get --assume-yes install dsniff
+apt-get --assume-yes install screen
+
+# Get required kernel version
+if ! uname -a | grep -q "4.4.50+"; then
+	BRANCH=master rpi-update 5224108
+	reboot now
+fi
+# ~\end Run First~
+
 # Network set up
 
 # Function to convert netmask to CODR notation
@@ -88,27 +111,6 @@ if [[ $? -eq 0 ]]; then
 else
         echo "Error connecting to internet - check configuration!"
         exit 0
-fi
-
-# Install Dependencies
-apt-get update
-apt-get --assume-yes install rpi-update
-apt-get --assume-yes install python
-apt-get --assume-yes install git
-apt-get --assume-yes install python-dev
-apt-get --assume-yes install python-pip
-apt-get --assume-yes install sqlite3
-apt-get --assume-yes install isc-dhcp-server
-apt-get --assume-yes install python-crypto
-apt-get --assume-yes install inotify-tools
-apt-get --assume-yes install isc-dhcp-server
-apt-get --assume-yes install dsniff
-apt-get --assume-yes install screen
-
-# Get required kernel version
-if ! uname -a | grep -q "4.4.50+"; then
-	BRANCH=master rpi-update 5224108
-	reboot now
 fi
 
 # Enable SSH
