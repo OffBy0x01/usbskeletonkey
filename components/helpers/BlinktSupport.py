@@ -1,5 +1,5 @@
 try:
-    import blinkt
+    from blinkt import set_brightness, set_pixel, show, clear
 except ImportError:
     import pip
     pip.main(['install', '--user', 'blinkt'])
@@ -44,4 +44,18 @@ class Blinkt:
 
     def new_colors(self, red, green, blue):
         self.new_colours(red, green, blue)
+        return
+
+    def progressive_pixels(self, current_task, total_tasks):
+        """
+        Where current tasks to complete is greater than 8 this can set the status lights
+        for you upon calling with correct inputs
+
+        :param current_task: Type int
+        :param total_tasks: Type int
+
+        Can be used with less than 8 but will hypothetically miss some LED's
+        """
+        self.set_pixel(int((current_task / total_tasks) * 8))
+
         return
