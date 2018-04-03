@@ -1,5 +1,7 @@
+from components.helpers.Color import Colors
+
 class Debug(object):
-    """The base class for all components"""
+    """The Debug class for all components"""
 
     def __init__(self, name="debug", type="component", debug=False):
         self._debug = debug
@@ -12,9 +14,9 @@ class Debug(object):
     def __exit__(self):
         self.debug(str(self._successful_operations) + "/" + str(self._operations) + " succeeded")
 
-    def debug(self, txt=""):
+    def debug(self, Color=Colors.DEFAULT, txt=""):
         if self._debug:
-            print(self._type, '/', self._name, self._module, ': ', txt, sep="")
+            print(Color, self._type, '/', self._name, self._module, ': ', txt, sep="")
 
     def enable_module_debug(self, module_name):
         self._module = "/" + module_name
