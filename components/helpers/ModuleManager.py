@@ -7,7 +7,7 @@ from components.helpers.Color import Color
 from components.helpers.ModuleDescriptor import ModuleDescriptor
 
 
-class ModuleManager():
+class ModuleManager:
     """
      Args:
                 save_needs_confirm          Flag to determine if the manager should rely on the confirmation state or
@@ -129,7 +129,6 @@ class ModuleManager():
                 config.read(module_config)
 
             try:
-
                 # get  module_desc, options, fw_requirements, output_format, version, module_help
                 current_module = ModuleDescriptor(
                     module_name=config.get("general", 'module_name'),
@@ -142,6 +141,12 @@ class ModuleManager():
                     output_format=config._sections['output_format']
                 )
                 self.module_list.append(current_module)
+
+                # Prevent ordered dict from duplicating everything
+                config._sections["general"] = {}
+                config._sections["options"] = {}
+                config._sections["fw_requirements"] = {}
+                config._sections['output_format'] = {}
 
             except configparser.Error:
                 self.module_manager.debug("Error: Unable to import module from file", color=Color.WARNING)
