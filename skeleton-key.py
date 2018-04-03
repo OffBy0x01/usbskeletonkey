@@ -338,7 +338,7 @@ class SkeletonKey:
             print("\n")
 
             # Whatever the user enters - convert it to lowercase and place each word in an array.
-            config_selection = str(input(">")).lower().split()
+            config_selection = str(input(Color.INFOBLUE+"Configure/%s>" % self.module_manager.module_list[user_choice-1].module_name +Color.DEFAULT)).lower().split()
             if len(config_selection) == 0:
                 print("Please enter a valid command")
                 self.display_help()
