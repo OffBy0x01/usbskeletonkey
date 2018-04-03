@@ -30,6 +30,7 @@ mask2cidr() {
 cat /etc/network/interfaces
 # Ask user if config is to be kept
 read -p "Keep current network configuration (Y/N): " -n 1 -r
+echo
 if ! [[ $REPLY =~ ^[Yy]$ ]]
 then
     # Ensure DHCP server is stopped
