@@ -433,7 +433,9 @@ class Enumerate:
             try:
                 raw_rpc.stdin.write(user_list[user])
                 if user_list[user] == "":
-                    #password list is empty - use default
+                    # password list is empty - use default
+                    for password in password_list:
+                        raw_rpc.stdin.write(password)
 
             except IOError as e:
                 self.enumerate.debug("Error: get_rpcclient: %s" % e)
