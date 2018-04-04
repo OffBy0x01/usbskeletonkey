@@ -245,45 +245,28 @@ class SkeletonKey:
         print("Leaving help...")
         return
 
+
+
     def save_module_config(self, config_selection, user_choice):
         print("Confirm action: (Y/N)")
         print(Color.WARNING+"WARNING: Any unsaved changes will be lost on exit"+Color.DEFAULT)
         confirm_save = input(">")
         confirm_save = confirm_save.upper()
         module = self.module_manager.module_list[user_choice - 1]
-        module_name = module.module_name
         if confirm_save == "Y":
             print("Saving...")
-            self.module_manager.save_config(module_name, True)
+            self.module_manager.save_config(module.module_name, True)
 
-            if "true" == module.options["enabled"].lower():
-                try:
-                    # If it already exists it needs to be removed first
-                    self.module_manager.module_order.remove(module)
-                except Exception:
-                    # Easier to ask for forgiveness
-                    pass
-
-                # Add module to order
-                self.module_manager.module_order.append(module)
-                self.main.debug("% added to module_order", color=Color.OKGREEN)
-
-            else:
-                try:
-                    self.module_manager.module_order.remove(module)
-                except Exception as rem:
-                    self.main.debug("Unable to remove %s from module_order" % rem, color=Color.WARNING)
-                else:
-                    self.main.debug("% removed from module_order", color=Color.OKGREEN)
+            self.module_manager.update_order(module.module_name)
 
         elif confirm_save == "N":
             print("Discarding changes...")
-            self.module_manager.save_config(module_name, False)
 
     def move_module_by(self, module_index, move_to):
-        temporary_holder = self.module_manager.module_list[module_index]
-        self.module_manager.module_list.remove(self.module_manager.module_list[module_index])
-        self.module_manager.module_list.insert(move_to, temporary_holder)
+        self.main.debug("Move %s from #%s to #%s" % (self.module_manager.module_order[module_index], module_index, move_to), color=Color.INFOBLUE)
+        temporary_holder = self.module_manager.module_order[module_index]
+        self.module_manager.module_order.remove(self.module_manager.module_order[module_index])
+        self.module_manager.module_order.insert(move_to, temporary_holder)
         return
 
     def edit_module_order(self, user_choice):
@@ -302,7 +285,7 @@ class SkeletonKey:
                 try:
                     current_index = int(change_order_command[1])
                 except ValueError:
-                    print(Color.WARNING+"Module index is not in list"+Color.DEFAULT)
+                    print(Color.WARNING+"Invalid Module index"+Color.DEFAULT)
                 if change_order_command[2] == "up":
                     # move item up 1
                     self.move_module_by(current_index, (current_index - 1))
@@ -330,12 +313,11 @@ class SkeletonKey:
 
     def edit_module_order_question(self, user_choice):  # TODO Check this
         print("Current module order")
-        if self.module_manager.module_order == 0:
-            print("There are currently no modules in line")
+        if not self.module_manager.module_order:
+            print("There are currently no modules enabled")
         else:
-            for x in range(0, len(self.module_manager.module_order)):
-                module = self.module_manager.module_list[self.module_manager.module_order[x]]
-                print(x, " ", module.module_name)
+            for index in range(len(self.module_manager.module_order)):
+                print(index, self.module_manager.module_order[index])
         try:
             change_order = input("Change module order? (Y/N)")
         except ValueError:
@@ -352,7 +334,6 @@ class SkeletonKey:
     def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
-        self.module_manager.module_order.append(user_choice-1)
         print("Entering Configuration mode")
         config_mode = True
         save_flag = False
@@ -516,7 +497,7 @@ class SkeletonKey:
 # TODO #ATSOMEPOINT implement new testing methods
 
 if __name__ == '__main__':
-    skeleton_key = SkeletonKey()
+    skeleton_key = SkeletonKey(debug=True)
     skeleton_key.run()
 
 
