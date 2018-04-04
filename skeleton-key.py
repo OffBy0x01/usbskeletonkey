@@ -33,12 +33,15 @@ class SkeletonKey:
               Invalid user input - index of module not listed (e.g. <0 or >list)
       """
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=""):
 
         # Define directory and module paths
-        self.main_path = os.path.dirname(os.path.realpath(__file__)) + "/components"
-        self.module_path = self.main_path + "/modules"
+        self.main_path = os.path.dirname(os.path.realpath(__file__))
         self.config_file = self.main_path + '/config.ini'
+
+        self.main_path += "/components"
+        self.module_path = self.main_path + "/modules"
+
 
         # Load or create config files
         self.config = configparser.ConfigParser()
@@ -55,6 +58,9 @@ class SkeletonKey:
             self.config.add_section('interface')
             self.config.set('interface', 'debug', 'false')
 
+            # Disable debug if not specified
+            debug = False if debug == "" else debug
+
             # General options
             self.config.add_section('general')
             self.config.set('general', 'config_mode', 'true')
@@ -70,10 +76,7 @@ class SkeletonKey:
             self.config.read(self.config_file)
 
             # Set debug state accordingly
-            if self.config.get('interface', 'debug').lower() == "true":
-                debug = True
-            else:
-                debug = False
+            debug = self.config.get('interface', 'debug').lower() == "true" if debug == "" else debug
 
             # if no display = armed is in effect
             pin_armed = self.config.get('general', 'pin_armed').lower() == "true" and self.is_pin_armed()
@@ -89,8 +92,6 @@ class SkeletonKey:
                          "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
                          "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
 
-
-
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
                 self.main.debug("ERROR: " + self.module_path + " directory does not exist", color=Color.WARNING)
@@ -98,8 +99,8 @@ class SkeletonKey:
 
     # Check if 'pin' says go
     def is_pin_armed(self):
-        if subprocess.run(["tvservice", "-s"], stdout=subprocess.PIPE).stdout.decode('utf-8')[6:14]\
-                is not "0x40001" and self.config.get('general', 'pin') == "true":
+        output = subprocess.run(["tvservice", "-s"], stdout=subprocess.PIPE, shell=True).stdout.decode('utf-8')
+        if output[6:14] != "0x40001" and "not found" not in output:
             return True
         return False
 
@@ -141,9 +142,6 @@ class SkeletonKey:
                     self.main.debug("RUN ERROR: " + str(WTF), color=Color.WARNING)
 
             self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n")
-
-    def config_mode(self):
-        pass
 
     def display_title(self):
         print(Color.FAIL +self.SK_title + Color.ENDC)
@@ -250,11 +248,11 @@ class SkeletonKey:
     def save_module_config(self, config_selection, user_choice):
         print("Confirm action: (Y/N)")
         print(Color.WARNING+"WARNING: Any unsaved changes will be lost on exit"+Color.DEFAULT)
-        confirm_save = input(">")
-        confirm_save = confirm_save.upper()
         module = self.module_manager.module_list[user_choice - 1]
+        confirm_save = input(Color.INFOBLUE+"%s/%s/%s>" % ("Configure", module.module_name, "Save")+Color.DEFAULT)
+        confirm_save = confirm_save.upper()
         if confirm_save == "Y":
-            print("Saving...")
+            print(Color.OKGREEN+"Changes saved"+Color.DEFAULT)
             self.module_manager.save_config(module.module_name, True)
 
             self.module_manager.update_order(module.module_name)
@@ -263,11 +261,19 @@ class SkeletonKey:
             print("Discarding changes...")
 
     def move_module_by(self, module_index, move_to):
-        self.main.debug("Move %s from #%s to #%s" % (self.module_manager.module_order[module_index], module_index, move_to), color=Color.INFOBLUE)
-        temporary_holder = self.module_manager.module_order[module_index]
-        self.module_manager.module_order.remove(self.module_manager.module_order[module_index])
-        self.module_manager.module_order.insert(move_to, temporary_holder)
-        return
+        try:
+            self.main.debug("Move %s from #%s to #%s" % (self.module_manager.module_order[module_index], module_index, move_to), color=Color.INFOBLUE)
+            temporary_holder = self.module_manager.module_order[module_index]
+            self.module_manager.module_order.remove(self.module_manager.module_order[module_index])
+            self.module_manager.module_order.insert(move_to, temporary_holder)
+        except Exception:
+            print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
+
+    def update_module_order(self):
+        # PICKLE
+        with open('module_load_order', 'wb') as fp:
+            modules_to_pickle = [mod for mod in self.module_manager.module_order]
+            pickle.dump(modules_to_pickle, fp)
 
     def edit_module_order(self, user_choice):
         print("Use the following commands to change the module load order")
@@ -275,8 +281,8 @@ class SkeletonKey:
         print("order [module index] up")
         print("order [module index] down")
         try:
-            change_order_command = str(input(">")).lower().split()
-        except ValueError:
+            change_order_command = str(input(Color.INFOBLUE+"%s/%s/Order>"%("Configure", self.module_manager.module_order[user_choice-1])+Color.DEFAULT)).lower().split()
+        except Exception:
             print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
         if len(change_order_command) is not 3:
             print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
@@ -297,11 +303,11 @@ class SkeletonKey:
                         if int(change_order_command[2]) < len(self.module_manager.module_list):
                             self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
                         else:
-                            print("Integer out of range")
+                            print(Color.WARNING+"Integer out of range"+Color.DEFAULT)
                     else:
-                        print("Please enter a valid command")
-        print(Color.FAIL+"Exiting Module Order loader..."+Color.DEFAULT)
-        return
+                        print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
+        # Implement potential changes
+        self.update_module_order()
 
     @staticmethod
     def check_order_is_number(test_case):
@@ -411,6 +417,7 @@ class SkeletonKey:
                 else:
                     print("Please enter a valid command.")
 
+
     # Main menu for Interface, takes user input of which module they would like to use
     def input_choice(self):
         # exit flag for ending the program
@@ -435,11 +442,8 @@ class SkeletonKey:
                     print(Color.FAIL+"Exiting Program..."+Color.DEFAULT)
                     exit_flag = True
 
-                    # PICKLE
-                    with open('module_load_order', 'wb') as fp:
-                        modules_to_pickle = [mod.module_name for mod in self.module_manager.module_list]
-                        self.main.debug(modules_to_pickle)
-                        pickle.dump(modules_to_pickle, fp)
+                    # Implement potential order changes
+                    self.update_module_order()
 
                     return user_selection
                 elif user_selection < 0 or user_selection > len(self.module_manager.module_list):
@@ -461,12 +465,12 @@ class SkeletonKey:
         >>>if self.yorn("Please say Y? (Y/N)", "Y"):
         >>>  print("entered Y")
         >>>else:
-        >>>  print("You didnt enter Y")
+        >>>  print("You didn't enter Y")
 
         :param output: What to ask the user and waiting for a response
         :param expected: A string that should match your yes case
 
-        :return: Binary did response match expected user input
+        :return: Boolean did response match expected user input
         """
         response = input(output).__str__().strip()
 
@@ -476,15 +480,19 @@ class SkeletonKey:
         return False
 
     def run(self):
+        if self.config_mode:
+            # Config mode
+            self.main.debug("Entering Config Mode", color=Color.WARNING)
+            selection = -1
+            while selection != 0:
+                selection = self.input_choice()
+                if 1 <= selection <= 9999999:
+                    self.module_configuration(selection)
+        else:
+            # Armed mode
+            self.main.debug("Entering Armed Mode", color=Color.WARNING)
+            self.armed_mode()
 
-
-        selection = -1
-        while selection != 0:
-            selection = self.input_choice()
-            if 1 <= selection <= 9999999:
-                self.module_configuration(selection)
-
-        print("Thanks for playing.")
 
 
     def __exit__(self):
@@ -497,23 +505,5 @@ class SkeletonKey:
 # TODO #ATSOMEPOINT implement new testing methods
 
 if __name__ == '__main__':
-    skeleton_key = SkeletonKey(debug=True)
+    skeleton_key = SkeletonKey()
     skeleton_key.run()
-
-
-# debugging
-if __name__ == '__main__2':
-    selection = -1
-    begin = SkeletonKey(debug=True)
-    if input("Enter Armed Mode? 1 = y 0 = n") == "1":  # Also just for testing
-        begin.armed_mode()
-    else:
-        while selection == -1:
-            selection = begin.input_choice()
-            if selection == 0:
-                print("Thanks for playing.")
-                break
-            # Crappy fix for "selection always leads to config mode"
-            elif 1 <= selection <= 99999:
-                begin.module_configuration(selection)
-                selection = -1
