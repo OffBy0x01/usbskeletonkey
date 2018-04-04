@@ -1,6 +1,28 @@
 #!/usr/bin/env bash
 # MUST BE RUN AS ROOT!
 
+# ~Run First~
+# Install Dependencies
+apt-get update
+apt-get --assume-yes install rpi-update
+apt-get --assume-yes install python
+apt-get --assume-yes install git
+apt-get --assume-yes install python-dev
+apt-get --assume-yes install python-pip
+apt-get --assume-yes install sqlite3
+apt-get --assume-yes install isc-dhcp-server
+apt-get --assume-yes install python-crypto
+apt-get --assume-yes install inotify-tools
+apt-get --assume-yes install isc-dhcp-server
+apt-get --assume-yes install dsniff
+apt-get --assume-yes install screen
+
+# Get required kernel version
+if ! uname -a | grep -q "4.4.50+"; then
+	BRANCH=master rpi-update 5224108
+fi
+# ~\end Run First~
+
 # Network set up
 
 # Function to convert netmask to CODR notation
@@ -80,37 +102,6 @@ then
     ifconfig wlan0 up
 fi
 
-
-# Test for connection
-wget -q --tries=10 --timeout=20 --spider http://google.com
-if [[ $? -eq 0 ]]; then
-        echo "Connection Successful!"
-else
-        echo "Error connecting to internet - check configuration!"
-        exit 0
-fi
-
-# Install Dependencies
-apt-get update
-apt-get --assume-yes install rpi-update
-apt-get --assume-yes install python
-apt-get --assume-yes install git
-apt-get --assume-yes install python-dev
-apt-get --assume-yes install python-pip
-apt-get --assume-yes install sqlite3
-apt-get --assume-yes install isc-dhcp-server
-apt-get --assume-yes install python-crypto
-apt-get --assume-yes install inotify-tools
-apt-get --assume-yes install isc-dhcp-server
-apt-get --assume-yes install dsniff
-apt-get --assume-yes install screen
-
-# Get required kernel version
-if ! uname -a | grep -q "4.4.50+"; then
-	BRANCH=master rpi-update 5224108
-	reboot now
-fi
-
 # Enable SSH
 touch /boot/ssh
 
@@ -136,5 +127,7 @@ fi
 # Required for keyboard framework component
 mv /home/pi/usbskeletonkey/components/framework/shell_scripts/g_hid.ko /lib/modules/4.4.50+/kernel/drivers/usb/gadget/legacy/g_hid.ko
 chmod +x /home/pi/usbskeletonkey/components/framework/shell_scripts/hid-gadget-test
+
+reboot now
 
 # sed -i -r "1,16{s,first_run .*,first_run = false,g}" ./config.ini

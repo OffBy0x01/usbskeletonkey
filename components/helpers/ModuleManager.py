@@ -40,10 +40,10 @@ class ModuleManager:
 
         # Define directory and module paths
         self.main_path = os.path.dirname(os.path.realpath(__file__))
-        self.module_path = self.main_path + "/../modules"
+        self.modules_dir = self.main_path + "/../modules"
         self.module_list = []
-        self.import_module_configs()
         self.module_order = []
+        self.import_module_configs()
 
     def get_module_by_name(self, module):
         for m in self.module_list:
@@ -63,7 +63,7 @@ class ModuleManager:
         # Saves current configuration to module config file
         if confirm or not self.save_needs_confirm:
             config = configparser.ConfigParser()
-            module_config = self.module_path + '/%s/%s.ini' % (module_name, module_name)
+            module_config = self.modules_dir + '/%s/%s.ini' % (module_name, module_name)
             config.read(module_config)
             # locate module that will be editing
             module = self.get_module_by_name(module=module_name)
@@ -97,36 +97,36 @@ class ModuleManager:
 
         # get the module paths from modules directory
         self.module_manager.debug("discover_modules: Looking for modules...", color=Color.UNDERLINE, formatting=Color.BOLD)
-        module_paths = os.listdir(self.module_path)
+        module_paths = os.listdir(self.modules_dir)
 
         # identify module name from file path
         #        return [os.path.splitext(m)[0] for m in module_paths]
-        return [m for m in module_paths if os.path.isdir(self.module_path + "/" + m)]
+        return [m for m in module_paths if os.path.isdir(self.modules_dir + "/" + m)]
 
     def import_module_configs(self):
         # print("Import Module Configs:")
         config = configparser.ConfigParser()
 
         # (Import | Freak out over) module config
-        for module in self.discover_modules():
+        for this_module in self.discover_modules():
 
-            module_config = self.module_path + '/%s/%s.ini' % (module, module)
+            module_path = self.modules_dir + '/%s/%s.ini' % (this_module, this_module)
 
             try:
                 # Attempt to read current module's config file
-                Path(module_config).resolve()
+                Path(module_path).resolve()
 
             except FileNotFoundError:
 
                 # Was unable to read this module, log an error then skip
-                self.module_manager.debug(module + " config file not found!", color=Color.WARNING)
-                self.module_manager.debug(module_config)
+                self.module_manager.debug(this_module + " config file not found!", color=Color.WARNING)
+                self.module_manager.debug(module_path)
                 continue
 
             else:
                 # Module config exists, start importing datas
-                self.module_manager.debug(module + " config file found, importing data", color=Color.DEFAULT)
-                config.read(module_config)
+                self.module_manager.debug(this_module + " config file found, importing data", color=Color.DEFAULT)
+                config.read(module_path)
 
             try:
                 # get  module_desc, options, fw_requirements, output_format, version, module_help
@@ -150,5 +150,34 @@ class ModuleManager:
 
             except configparser.Error:
                 self.module_manager.debug("Error: Unable to import module from file", color=Color.WARNING)
+            else:
+                self.update_order(module_name=this_module)
 
         self.module_manager.debug("modules loaded: " + str([module.module_name for module in self.module_list]), color=Color.INFOBLUE if len(self.module_list) else Color.FAIL)
+
+    def update_order(self, module_name):
+        try:
+            module = self.get_module_by_name(module_name)
+
+            if "true" == module.options["enabled"].lower():
+                try:
+                    # If it already exists it needs to be removed first
+                    self.module_order.remove(module_name)
+                except Exception:
+                    # Easier to ask for forgiveness
+                    pass
+
+                # Add module to order
+                self.module_order.append(module_name)
+                self.module_manager.debug("%s added to order" % (module_name), color=Color.INFOBLUE)
+
+
+            else:
+                try:
+                    self.module_order.remove(module_name)
+                except Exception:
+                    pass  # probably don't need to remove it
+                else:
+                    self.module_manager.debug("% removed from order", color=Color.OKGREEN)
+        except Exception as reason:
+            self.module_manager.debug("Could not add or remove %s as %s" % (module_name, reason), color=Color.WARNING)

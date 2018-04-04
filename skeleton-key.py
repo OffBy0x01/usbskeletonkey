@@ -34,25 +34,13 @@ class SkeletonKey:
       """
 
     def __init__(self, debug=False):
-        self.main = Debug(debug=debug, name="Skeleton Key", type="Main")
-        self.module_manager = ModuleManager(debug=debug)
-        self.module_debug = debug
-
-        self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
-                         "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
-                         "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
 
         # Define directory and module paths
         self.main_path = os.path.dirname(os.path.realpath(__file__)) + "/components"
         self.module_path = self.main_path + "/modules"
         self.config_file = self.main_path + '/config.ini'
 
-
-        # Ensure that modules folder exists
-        if not (os.path.exists(self.module_path)):
-            self.main.debug("ERROR: " + self.module_path + " directory does not exist", color=Color.WARNING)
-
-        '''Load or create config files'''
+        # Load or create config files
         self.config = configparser.ConfigParser()
 
         # (Import | Create) default config
@@ -75,23 +63,38 @@ class SkeletonKey:
             with open('config.ini', 'w') as self.config_file:
                 self.config.write(self.config_file)
 
+            self.config_mode = True
+
         else:
             # Config file exists, start importing
             self.config.read(self.config_file)
 
             # Set debug state accordingly
-            if self.config.get('interface', 'debug') == "true":
-                pass
-            # TODO TEST
-            #     self._debug = True
-            # else:
-            #     self._debug = False
+            if self.config.get('interface', 'debug').lower() == "true":
+                debug = True
+            else:
+                debug = False
+
+            # if no display = armed is in effect
+            pin_armed = self.config.get('general', 'pin_armed').lower() == "true" and self.is_pin_armed()
 
             # Set current run state (config | Armed)
-            if self.config.get('general', 'config_mode') == "true":
-                self.config_mode = True
-            else:
-                self.config_mode = False
+            self.config_mode = self.config.get('general', 'config_mode').lower() == "true" or pin_armed
+
+        self.main = Debug(debug=debug, name="Skeleton Key", type="Main")
+        self.module_manager = ModuleManager(debug=debug)
+        self.module_debug = debug
+
+        self.SK_title = ("____ _  _ ____ _    ____ ___ ____ _  _    _  _ ____ _   _ \n"
+                         "[__  |_/  |___ |    |___  |  |  | |\ |    |_/  |___  \_/  \n"
+                         "___] | \_ |___ |___ |___  |  |__| | \|    | \_ |___   |   \n")
+
+
+
+        # Ensure that modules folder exists
+        if not (os.path.exists(self.module_path)):
+                self.main.debug("ERROR: " + self.module_path + " directory does not exist", color=Color.WARNING)
+
 
     # Check if 'pin' says go
     def is_pin_armed(self):
@@ -242,45 +245,28 @@ class SkeletonKey:
         print("Leaving help...")
         return
 
+
+
     def save_module_config(self, config_selection, user_choice):
         print("Confirm action: (Y/N)")
         print(Color.WARNING+"WARNING: Any unsaved changes will be lost on exit"+Color.DEFAULT)
         confirm_save = input(">")
         confirm_save = confirm_save.upper()
         module = self.module_manager.module_list[user_choice - 1]
-        module_name = module.module_name
         if confirm_save == "Y":
             print("Saving...")
-            self.module_manager.save_config(module_name, True)
+            self.module_manager.save_config(module.module_name, True)
 
-            if "true" == module.options["enabled"].lower():
-                try:
-                    # If it already exists it needs to be removed first
-                    self.module_manager.module_order.remove(module)
-                except Exception:
-                    # Easier to ask for forgiveness
-                    pass
-
-                # Add module to order
-                self.module_manager.module_order.append(module)
-                self.main.debug("% added to module_order", color=Color.OKGREEN)
-
-            else:
-                try:
-                    self.module_manager.module_order.remove(module)
-                except Exception as rem:
-                    self.main.debug("Unable to remove %s from module_order" % rem, color=Color.WARNING)
-                else:
-                    self.main.debug("% removed from module_order", color=Color.OKGREEN)
+            self.module_manager.update_order(module.module_name)
 
         elif confirm_save == "N":
             print("Discarding changes...")
-            self.module_manager.save_config(module_name, False)
 
     def move_module_by(self, module_index, move_to):
-        temporary_holder = self.module_manager.module_list[module_index]
-        self.module_manager.module_list.remove(self.module_manager.module_list[module_index])
-        self.module_manager.module_list.insert(move_to, temporary_holder)
+        self.main.debug("Move %s from #%s to #%s" % (self.module_manager.module_order[module_index], module_index, move_to), color=Color.INFOBLUE)
+        temporary_holder = self.module_manager.module_order[module_index]
+        self.module_manager.module_order.remove(self.module_manager.module_order[module_index])
+        self.module_manager.module_order.insert(move_to, temporary_holder)
         return
 
     def edit_module_order(self, user_choice):
@@ -299,7 +285,7 @@ class SkeletonKey:
                 try:
                     current_index = int(change_order_command[1])
                 except ValueError:
-                    print(Color.WARNING+"Module index is not in list"+Color.DEFAULT)
+                    print(Color.WARNING+"Invalid Module index"+Color.DEFAULT)
                 if change_order_command[2] == "up":
                     # move item up 1
                     self.move_module_by(current_index, (current_index - 1))
@@ -327,12 +313,11 @@ class SkeletonKey:
 
     def edit_module_order_question(self, user_choice):  # TODO Check this
         print("Current module order")
-        if self.module_manager.module_order == 0:
-            print("There are currently no modules in line")
+        if not self.module_manager.module_order:
+            print("There are currently no modules enabled")
         else:
-            for x in range(0, len(self.module_manager.module_order)):
-                module = self.module_manager.module_list[self.module_manager.module_order[x]]
-                print(x, " ", module.module_name)
+            for index in range(len(self.module_manager.module_order)):
+                print(index, self.module_manager.module_order[index])
         try:
             change_order = input("Change module order? (Y/N)")
         except ValueError:
@@ -349,7 +334,6 @@ class SkeletonKey:
     def module_configuration(self, user_choice):
         # mainly for debug
         # RETURN current_module (move to current_module file)
-        self.module_manager.module_order.append(user_choice-1)
         print("Entering Configuration mode")
         config_mode = True
         save_flag = False
@@ -492,7 +476,16 @@ class SkeletonKey:
         return False
 
     def run(self):
-        pass
+
+
+        selection = -1
+        while selection != 0:
+            selection = self.input_choice()
+            if 1 <= selection <= 9999999:
+                self.module_configuration(selection)
+
+        print("Thanks for playing.")
+
 
     def __exit__(self):
         print("Killing Interface...")
@@ -503,13 +496,13 @@ class SkeletonKey:
 
 # TODO #ATSOMEPOINT implement new testing methods
 
-if __name__ == '__main__2':
-    skeleton_key = SkeletonKey()
+if __name__ == '__main__':
+    skeleton_key = SkeletonKey(debug=True)
     skeleton_key.run()
 
 
 # debugging
-if __name__ == '__main__':
+if __name__ == '__main__2':
     selection = -1
     begin = SkeletonKey(debug=True)
     if input("Enter Armed Mode? 1 = y 0 = n") == "1":  # Also just for testing
