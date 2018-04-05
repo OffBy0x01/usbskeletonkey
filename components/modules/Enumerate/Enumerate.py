@@ -12,12 +12,12 @@ import subprocess
 from collections import defaultdict
 
 from components.framework.Debug import Debug
-from components.modules.Enumerate.Result2Html import result2html
-from components.modules.Enumerate.TargetInfo import TargetInfo
-from components.helpers.Color import Color
+from components.helpers.BlinktSupport import Blinkt
+from components.helpers.Format import Format
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
-from components.helpers.BlinktSupport import Blinkt
+from components.modules.Enumerate.Result2Html import result2html
+from components.modules.Enumerate.TargetInfo import TargetInfo
 
 
 # -.-. --- .-. . -.-- .... .- ... -. --- --. --- --- -.. .. -.. . .- ...
@@ -33,7 +33,7 @@ class Enumerate:
         # import config data for this module
         self.current_config = self.module_manager.get_module_by_name(self.enumerate._name)
         if not self.current_config:
-            self.enumerate.debug("Error: could not import config of " + self.enumerate._name, color=Color.FAIL)
+            self.enumerate.debug("Error: could not import config of " + self.enumerate._name, color=Format.color_danger)
 
         # Import default system path
         self.path = path

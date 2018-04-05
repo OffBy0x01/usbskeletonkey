@@ -1,4 +1,4 @@
-from components.helpers.Color import Color
+from components.helpers.Format import Format
 
 class Debug(object):
     """The Debug class for all components"""
@@ -14,9 +14,9 @@ class Debug(object):
     def __exit__(self):
         self.debug(str(self._successful_operations) + "/" + str(self._operations) + " succeeded")
 
-    def debug(self, txt="", color=Color.DEFAULT, formatting=Color.DEFAULT):
+    def debug(self, txt="", color=Format.format_clear, formatting=Format.format_clear):
         if self._debug:
-            print(self._type, '/', self._name, self._module, ': ', formatting, color,  txt, Color.ENDC, sep="")
+            print(self._type, '/', self._name, self._module, ': ', formatting, color, txt, Format.format_clear, sep="")
 
     def enable_module_debug(self, module_name):
         self._module = "/" + module_name

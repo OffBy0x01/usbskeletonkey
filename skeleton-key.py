@@ -5,7 +5,7 @@ import pickle
 import subprocess
 
 from components.framework.Debug import Debug
-from components.helpers.Color import Color
+from components.helpers.Format import Format
 from components.helpers.ModuleManager import ModuleManager
 
 
@@ -94,7 +94,7 @@ class SkeletonKey:
 
         # Ensure that modules folder exists
         if not (os.path.exists(self.module_path)):
-                self.main.debug("ERROR: " + self.module_path + " directory does not exist", color=Color.WARNING)
+                self.main.debug("ERROR: " + self.module_path + " directory does not exist", color=Format.color_warning)
 
 
     # Check if 'pin' says go
@@ -116,11 +116,11 @@ class SkeletonKey:
         for this_module in armed_module_list:
             try:
                 self.main.enable_module_debug(str(this_module))
-                self.main.debug("~~~Start of " + str(this_module) + "~~~")
+                self.main.debug("~~~Start of " + str(this_module) + "~~~", color=Format.color_primary)
                 imp_module = importlib.import_module("components.modules." + this_module + "." + this_module,
                                                      this_module)
             except Exception as Err:
-                self.main.debug("LOAD ERROR: " + str(Err), color=Color.WARNING)
+                self.main.debug("LOAD ERROR: " + str(Err), color=Format.color_warning)
             else:
                 try:
                     # This is why modules must stick to the naming convention
@@ -131,20 +131,20 @@ class SkeletonKey:
 
                     # Module needs to be enabled before it will run
                     if current_config.options["enabled"] == "true":
-                        self.main.debug(txt=str(this_module) + " is enabled", color=Color.OKGREEN)
+                        self.main.debug(txt=str(this_module) + " is enabled", color=Format.color_success)
                         module_class = getattr(imp_module, this_module)
                         runnable = module_class(self.main_path, debug=self.module_debug)
                         runnable.run()
                     else:
-                        self.main.debug(txt=str(this_module) + " is disabled", color=Color.FAIL)
+                        self.main.debug(txt=str(this_module) + " is disabled", color=Format.color_danger)
 
                 except Exception as WTF:
-                    self.main.debug("RUN ERROR: " + str(WTF), color=Color.WARNING)
+                    self.main.debug("RUN ERROR: " + str(WTF), color=Format.color_warning)
 
-            self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n")
+            self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n", color=Format.color_primary)
 
     def display_title(self):
-        print(Color.FAIL +self.SK_title + Color.ENDC)
+        print(Format.color_danger + self.SK_title + Format.format_clear)
 
     def display_modules(self):
         # displays all module information.
@@ -181,7 +181,7 @@ class SkeletonKey:
         elif "format" in config_selection[1]:
             print("Output Format: ", module.output_format)
         else:
-            print(Color.WARNING+"ERROR: Please enter a valid attribute"+Color.DEFAULT)
+            print(Format.color_warning + "ERROR: Please enter a valid attribute" + Format.format_clear)
 
     def set_module_attribute(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
@@ -200,9 +200,9 @@ class SkeletonKey:
                     flag = True
         if flag:
             print("Value changed")
-            print(Color.FAIL+"Exiting Module setter..."+Color.DEFAULT)
+            print(Format.color_danger + "Exiting Module setter..." + Format.format_clear)
         else:
-            print(Color.WARNING+"ERROR: Please enter a valid attribute to set"+Color.DEFAULT)
+            print(Format.color_warning + "ERROR: Please enter a valid attribute to set" + Format.format_clear)
 
     def show_module_option(self, config_selection, user_selection):
         # set flag to display error message if option is invalid
@@ -215,7 +215,7 @@ class SkeletonKey:
                 print(x, " : ", module.options[x])
                 flag = True
         if not flag:
-            print(Color.WARNING+"ERROR: Please enter a valid option to show"+Color.DEFAULT)
+            print(Format.color_warning + "ERROR: Please enter a valid option to show" + Format.format_clear)
 
     def display_help(self):
         # Displays help information for Skeleton Key
@@ -247,12 +247,12 @@ class SkeletonKey:
 
     def save_module_config(self, config_selection, user_choice):
         print("Confirm action: (Y/N)")
-        print(Color.WARNING+"WARNING: Any unsaved changes will be lost on exit"+Color.DEFAULT)
+        print(Format.color_warning + "color_warning: Any unsaved changes will be lost on exit" + Format.format_clear)
         module = self.module_manager.module_list[user_choice - 1]
-        confirm_save = input(Color.INFOBLUE+"%s/%s/%s>" % ("Configure", module.module_name, "Save")+Color.DEFAULT)
+        confirm_save = input(Format.color_primary + "%s/%s/%s>" % ("Configure", module.module_name, "Save") + Format.format_clear)
         confirm_save = confirm_save.upper()
         if confirm_save == "Y":
-            print(Color.OKGREEN+"Changes saved"+Color.DEFAULT)
+            print(Format.color_success + "Changes saved" + Format.format_clear)
             self.module_manager.save_config(module.module_name, True)
 
             self.module_manager.update_order(module.module_name)
@@ -262,12 +262,12 @@ class SkeletonKey:
 
     def move_module_by(self, module_index, move_to):
         try:
-            self.main.debug("Move %s from #%s to #%s" % (self.module_manager.module_order[module_index], module_index, move_to), color=Color.INFOBLUE)
+            self.main.debug("Move %s from #%s to #%s" % (self.module_manager.module_order[module_index], module_index, move_to), color=Format.color_info)
             temporary_holder = self.module_manager.module_order[module_index]
             self.module_manager.module_order.remove(self.module_manager.module_order[module_index])
             self.module_manager.module_order.insert(move_to, temporary_holder)
         except Exception:
-            print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
+            print(Format.color_warning + "Please enter a valid command" + Format.format_clear)
 
     def update_module_order(self):
         # PICKLE
@@ -281,17 +281,17 @@ class SkeletonKey:
         print("order [module index] up")
         print("order [module index] down")
         try:
-            change_order_command = str(input(Color.INFOBLUE+"%s/%s/Order>"%("Configure", self.module_manager.module_order[user_choice-1])+Color.DEFAULT)).lower().split()
+            change_order_command = str(input(Format.color_primary + "%s/%s/Order>" % ("Configure", self.module_manager.module_order[user_choice - 1]) + Format.format_clear)).lower().split()
         except Exception:
-            print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
+            print(Format.color_warning + "Please enter a valid command" + Format.format_clear)
         if len(change_order_command) is not 3:
-            print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
+            print(Format.color_warning + "Please enter a valid command" + Format.format_clear)
         else:
             if change_order_command[0] == "order":
                 try:
                     current_index = int(change_order_command[1])
                 except ValueError:
-                    print(Color.WARNING+"Invalid Module index"+Color.DEFAULT)
+                    print(Format.color_warning + "Invalid Module index" + Format.format_clear)
                 if change_order_command[2] == "up":
                     # move item up 1
                     self.move_module_by(current_index, (current_index - 1))
@@ -303,9 +303,9 @@ class SkeletonKey:
                         if int(change_order_command[2]) < len(self.module_manager.module_list):
                             self.move_module_by(int(change_order_command[1]), (int(change_order_command[2])))
                         else:
-                            print(Color.WARNING+"Integer out of range"+Color.DEFAULT)
+                            print(Format.color_warning + "Integer out of range" + Format.format_clear)
                     else:
-                        print(Color.WARNING+"Please enter a valid command"+Color.DEFAULT)
+                        print(Format.color_warning + "Please enter a valid command" + Format.format_clear)
         # Implement potential changes
         self.update_module_order()
 
@@ -327,7 +327,7 @@ class SkeletonKey:
         try:
             change_order = input("Change module order? (Y/N)")
         except ValueError:
-            print(Color.WARNING+"Please enter a valid input"+Color.DEFAULT)
+            print(Format.color_warning + "Please enter a valid input" + Format.format_clear)
         change_order = change_order.upper()
         if change_order == "Y":
             self.edit_module_order(user_choice)
@@ -348,7 +348,7 @@ class SkeletonKey:
             print("\n")
 
             # Whatever the user enters - convert it to lowercase and place each word in an array.
-            config_selection = str(input(Color.INFOBLUE+"Configure/%s>" % self.module_manager.module_list[user_choice-1].module_name +Color.DEFAULT)).lower().split()
+            config_selection = str(input(Format.color_primary + "Configure/%s>" % self.module_manager.module_list[user_choice - 1].module_name + Format.format_clear)).lower().split()
             if len(config_selection) == 0:
                 print("Please enter a valid command")
                 self.display_help()
@@ -358,18 +358,18 @@ class SkeletonKey:
                     if config_selection[0] == "exit":
                         if not save_flag:
                             try:
-                                confirm_exit = input(Color.WARNING+"You are about to exit without saving, are you sure? (Y/N)"+Color.DEFAULT)
+                                confirm_exit = input(Format.color_warning + "You are about to exit without saving, are you sure? (Y/N)" + Format.format_clear)
                             except ValueError:
-                                print(Color.WARNING+"Please enter a valid input"+Color.DEFAULT)
+                                print(Format.color_warning + "Please enter a valid input" + Format.format_clear)
                             confirm_exit = confirm_exit.upper()
                             if confirm_exit == "Y":
-                                print(Color.FAIL+"Exiting Configuration mode..."+Color.DEFAULT)
+                                print(Format.color_danger + "Exiting Configuration mode..." + Format.format_clear)
                                 config_mode = False
                                 pass
                             elif confirm_exit == "N":
                                 pass
                         elif save_flag:
-                            print(Color.FAIL+"Exiting Configuration mode..."+Color.DEFAULT)
+                            print(Format.color_danger + "Exiting Configuration mode..." + Format.format_clear)
                             config_mode = False
                             pass
                     elif config_selection[0] == "show":
@@ -430,16 +430,16 @@ class SkeletonKey:
 
             # Communicating to user how to use the Interface.
             print("\n")
-            print(Color.INFOBLUE+"Enter 0 to exit"+Color.DEFAULT)
+            print(Format.color_info + "Enter 0 to exit" + Format.format_clear)
             try:
                 user_selection = int(input("Please enter the module you would like to configure. (Based on index)"))
             except ValueError:
-                print(Color.WARNING+"ERROR: Invalid selection - string instead of integer."+Color.DEFAULT)
+                print(Format.color_warning + "ERROR: Invalid selection - string instead of integer." + Format.format_clear)
                 return -1
             else:
                 # Based on user input - moves to respective method
                 if user_selection == 0:
-                    print(Color.FAIL+"Exiting Program..."+Color.DEFAULT)
+                    print(Format.color_danger + "Exiting Program..." + Format.format_clear)
                     exit_flag = True
 
                     # Implement potential order changes
@@ -447,13 +447,13 @@ class SkeletonKey:
 
                     return user_selection
                 elif user_selection < 0 or user_selection > len(self.module_manager.module_list):
-                    print(Color.WARNING+"ERROR: Invalid index selection. Please enter a valid selection."+Color.DEFAULT)
+                    print(Format.color_warning + "ERROR: Invalid index selection. Please enter a valid selection." + Format.format_clear)
                 else:
                     if not exit_flag:
                         return user_selection
                     else:
                         # Ending program
-                        print(Color.OKGREEN+"Thank you for using 'Skeleton Key'."+Color.DEFAULT)
+                        print(Format.color_success + "Thank you for using 'Skeleton Key'." + Format.format_clear)
                         exit(0)
 
     @staticmethod
@@ -482,7 +482,7 @@ class SkeletonKey:
     def run(self):
         if self.config_mode:
             # Config mode
-            self.main.debug("Entering Config Mode", color=Color.WARNING)
+            self.main.debug("Entering Config Mode", color=Format.color_warning)
             selection = -1
             while selection != 0:
                 selection = self.input_choice()
@@ -490,7 +490,7 @@ class SkeletonKey:
                     self.module_configuration(selection)
         else:
             # Armed mode
-            self.main.debug("Entering Armed Mode", color=Color.WARNING)
+            self.main.debug("Entering Armed Mode", color=Format.color_warning)
             self.armed_mode()
 
 

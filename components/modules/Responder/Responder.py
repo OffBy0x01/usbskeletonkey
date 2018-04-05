@@ -5,8 +5,9 @@ import time
 
 from components.framework.Debug import Debug
 from components.framework.network import FwComponentNetwork
+from components.helpers.Format import Format
 from components.helpers.ModuleManager import ModuleManager
-from components.helpers.Color import Color
+
 
 # TODO: Update Doc String and comments
 
@@ -44,9 +45,9 @@ class Responder(Debug):
             # If the "hashes" directory doesn't exist, create it
             if not os.path.exists("%s/modules/Responder/hashes" % self.path):
                 subprocess.run("mkdir %s/modules/Responder/hashes" % self.path, shell=True)
-                self.responder.debug("Creating hashes directory", color=Color.INFOBLUE)
+                self.responder.debug("Creating hashes directory", color=Format.color_info)
             else:
-                self.responder.debug("The hashes directory already exists, skipping creation!", color=Color.INFOBLUE)
+                self.responder.debug("The hashes directory already exists, skipping creation!", color=Format.color_info)
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -54,7 +55,7 @@ class Responder(Debug):
         # import config data for this module
         self.current_config = self.module_manager.get_module_by_name(self._name)
         if not self.current_config:
-            self.responder.debug("Error: could not import config of " + self._name, color=Color.FAIL)
+            self.responder.debug("Error: could not import config of " + self._name, color=Format.color_danger)
 
         # Should not be global and should register debug state
         self.network = FwComponentNetwork(debug=debug)
@@ -62,7 +63,7 @@ class Responder(Debug):
         # Adapted from /src/utils.py. Creates and populates Responder.db correctly
         # (for some unknown reason Responder doesn't do this automatically)
         if not os.path.exists("%s/modules/Responder/src/Responder.db"%self.path):
-            self.responder.debug("Creating Responder.db", color=Color.INFOBLUE)
+            self.responder.debug("Creating Responder.db", color=Format.color_info)
             cursor = sqlite3.connect("%s/modules/Responder/src/Responder.db" % self.path)
             cursor.execute(
                 'CREATE TABLE responder (timestamp varchar(32), module varchar(16), '
@@ -82,12 +83,12 @@ class Responder(Debug):
         # If "ttl" cannot be converted to a float then set it to 60 seconds
         except Exception:
             time_to_live = 60
-            self.responder.debug("Catch triggered! Setting 'ttl' to 60 seconds", color=Color.INFOBLUE)
+            self.responder.debug("Catch triggered! Setting 'ttl' to 60 seconds", color=Format.color_info)
 
         # If "ttl" < 60 seconds, set "ttl" to 60 seconds (the default value)
         if time_to_live < 60:
             time_to_live = 60
-            self.responder.debug("'ttl' too low! Setting 'ttl' to 60 seconds", color=Color.INFOBLUE)
+            self.responder.debug("'ttl' too low! Setting 'ttl' to 60 seconds", color=Format.color_info)
 
         def check_for_hashes(timestamp_old, timestamp_new):
 
@@ -111,10 +112,10 @@ class Responder(Debug):
 
             if timestamp_new > timestamp_old:  # if newer modification time is detected, sleep and return
                 time.sleep(2)
-                self.responder.debug("Hash detected!", color=Color.INFOBLUE)
+                self.responder.debug("Hash detected!", color=Format.color_info)
                 return True
             else:
-                self.responder.debug("No hash detected!", color=Color.INFOBLUE)
+                self.responder.debug("No hash detected!", color=Format.color_info)
             return False
 
             # ~end of Pi-Key derived code~
@@ -128,10 +129,10 @@ class Responder(Debug):
         network_success = self.network.up()  # Up usb0
 
         if not network_success: # If networking.py has failed, don't run Responder and exit
-            self.responder.debug("Exiting as networking.py has failed!", color=Color.FAIL)
+            self.responder.debug("Exiting as networking.py has failed!", color=Format.color_danger)
             return False
 
-        self.responder.debug("Responder starting", color=Color.OKGREEN)
+        self.responder.debug("Responder starting", color=Format.color_success)
 
         timestamp_before = os.stat("%s/modules/Responder/src/Responder.db" % self.path).st_mtime
 
@@ -142,7 +143,7 @@ class Responder(Debug):
         except Exception:
             pass
 
-        self.responder.debug("Responder ended", color=Color.INFOBLUE)
+        self.responder.debug("Responder ended", color=Format.color_info)
 
         timestamp_after = os.stat("%s/modules/Responder/src/Responder.db" % self.path).st_mtime
 

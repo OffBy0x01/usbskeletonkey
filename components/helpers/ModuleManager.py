@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 from components.framework.Debug import Debug
-from components.helpers.Color import Color
+from components.helpers.Format import Format
 from components.helpers.ModuleDescriptor import ModuleDescriptor
 
 
@@ -49,7 +49,7 @@ class ModuleManager:
         for m in self.module_list:
             if m.module_name == module:
                 return m
-        self.module_manager.debug("Error: Unable to get module by name: " + module, color=Color.FAIL)
+        self.module_manager.debug("Error: Unable to get module by name: %s" % module, color=Format.color_danger)
 
     def save_config(self, module_name, confirm=False):
         """
@@ -73,7 +73,7 @@ class ModuleManager:
             config.set("general", "version", module.version)
             config.set("general", "module_help", module.module_help)
             for option in module.options.items():
-                self.module_manager.debug("option: " + option[0] + " : " + option[1], color=Color.DEFAULT)
+                self.module_manager.debug("option: " + option[0] + " : " + option[1], color=Format.format_clear)
                 config.set("options", option[0], option[1])
             for fw_requirements in module.fw_requirements.items():
                 config.set("fw_requirements", fw_requirements[0], fw_requirements[1])
@@ -82,7 +82,7 @@ class ModuleManager:
 
             with open(module_config, 'w') as configfile:
                 config.write(configfile)
-            self.module_manager.debug("Saved module options", color=Color.OKGREEN)
+            self.module_manager.debug("Saved module options", color=Format.color_success)
 
             return True
         return False
@@ -96,7 +96,7 @@ class ModuleManager:
         """
 
         # get the module paths from modules directory
-        self.module_manager.debug("discover_modules: Looking for modules...", color=Color.UNDERLINE, formatting=Color.BOLD)
+        self.module_manager.debug("discover_modules: Looking for modules...", color=Format.color_primary, formatting=Format.decoration_bold)
         module_paths = os.listdir(self.modules_dir)
 
         # identify module name from file path
@@ -119,13 +119,13 @@ class ModuleManager:
             except FileNotFoundError:
 
                 # Was unable to read this module, log an error then skip
-                self.module_manager.debug(this_module + " config file not found!", color=Color.WARNING)
+                self.module_manager.debug(this_module + " config file not found!", color=Format.color_warning)
                 self.module_manager.debug(module_path)
                 continue
 
             else:
                 # Module config exists, start importing datas
-                self.module_manager.debug(this_module + " config file found, importing data", color=Color.DEFAULT)
+                self.module_manager.debug(this_module + " config file found, importing data", color=Format.format_clear)
                 config.read(module_path)
 
             try:
@@ -149,11 +149,11 @@ class ModuleManager:
                 config._sections['output_format'] = {}
 
             except configparser.Error:
-                self.module_manager.debug("Error: Unable to import module from file", color=Color.WARNING)
+                self.module_manager.debug("Error: Unable to import module from file", color=Format.color_warning)
             else:
                 self.update_order(module_name=this_module)
 
-        self.module_manager.debug("modules loaded: " + str([module.module_name for module in self.module_list]), color=Color.INFOBLUE if len(self.module_list) else Color.FAIL)
+        self.module_manager.debug("modules loaded: " + str([module.module_name for module in self.module_list]), color=Format.color_info if len(self.module_list) else Format.color_danger)
 
     def update_order(self, module_name):
         try:
@@ -169,7 +169,7 @@ class ModuleManager:
 
                 # Add module to order
                 self.module_order.append(module_name)
-                self.module_manager.debug("%s added to order" % (module_name), color=Color.INFOBLUE)
+                self.module_manager.debug("%s added to order" % (module_name), color=Format.color_info)
 
 
             else:
@@ -178,6 +178,6 @@ class ModuleManager:
                 except Exception:
                     pass  # probably don't need to remove it
                 else:
-                    self.module_manager.debug("% removed from order", color=Color.OKGREEN)
+                    self.module_manager.debug("% removed from order", color=Format.color_success)
         except Exception as reason:
-            self.module_manager.debug("Could not add or remove %s as %s" % (module_name, reason), color=Color.WARNING)
+            self.module_manager.debug("Could not add or remove %s as %s" % (module_name, reason), color=Format.color_warning)
