@@ -60,27 +60,27 @@ Interface use
 
 Modules are selected by a index number in the following form:
 
---------------------
-1	Enumerate
-2	Ducky Script
-3	Responder
-
---------------------
+        --------------------
+        1	Enumerate
+        2	KeyInject
+        3	Responder
+        4   SomeOtherModule
+        --------------------
 
 Once a module is selected, configuration mode for said module is entered.
 The following commands can be used to interact with configuration mode:
 
-command				- Description of command
---------------------------------------------------------------------------------------------------
-show				        - shows all info on the current module
-show [attribute]		    - shows the info on the specified attribute of the current module e.g. options
-set				            - displays instructions on how to use the set command
-set [attribute]			    - allows the user to enter a value to set the specified attribute for the current module
-set [attribute] [value]	    - sets the value for the specified attribute for the current module
-order                       - displays instructions on how to use the order command
-order [index] [index]       - move module at from current index to target index
-order [index] [direction]   - move module by one position \<up/down\>
-exit 				        - exits configuration mode
+        command				- Description of command
+        --------------------------------------------------------------------------------------------------
+        show				        - shows all info on the current module
+        show [attribute]		    - shows the info on the specified attribute of the current module e.g. options
+        set				            - displays instructions on how to use the set command
+        set [attribute]			    - allows the user to enter a value to set the specified attribute for the current module
+        set [attribute] [value]	    - sets the value for the specified attribute for the current module
+        order                       - displays instructions on how to use the order command
+        order [index] [index]       - move module at from current index to target index
+        order [index] [direction]   - move module by one position \<up/down\>
+        exit 				        - exits configuration mode
 
 Examples
 ----------
