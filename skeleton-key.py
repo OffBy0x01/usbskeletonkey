@@ -135,13 +135,15 @@ class SkeletonKey:
                         module_class = getattr(imp_module, this_module)
                         runnable = module_class(self.main_path, debug=self.module_debug)
                         runnable.run()
+
                     else:
                         self.main.debug(txt=str(this_module) + " is disabled", color=Format.color_danger)
 
                 except Exception as WTF:
                     self.main.debug("RUN ERROR: " + str(WTF), color=Format.color_warning)
 
-            self.main.debug("~~~~End of " + str(this_module) + "~~~~\n\n", color=Format.color_primary)
+            self.main.debug("~~~End of " + str(this_module) + "~~~", color=Format.color_primary)
+
 
     def display_title(self):
         print(Format.color_danger + self.SK_title + Format.format_clear)

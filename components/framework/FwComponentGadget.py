@@ -1,6 +1,7 @@
 import subprocess
 
 from components.framework.Debug import Debug
+from components.helpers.Format import Format
 
 
 class FwComponentGadget(Debug):
@@ -29,7 +30,7 @@ class FwComponentGadget(Debug):
         # If kernel module was not found then modprobe -n will return driver_name not found in modules
         if "not found" in subprocess.run(["modprobe", "-n", driver_name], stdout=subprocess.PIPE).stdout.decode(
                 'utf-8'):  # THROW EXCEPTION HERE
-            print("THROW EXCEPTION HERE")
+            self.debug("CRITICAL: %s does not exist" % driver_name, color=Format.color_danger)
 
         self.driver_name = driver_name
 
@@ -51,7 +52,7 @@ class FwComponentGadget(Debug):
             self.debug(self.enabled)
             self.enabled = True
         else:
-            self.debug("Driver already enabled: %s" % self.enabled)
+            self.debug("Driver already enabled: %s" % self.enabled, color=Format.color_info)
 
     def disable(self):
         """Disable an enabled framework object"""
@@ -59,9 +60,9 @@ class FwComponentGadget(Debug):
             subprocess.call("modprobe -r %s" % self.driver_name, shell=True)
             self.enabled = False
         else:
-            self.debug("Driver already disabled: %s" % self.enabled)
+            self.debug("Driver already disabled: %s" % self.enabled, color=Format.color_info)
 
     def status(self):
         """Return the driver status"""
-        self.debug("Driver enabled: %s" % self.enabled)
+        self.debug("Driver enabled: %s" % self.enabled, color=Format.color_info)
         return self.enabled

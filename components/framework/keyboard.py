@@ -3,6 +3,7 @@ import subprocess
 import time
 
 from components.framework.FwComponentGadget import FwComponentGadget
+from components.helpers.Format import Format
 
 
 class Keyboard(FwComponentGadget):
@@ -38,6 +39,8 @@ class Keyboard(FwComponentGadget):
 
         self.path = path
         self.keyboard_path = path + "/framework/shell_scripts/hid-gadget-test"
+
+        self.debug("Initializing Keyboard...", color=Format.color_primary)
 
         # TODO add language/layout support
         # stores .keyboard layout
@@ -164,7 +167,7 @@ class Keyboard(FwComponentGadget):
         with open(path + "/../scripts/" + script, "r") as file:
             for line in file:
                 self.resolve_line(current_line=line)
-            self.debug("RESOLVE DONE")
+            self.debug("RESOLVE DONE",  color=Format.color_info)
         return
 
     def __send_data(self, data):

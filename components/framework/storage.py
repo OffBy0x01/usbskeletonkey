@@ -2,8 +2,8 @@ import os
 import subprocess
 from datetime import datetime
 
-from components.framework.FwComponentGadget import FwComponentGadget
 from components.framework.Debug import *
+from components.framework.FwComponentGadget import FwComponentGadget
 
 
 class StorageAccess(FwComponentGadget):
@@ -39,7 +39,7 @@ class StorageAccess(FwComponentGadget):
         """
         Creates a file system: This action does not require sudo. This action does not have exit codes
         """
-        self.storage.debug("    Creating a filesystem")
+        self.storage.debug("    Creating a filesystem",  color=Format.color_info)
 
         # Create device to store to
         self.file_name = datetime.now().strftime('%Y-%m-%d--%H:%M.img')
@@ -78,10 +78,10 @@ class StorageAccess(FwComponentGadget):
         self._name = "Storage"
 
         # Start debugger
-        self.storage = Debug(debug=debug)
+        self.storage = Debug(debug=debug, type=self._type, name=self._name)
 
         # Inform the user on debug what module has started
-        self.storage.debug("Starting Module: Storage Access")
+        self.storage.debug("Starting: Storage Access", color=Format.color_primary)
 
         # Variable init
         self.old_fs = (file_name is None)
@@ -102,7 +102,7 @@ class StorageAccess(FwComponentGadget):
             if os.path.isfile(self.file_path + self.file_name):
                 self.storage.debug("File discovered")
             else:
-                self.storage.debug("File " + self.file_path + self.file_name + " does not exist: 2.04")
+                self.storage.debug("File " + self.file_path + self.file_name + " does not exist: 2.04", color=Format.color_danger)
                 raise 2.04
 
         self.local_mount = False
@@ -149,13 +149,13 @@ class StorageAccess(FwComponentGadget):
 
         if "failed to set up loop device" in loop_output:
             error = "Error mounting on loop back " + loop_back_device + ": 2.04"
-            self.storage.debug(error)
+            self.storage.debug(error, color=Format.color_danger)
             raise ValueError(error)
 
         # If the first loop back device available is still the one we should be mounted to
         if loop_back_device == subprocess.run(["losetup", "-f"], stdout=subprocess.PIPE).stdout.decode('utf-8'):
             error = "Loop back setup Failed: 2.04"
-            self.storage.debug(error)
+            self.storage.debug(error, color=Format.color_danger)
             raise ValueError(error)
 
         return loop_back_device
@@ -196,7 +196,7 @@ class StorageAccess(FwComponentGadget):
             self.product_id = "file=" + self.file_path + self.file_name
 
         self.enable()
-        self.storage.debug("Mounted over bus. RO: " + write_block.__str__())
+        self.storage.debug("Mounted over bus. RO: " + write_block.__str__(), color=Format.color_info)
         self.bus_mounted = True
         return
 
@@ -225,16 +225,16 @@ class StorageAccess(FwComponentGadget):
         self.storage.debug("Starting unmount")
 
         if self.local_mount:
-            self.storage.debug("Filesystem is mounted on " + self.mounted_dir)
+            self.storage.debug("Filesystem is mounted on " + self.mounted_dir, color=Format.color_success)
             self.unmount_local()
             return
 
         if self.bus_mounted:
-            self.storage.debug("Filesystem is mounted on the bus")
+            self.storage.debug("Filesystem is mounted on the bus",  color=Format.color_success)
             self.unmount_bus()
             return
 
-        self.storage.debug("Nothing was mounted")
+        self.storage.debug("Nothing was mounted",  color=Format.color_warning)
         return
 
     '''

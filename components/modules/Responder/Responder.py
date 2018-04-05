@@ -48,7 +48,6 @@ class Responder(Debug):
             open("%s/%s" % (responder_source_directory, "LICENSE"))
         except FileNotFoundError:
             subprocess.run("git clone https://github.com/SpiderLabs/Responder.git %s" % responder_source_directory, shell=True)
-            time.sleep(10)
 
         if "aspbian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
             # If the "hashes" directory doesn't exist, create it
@@ -139,6 +138,7 @@ class Responder(Debug):
 
         if not network_success: # If networking.py has failed, don't run Responder and exit
             self.responder.debug("Exiting as networking.py has failed!", color=Format.color_danger)
+            self.network.down()
             return False
 
         self.responder.debug("Responder starting", color=Format.color_success)

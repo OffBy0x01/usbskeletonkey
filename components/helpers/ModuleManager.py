@@ -96,7 +96,7 @@ class ModuleManager:
         """
 
         # get the module paths from modules directory
-        self.module_manager.debug("discover_modules: Looking for modules...", color=Format.color_primary, formatting=Format.decoration_bold)
+        self.module_manager.debug("discover_modules: Looking for modules...", color=Format.color_info, formatting=Format.decoration_bold)
         module_paths = os.listdir(self.modules_dir)
 
         # identify module name from file path
