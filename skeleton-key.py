@@ -247,7 +247,7 @@ class SkeletonKey:
 
     def save_module_config(self, config_selection, user_choice):
         print("Confirm action: (Y/N)")
-        print(Format.color_warning + "color_warning: Any unsaved changes will be lost on exit" + Format.format_clear)
+        print(Format.color_warning + "Warning: Any unsaved changes will be lost on exit" + Format.format_clear)
         module = self.module_manager.module_list[user_choice - 1]
         confirm_save = input(Format.color_primary + "%s/%s/%s>" % ("Configure", module.module_name, "Save") + Format.format_clear)
         confirm_save = confirm_save.upper()
@@ -507,3 +507,4 @@ class SkeletonKey:
 if __name__ == '__main__':
     skeleton_key = SkeletonKey()
     skeleton_key.run()
+

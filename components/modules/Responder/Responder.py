@@ -41,6 +41,15 @@ class Responder(Debug):
         self.path = path
         self.responder = Debug(name="Responder", type="Module", debug=debug)
 
+        #If no responder source, install it
+        responder_source_directory = "%s/modules/%s/%s" % (self.path, self._name, "source")
+        try:
+            # Attempt to open file
+            open("%s/%s" % (responder_source_directory, "LICENSE"))
+        except FileNotFoundError:
+            subprocess.run("git clone https://github.com/SpiderLabs/Responder.git %s" % responder_source_directory, shell=True)
+            time.sleep(10)
+
         if "aspbian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
             # If the "hashes" directory doesn't exist, create it
             if not os.path.exists("%s/modules/Responder/hashes" % self.path):
@@ -55,16 +64,16 @@ class Responder(Debug):
         # import config data for this module
         self.current_config = self.module_manager.get_module_by_name(self._name)
         if not self.current_config:
-            self.responder.debug("Error: could not import config of " + self._name, color=Format.color_danger)
+            self.responder.debug("Error: could not import config ", color=Format.color_danger)
 
         # Should not be global and should register debug state
         self.network = FwComponentNetwork(debug=debug)
 
         # Adapted from /src/utils.py. Creates and populates Responder.db correctly
         # (for some unknown reason Responder doesn't do this automatically)
-        if not os.path.exists("%s/modules/Responder/src/Responder.db"%self.path):
+        if not os.path.exists("%s/modules/Responder/source/Responder.db"%self.path):
             self.responder.debug("Creating Responder.db", color=Format.color_info)
-            cursor = sqlite3.connect("%s/modules/Responder/src/Responder.db" % self.path)
+            cursor = sqlite3.connect("%s/modules/Responder/source/Responder.db" % self.path)
             cursor.execute(
                 'CREATE TABLE responder (timestamp varchar(32), module varchar(16), '
                 'type varchar(16), client varchar(32), hostname varchar(32), user varchar(32), '
@@ -134,18 +143,18 @@ class Responder(Debug):
 
         self.responder.debug("Responder starting", color=Format.color_success)
 
-        timestamp_before = os.stat("%s/modules/Responder/src/Responder.db" % self.path).st_mtime
+        timestamp_before = os.stat("%s/modules/Responder/source/Responder.db" % self.path).st_mtime
 
         try:
             # Run Responder on usb0
-            subprocess.run("exec python %s/modules/Responder/src/Responder.py -I usb0 "
+            subprocess.run("exec python %s/modules/Responder/source/Responder.py -I usb0 "
                                    "-f - w - r - d - F"% self.path, shell=True, timeout=time_to_live)
         except Exception:
             pass
 
         self.responder.debug("Responder ended", color=Format.color_info)
 
-        timestamp_after = os.stat("%s/modules/Responder/src/Responder.db" % self.path).st_mtime
+        timestamp_after = os.stat("%s/modules/Responder/source/Responder.db" % self.path).st_mtime
 
         # Call the method that will determine if hashes have been captured
         hash_success = check_for_hashes(timestamp_before, timestamp_after)
@@ -154,7 +163,7 @@ class Responder(Debug):
 
         # Move txt files that contain the hashes to a more central directory (hashes directory) if hashes were captured
         if hash_success:
-            subprocess.run("find %s/modules/Responder/src/logs -name '*.txt' -exec mv {} %s/modules/Responder/hashes \;"
+            subprocess.run("find %s/modules/Responder/source/logs -name '*.txt' -exec mv {} %s/modules/Responder/hashes \;"
                            "" % (self.path, self.path), shell=True)
 
         return True
