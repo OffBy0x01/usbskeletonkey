@@ -14,7 +14,7 @@ Features
 Setup
 -------------
 When making use of the Pi we expect a specifically crafted Raspberry Pi Zero in order to provide status lights (Although this is optional).
-The HAT we make use of by default is the [Blinkt kit](https://shop.pimoroni.com/products/blinkt) and we also make use of a [USB Stem kit](https://shop.pimoroni.com/products/zero-stem-usb-otg-connector) to provide a USB stick look and feel.
+The HAT we make use of by default is the [Blinkt kit][BLINKT] and we also make use of a [USB Stem kit][USBSTEM] to provide a USB stick look and feel.
 
 Install USB Skeleton Key by running:
 ```commandline
@@ -24,8 +24,8 @@ run skeleton-key.py
 
 Contribute
 -----------
-- [Issue Tracker](github.com/AR-Calder/usbskeletonkey/usbskeletonkey/issues)
-- [Source Code](github.com/AR-Calder/usbskeletonkey/usbskeletonkey)
+- [Issue Tracker][ISSUES]
+- [Source Code][PROJECT]
 
 Support
 --------
@@ -33,7 +33,9 @@ If you are having any issues, please create an issue with a detailed explanation
 
 License
 --------
-The project is licensed under the <LICENSE>
+The project is licensed under the
+
+See the [Legal Disclaimer][LEGAL] for information on this projects legal bounds
 
 
 skeleton-key.py
@@ -92,8 +94,8 @@ set port_targets  		- Enters input mode to enter a value for port_targets of cur
 
 set port_targets 55-1000	- Sets port_targets to the range 55-1000 on the current module
 
-
-## Interface Bugs
+Interface Bugs
+-----
 Interface is not perfect therefore, will at times, throw errors.
 Many of these errors have been fixed or altered but some may still creep in.
 For this, we ask that you report any bugs or even write a patch to fix them.
@@ -104,7 +106,7 @@ Try searching for the problem or error message on Google, if nothing comes up pl
 
 
 network.py
-================
+===========
 This framework component of Skeleton Key requires no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules to operate:
 
 	LIST OF MODULES (COME BACK TO)
@@ -129,7 +131,7 @@ As user interaction is pretty much non-existant with this componenent there is v
 - Windows systems prioritise "new" ethernet network devices over existing ones, so unfortunately it is only possible to use network emulation to capture network traffic once during an attack. This is due to fact that the target system won't automatically connect to the "ethernet" adapter as the device will be known to the system after its first use.
 
 
-Keyboard.py
+keyboard.py
 ===========
 This framework component of Skeleton Key requries ducky scripts to operate. The functionality of Keyboard can be accessed through the Ducky Script Module by Users, or directly by Module Developers.
 
@@ -161,5 +163,8 @@ Authors
 [Michaela Stewart](https://github.com/muicheka) - [Email](1501125@uad.ac.uk)
 
 [LOGO]: key.png
-[PROJECT]: https://github.com/AR-Calder/usbskeletonkey "Github Project"
-[ISSUES]: https://github.com/AR-Calder/usbskeletonkey/issues "Github Project Issues Page1"
+[BLINKT]: https://shop.pimoroni.com/products/blinkt "Pimoroni Link to Blinkt kit"
+[USBSTEM]: https://shop.pimoroni.com/products/zero-stem-usb-otg-connector "Pimoroni Link to USB Stem"
+[PROJECT]: https://github.com/AR-Calder/usbskeletonkey "Skeleton Key Project"
+[ISSUES]: https://github.com/AR-Calder/usbskeletonkey/issues "Skeleton Key Issues Page"
+[LEGAL]: LEGAL%20DISCLAIMER.pdf
