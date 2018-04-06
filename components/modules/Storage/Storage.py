@@ -3,7 +3,7 @@ import time
 from components.framework.Debug import Debug
 from components.framework.storage import StorageAccess
 from components.helpers.ModuleManager import ModuleManager
-from components.helpers.BlinktSupport import Blinkt
+from components.helpers.BlinktSupport import BlinktSupport
 
 
 class Storage:
@@ -47,7 +47,7 @@ class Storage:
 
         :return: No return
         """
-        blinkt = Blinkt(200, 0, 200)
+        blinkt = BlinktSupport(200, 0, 200)
 
         current_storage = StorageAccess(file_name=self.file_name, file_path=self.file_path, debug=self.debug)
         current_storage.mount_bus(self.read_only)

@@ -12,7 +12,7 @@ import subprocess
 from collections import defaultdict
 
 from components.framework.Debug import Debug
-from components.helpers.BlinktSupport import Blinkt
+# from components.helpers.BlinktSupport import BlinktSupport
 from components.helpers.Format import Format
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
@@ -59,7 +59,7 @@ class Enumerate:
         port_exclusions = self.current_config.options["port_exclusions"]
         self.port_list = [port for port in self.get_port_list(ports) if port not in self.get_port_list(port_exclusions)]
 
-        # ~Produce list of usable users~
+        # ~Produce list of usable users.txt~
         self.user_list = []
         with open(self.path + "/modules/Enumerate/users.txt") as user_file:
             for line in user_file:
@@ -143,28 +143,18 @@ class Enumerate:
         # ---------------------
         target_ips = defaultdict()  # Init of dictionary
 
-        # Led reqs
-        if self.current_config.options['use_blinkt'].lower() == 'true':
-            blinkt = Blinkt(int(self.current_config.options['rcolor']),
-                            int(self.current_config.options['gcolor']),
-                            int(self.current_config.options['bcolor']))
 
-        current_ip_in_list = 0
+        current_ip_in_list = 1
         ips_in_list = len(self.ip_list_shuffled)
 
         for ip in self.ip_list_shuffled:  # Make it less obvious
-
-            blinkt.progressive_pixels(current_ip_in_list, ips_in_list)
-            try:
-                blinkt.progressive_pixels(current_ip_in_list, len(self.ip_list_shuffled))
-            finally:
-                self.enumerate.debug("Target " + current_ip_in_list + " of " + len(self.ip_list_shuffled))
+            self.enumerate.debug("Target (%s) %s of %s" % (ip, current_ip_in_list, ips_in_list))
 
             current = TargetInfo()
 
             # check current IP responds to ICMP
-            if self.check_target_is_alive(current, interface=self.interface):
-                current.RESPONDS_ICMP = True
+            current.RESPONDS_ICMP = self.check_target_is_alive(current, interface=self.interface)
+            self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
 
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(current, interface=self.interface)
@@ -184,10 +174,16 @@ class Enumerate:
                 current.RESPONDS_ARP = True
                 current.MAC_ADDRESS = arp_response[1]
                 current.ADAPTER_NAME = arp_response[2]
+                self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
+                self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
+                self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
+            else:
+                self.enumerate.debug("No ARP response from %s" % ip)
 
-            # check route to this target
-            if self.interface is "usb0":
-                current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+                # check route to this target
+                if self.interface != "usb0":
+                    current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+                    self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
 
             # Check to see if trace route generated valid data
             current_route_valid = False  # Flag for valid data
@@ -214,7 +210,7 @@ class Enumerate:
                 pass
 
             for user in self.user_list:
-                # things that need users
+                # things that need users.txt
                 pass
 
             # Use nmap to determine OS, port and service info then save to our current TargetInfo
@@ -224,10 +220,8 @@ class Enumerate:
 
             # self.other things that just uses IPs
 
-            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list,
-                                                                               password_list=self.default_passwords,
-                                                                               target=ip, ip=ip)
-            current.DOMAIN
+            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
+            #current.DOMAIN
 
             # NBT STAT
             current.NBT_STAT = self.get_nbt_stat(ip)
@@ -466,12 +460,12 @@ class Enumerate:
             elif "rpcclient $>" in raw_rpc:
                 raw_command = subprocess.run("enumdomgroups", stdout=subprocess.PIPE).stdout.decode('utf-8')
                 users_or_groups = False
-                # true = users / false = groups
+                # true = users.txt / false = groups
                 domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                 raw_command = subprocess.run("enumdomusers", stdout=subprocess.PIPE).stdout.decode('utf-8')
                 users_or_groups = True
-                # true = users / false = groups
+                # true = users.txt / false = groups
                 userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                 raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -550,14 +544,14 @@ class Enumerate:
             times += 1
 
         current = TargetInfo
-        # users = (ip, users)
+        # users.txt = (ip, users.txt)
         # rids = (ip, rids)
-        # current.DOMAIN.append(users)
+        # current.DOMAIN.append(users.txt)
         # current.DOMAIN.append(rids)
         return users, rids
 
     @staticmethod
-    def check_target_is_alive(target, interface="usb0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
+    def check_target_is_alive(target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
                               contain_random_data=True, randomise_targets=False, source_address="self", verbose=False):
         """
         Uses ICMP pings to check that hosts are online/responsive. This makes use of the FPing command line tool so is
