@@ -392,17 +392,17 @@ class Enumerate:
                     if "No reply from" in line:
                         return False
 
-                    self.enumerate.debug("current line: %s" % result)
-
                     for nbt_line in self.nbt_info:
                         service, hex_code, group, descriptor = nbt_line
                         # if we need to check service or not (this is empty for some fields)
                         if service:
                             if service in result[0] and hex_code in result[1] and group in result[2]:
+                                self.enumerate.debug("service line: %s/%s " % (line, descriptor))
                                 output.append("%s %s" % (line, descriptor))
                                 break
                         else:
-                            if hex_code in result[1] and group == bool(result[2]):
+                            if hex_code in result[1] and group == result[2]:
+                                self.enumerate.debug("hex_code line: %s/%s " % (line, descriptor))
                                 output.append("%s %s" % (line, descriptor))
                                 break
                 else:  # If it didn't match the regex
