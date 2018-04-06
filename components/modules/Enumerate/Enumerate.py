@@ -161,18 +161,7 @@ class Enumerate:
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(ip, interface=self.interface)
 
-            # Check if arp generated valid data
-            arp_response_valid = False  # Flag for valid data
-            if arp_response:  # If list of data exists
-                for item in arp_response:  # Check each item in list for valid data
-                    if item:  # If data exists
-                        arp_response_valid = True  # Set flag to true
-                        break
-
-            if not arp_response_valid:  # If no valid data was found
-                arp_response = False  # Set value to false
-
-            if arp_response:
+            if arp_response is not None:
                 current.RESPONDS_ARP = True
                 current.MAC_ADDRESS = arp_response[1]
                 current.ADAPTER_NAME = arp_response[2]
@@ -182,38 +171,24 @@ class Enumerate:
             else:
                 self.enumerate.debug("No ARP response from %s" % ip)
 
-                # check route to this target
-                if self.interface != "usb0":
-                    current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
-                    self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
 
-            # Check to see if trace route generated valid data
-            current_route_valid = False  # Flag for valid data
-            if current.ROUTE:  # If list exists
-                if current.ROUTE[0]:  # Check first list for data
-                    for item in current.ROUTE[0]:
-                        if item:
-                            current_route_valid = True
-                            break
-                if current.ROUTE[1]:  # Check second list of lists
-                    for item in current.ROUTE[1]:  # Check each list of lists
-                        if item:  # If data exists
-                            for sub_item in item:  # Check each list
-                                if sub_item:  # If data exists
-                                    current_route_valid = True
-                                    break
+            # check route to this target
+            if self.interface != "usb0":
+                current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+                self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
 
-            if not current_route_valid:  # If no valid data was found
-                current.ROUTE = False  # Set value to false
+            # NBT STAT
+            current.NBT_STAT = self.get_nbt_stat(ip)
+            self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
 
             # use all port scanning tools against current ip
             for port in self.port_list:
-                # run things that use ports
                 pass
+                # run things that use ports
 
             for user in self.user_list:
-                # things that need users.txt
                 pass
+                # things that need users.txt
 
             # Use nmap to determine OS, port and service info then save to our current TargetInfo
             nmap_output = self.nmap()  # TODO portsCSV
@@ -225,8 +200,6 @@ class Enumerate:
             domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
             #current.DOMAIN
 
-            # NBT STAT
-            current.NBT_STAT = self.get_nbt_stat(ip)
 
             # Add target information to dict
             target_ips[ip] = current
@@ -788,7 +761,7 @@ class Enumerate:
             else:
                 return "Error: Target is not a string or list"
 
-        output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+        output = subprocess.run(command, stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
 
         if original_out is True:
             return output
