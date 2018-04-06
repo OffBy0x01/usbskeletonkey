@@ -28,8 +28,7 @@ class Keyboard(FwComponentGadget):
               ValueError on bad delay/string_delay
       """
 
-    def __init__(self, path, keyboard_layout="default.keyboard", language_layout="default.language", enabled=False,
-                 debug=False):
+    def __init__(self, path, keyboard_layout="default.keyboard", language_layout="default.language", enabled=False, debug=False):
         super().__init__(driver_name="g_hid", enabled=enabled, debug=debug, name="keyboard", type="component")
 
         # Debug params
@@ -158,7 +157,7 @@ class Keyboard(FwComponentGadget):
                 if keypress:
                     self.__send_data(keypress)
 
-    def run(self, script):
+    def resolve_script(self, script):
         """
         :param script:
         :return :
@@ -180,17 +179,16 @@ class Keyboard(FwComponentGadget):
 
         self.debug("SENDING DATA: " + data)
         try:
-            # Set timeout at 1s as it will otherwise expect more input
-            output = subprocess.call("echo "+data+" | " + self.keyboard_path + " /dev/hidg0 keyboard > /dev/null", timeout=0)
+            # Set timeout at 1s as it will otherwise wait for ages expecting more input
+            output = subprocess.call("echo "+data+" | " + self.keyboard_path + " /dev/hidg0 keyboard > /dev/null", timeout=1)
             # if "rror" in output:
             #     self.debug("ERROR: "+output)
             #     raise IOError("Failure to send data")
 
-        except Exception:
-            self.debug("Response time exceeded max")
+        except Exception as e:
+            self.debug("Warning: %s" % e, color=Format.color_warning)
             return False
         return True
-
 
     def __resolve_ascii(self, character):
         """
@@ -336,3 +334,6 @@ class Keyboard(FwComponentGadget):
 
             # Done in a "weird" way so that delays etc still work
         self.last_command = current_line
+
+    def __del__(self):
+        super().disable()  # Disable keyboard driver
