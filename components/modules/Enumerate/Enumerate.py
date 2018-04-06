@@ -382,7 +382,7 @@ class Enumerate:
             # Get actual results
             result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
             if result:  # If it matches the regex
-                result = [res if not None else "" for res in result.groups()]  # Need to replace None type with ""
+                result = [res for res in result.groups()]  # Need to replace None type with ""
                 self.enumerate.debug(result)
 
                 # Ignore the "Looking up status of [target]" line
