@@ -162,16 +162,17 @@ class Enumerate:
             self.enumerate.debug("Starting ARP", color=Format.color_info)
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(ip, interface=self.interface)
-            self.enumerate.debug("All arp: %s" % arp_response, color=Format.color_primary)
-
 
             if arp_response is not False:
-                current.RESPONDS_ARP = True
-                current.MAC_ADDRESS = arp_response[1]
-                current.ADAPTER_NAME = arp_response[2]
-                self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
-                self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
-                self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
+                try:
+                    current.RESPONDS_ARP = True
+                    current.MAC_ADDRESS = arp_response[0][1]
+                    current.ADAPTER_NAME = arp_response[0][2]
+                    self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
+                    self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
+                    self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
+                except Exception as Err:
+                    self.enumerate.debug("Another error for corey: %s" % Err, color=Format.color_warning)
             else:
                 self.enumerate.debug("No ARP response from %s" % ip)
 
