@@ -155,11 +155,11 @@ class Enumerate:
             current = TargetInfo()
 
             # check current IP responds to ICMP
-            current.RESPONDS_ICMP = self.check_target_is_alive(current, interface=self.interface)
+            current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
             self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
 
             # check current IP responds to ARP
-            arp_response = self.get_targets_via_arp(current, interface=self.interface)
+            arp_response = self.get_targets_via_arp(ip, interface=self.interface)
 
             # Check if arp generated valid data
             arp_response_valid = False  # Flag for valid data
@@ -172,7 +172,7 @@ class Enumerate:
             if not arp_response_valid:  # If no valid data was found
                 arp_response = False  # Set value to false
 
-            if arp_response is not None:
+            if arp_response:
                 current.RESPONDS_ARP = True
                 current.MAC_ADDRESS = arp_response[1]
                 current.ADAPTER_NAME = arp_response[2]
