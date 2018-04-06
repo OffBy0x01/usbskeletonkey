@@ -374,6 +374,8 @@ class Enumerate:
             self.enumerate.debug("get_nbt_stat Error: nmblookup failed", color=Format.color_warning)
             return False
 
+        self.enumerate.debug("Raw nbt: %s" % raw_nbt, color=Format.color_info)
+
         # Fixing that output
         output = []
         for line in raw_nbt:
