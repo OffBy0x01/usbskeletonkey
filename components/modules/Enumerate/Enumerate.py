@@ -1,12 +1,12 @@
+# This is why modules should share their package name.
 import importlib
-
 try:
-    import nmap
+    importlib.import_module("nmap")
 except ImportError:
     import pip
-
-    pip.main(['install', 'python-nmap'])
-    importlib.import_module("python-nmap")
+    pip.main(['install', "python-nmap"])
+finally:
+    globals()["nmap"] = importlib.import_module("nmap")
 
 import random
 import struct
