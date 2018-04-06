@@ -154,10 +154,12 @@ class Enumerate:
 
             current = TargetInfo()
 
+            self.enumerate.debug("Starting ICMP", color=Format.color_info)
             # check current IP responds to ICMP
             current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
             self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
 
+            self.enumerate.debug("Starting ARP", color=Format.color_info)
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(ip, interface=self.interface)
 
@@ -171,13 +173,14 @@ class Enumerate:
             else:
                 self.enumerate.debug("No ARP response from %s" % ip)
 
-
+            self.enumerate.debug("Starting Route", color=Format.color_info)
             # check route to this target
             if self.interface != "usb0":
                 current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
                 self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
 
             # NBT STAT
+            self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
             current.NBT_STAT = self.get_nbt_stat(ip)
             self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
 
