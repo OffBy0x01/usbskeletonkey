@@ -387,8 +387,6 @@ class Enumerate:
                     for nbt_line in self.nbt_info:
                         service, hex_code, group, descriptor = nbt_line
                         # if we need to check service or not (this is empty for some fields)
-                        print("line: ", line)
-                        print("nbt_line: ", nbt_line)
                         if service:
                             if service == result[0] and hex_code == result[1] and bool(group) == bool(result[2]):
                                 self.enumerate.debug("service line: %s/%s " % (line, descriptor))
