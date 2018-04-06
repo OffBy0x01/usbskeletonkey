@@ -733,7 +733,7 @@ class Enumerate:
 
 
         """
-        command = ["sudo", "arp-scan", "-v", "-I", interface, "-r", "3"]
+        command = ["arp-scan", "-v", "-I", interface, "-r", "3"]
 
         if randomise_targets:
             command += ['-R']
