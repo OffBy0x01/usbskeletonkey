@@ -385,16 +385,15 @@ class Enumerate:
                 result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
                 if result:  # If it matches the regex
                     result = [res if res is not None else "" for res in result.groups()]  # Need to replace None type with ""
-                    self.enumerate.debug("Result is: %s" % result)
-                    self.enumerate.debug("Result type is %s" % result.__class__)
 
                     # Ignore the "Looking up status of [target]" line
                     if "up status of" in line:
                         continue
 
                     # No results found for target
-                    elif target in line:
-                        break
+                    if "No reply from" in line:
+                        return False
+
                     for nbt_line in self.nbt_info:
                         service, hex_code, group, descriptor = nbt_line
                         # if we need to check service or not (this is empty for some fields)
