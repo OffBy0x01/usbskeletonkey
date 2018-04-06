@@ -143,12 +143,14 @@ class Enumerate:
         # ---------------------
         target_ips = defaultdict()  # Init of dictionary
 
+        # Led reqs
         blinkt = Blinkt(255, 0, 0)
-
         current_ip_in_list = 0
+        ips_in_list = len(self.ip_list_shuffled)
+
         for ip in self.ip_list_shuffled:  # Make it less obvious
 
-            blinkt.progressive_pixels(current_ip_in_list, len(self.ip_list_shuffled))
+            blinkt.progressive_pixels(current_ip_in_list, ips_in_list)
 
             current = TargetInfo()
 
