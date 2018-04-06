@@ -374,7 +374,7 @@ class Enumerate:
             self.enumerate.debug("get_nbt_stat Error: nmblookup failed", color=Format.color_warning)
             return False
 
-        self.enumerate.debug("Raw nbt: %s" % raw_nbt, color=Format.color_info)
+        self.enumerate.debug(raw_nbt, color=Format.color_info)
 
         # Fixing that output
         output = []
@@ -382,7 +382,7 @@ class Enumerate:
             # Get actual results
             result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
             if result:  # If it matches the regex
-                result = [res for res in result]  # Need to replace None type with ""
+                result = [res if not None else "" for res in result.groups()]  # Need to replace None type with ""
                 self.enumerate.debug(result)
 
                 # Ignore the "Looking up status of [target]" line
