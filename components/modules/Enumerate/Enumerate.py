@@ -163,10 +163,10 @@ class Enumerate:
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(ip, interface=self.interface)
 
-            if arp_response is not None:
+            if arp_response is not False:
                 current.RESPONDS_ARP = True
-                current.MAC_ADDRESS = arp_response[1]
-                current.ADAPTER_NAME = arp_response[2]
+                current.MAC_ADDRESS = arp_response[1] if arp_response[1] else "None"
+                current.ADAPTER_NAME = arp_response[2] if arp_response[2] else "None"
                 self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
                 self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
                 self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
