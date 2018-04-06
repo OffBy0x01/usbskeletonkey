@@ -733,7 +733,7 @@ class Enumerate:
 
 
         """
-        command = ["arp-scan", "-v", "-I", interface, "-r", "3"]
+        command = ["sudo", "arp-scan", "-v", "-I", interface, "-r", "3"]
 
         if randomise_targets:
             command += ['-R']
@@ -766,7 +766,7 @@ class Enumerate:
 
         self.enumerate.debug("get_targets_via_arp command is: %s" % command)
 
-        output = subprocess.run(command, stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
+        output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
         self.enumerate.debug("get_targets_via_arp raw output is: %s" % output)
 
