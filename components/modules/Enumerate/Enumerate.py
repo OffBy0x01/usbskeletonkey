@@ -392,6 +392,8 @@ class Enumerate:
                     if "No reply from" in line:
                         return False
 
+                    self.enumerate.debug("current line: %s" % result)
+
                     for nbt_line in self.nbt_info:
                         service, hex_code, group, descriptor = nbt_line
                         # if we need to check service or not (this is empty for some fields)
@@ -404,8 +406,8 @@ class Enumerate:
                                 output.append("%s %s" % (line, descriptor))
                                 break
                 else:  # If it didn't match the regex
-                    self.enumerate.debug("get_nbt_stat: No match found", color=Format.color_info)
                     if "".join(line.split()) != "":
+                        self.enumerate.debug("get_nbt_stat: No match found for %s" % line, color=Format.color_info)
                         output.append("%s" % line)
             except Exception as what_went_wrong:
                 self.enumerate.debug("Something went wrong %s" % what_went_wrong, color=Format.color_warning)
