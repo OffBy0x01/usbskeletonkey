@@ -596,9 +596,9 @@ class Enumerate:
         self.enumerate.debug("Command is: %s" % command)
 
         if ping_count > 0:
-            output = subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
+            output = subprocess.run(" ".join(command), stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
         else:
-            output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
+            output = subprocess.run(" ".join(command), stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
 
         self.enumerate.debug("Output is: %s" % output)
 
