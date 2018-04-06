@@ -1,10 +1,12 @@
+import importlib
+
 try:
     import nmap
 except ImportError:
     import pip
 
-    pip.main(['install', '--user', 'nmap'])
-    from nmap import nmap
+    pip.main(['install', 'python-nmap'])
+    importlib.import_module("python-nmap")
 
 import random
 import struct
