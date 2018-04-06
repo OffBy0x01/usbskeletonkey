@@ -389,18 +389,18 @@ class Enumerate:
                         # if we need to check service or not (this is empty for some fields)
                         if service:
                             if service == result[0] and hex_code == result[1] and bool(group) == bool(result[2]):
-                                self.enumerate.debug("service line: %s/%s " % (line, descriptor))
+                                self.enumerate.debug("service match: %s/%s " % (line, descriptor))
                                 output.append("%s %s" % (line, descriptor))
                                 break
                         else:
                             if hex_code == result[1] and bool(group) == bool(result[2]):
-                                self.enumerate.debug("hex_code line: %s/%s " % (line, descriptor))
+                                self.enumerate.debug("hex_code match: %s/%s " % (line, descriptor))
                                 output.append("%s %s" % (line, descriptor))
                                 break
 
                 else:  # If it didn't match the regex
                     # Ignore the "Looking up status of [target]" line
-                    if "up status of" in line:
+                    if "up status of" in line or "MAC Address" in line:
                         continue
 
                     # No results found for target
@@ -415,7 +415,7 @@ class Enumerate:
             except Exception as what_went_wrong:
                 self.enumerate.debug("Something went wrong %s" % what_went_wrong, color=Format.color_warning)
 
-        self.enumerate.debug("get_nbt_stat: Output generated: %s" % output, color=Format.color_info)
+        self.enumerate.debug("get_nbt_stat: Output generated successfully", color=Format.color_success)
         return output[2:]
 
     def get_rpcclient(self, user_list, password_list, target, ip):
