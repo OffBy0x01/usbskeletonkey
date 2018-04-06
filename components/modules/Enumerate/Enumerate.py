@@ -402,8 +402,10 @@ class Enumerate:
                             output.append("%s %s" % (line, descriptor))
                             break
             else:  # If it didn't match the regex
+                self.enumerate.debug("get_nbt_stat: No match found", color=Format.color_info)
                 output.append("%s" % line)
 
+        self.enumerate.debug("get_nbt_stat: Output generated: %s" % output, color=Format.color_info)
         return output
 
     def get_rpcclient(self, user_list, password_list, target, ip):
