@@ -381,11 +381,11 @@ class Enumerate:
             result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
             if result:  # If it matches the regex
                 result = [res if not None else "" for res in result.groups()]  # Need to replace None type with ""
-                print(result)
+                self.enumerate.debug(result)
 
                 # Ignore the "Looking up status of [target]" line
                 if "up status of" in line:
-                    print("nbtstat for ", target, ":", sep="")
+                    self.enumerate.debug("nbtstat for %s: " % target)
                     continue
                 # No results found for target
                 elif target in line:
