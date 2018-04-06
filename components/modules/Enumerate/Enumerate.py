@@ -143,15 +143,18 @@ class Enumerate:
         # ---------------------
         target_ips = defaultdict()  # Init of dictionary
 
+        # Led reqs
         if self.current_config.options['use_blinkt'].lower() == 'true':
             blinkt = Blinkt(int(self.current_config.options['rcolor']),
                             int(self.current_config.options['gcolor']),
                             int(self.current_config.options['bcolor']))
 
         current_ip_in_list = 0
+        ips_in_list = len(self.ip_list_shuffled)
 
         for ip in self.ip_list_shuffled:  # Make it less obvious
 
+            blinkt.progressive_pixels(current_ip_in_list, ips_in_list)
             try:
                 blinkt.progressive_pixels(current_ip_in_list, len(self.ip_list_shuffled))
             finally:
