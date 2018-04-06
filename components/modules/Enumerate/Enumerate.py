@@ -746,7 +746,8 @@ class Enumerate:
 
         if target_is_file is True:
             if target is list:
-                return "Error: A list of files cannot be scanned"
+                self.enumerate.debug("Error: A list of files cannot be scanned", color=Format.color_warning)
+                return False
 
             command += ["-f", target]  # The target in this case should be the path to a target list file
 
@@ -754,14 +755,14 @@ class Enumerate:
             if type(target) is list:
                 for current in target:
                     if not IpValidator.is_valid_ipv4_address(current, iprange=True):
-                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target)
+                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target, color=Format.color_warning)
                         return False
 
                 command += target
 
             elif type(target) is str:  # if target is just an IP
                 if not IpValidator.is_valid_ipv4_address(target, iprange=True):
-                    self.enumerate.debug("Error: Target is not a valid IP or Range")
+                    self.enumerate.debug("Error: Target is not a valid IP or Range", color=Format.color_warning)
                     return False
 
                 command += [target]
@@ -783,17 +784,18 @@ class Enumerate:
 
         self.enumerate.debug("get_targets_via_arp generating results...")
         # Removing generalised information out
-        del output[0:2]
-        del output[-3:]
-
         try:
+            del output[0:2]
+            del output[-3:]
+
+
             outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
             for line in output:
                 # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
                 outlist += [line.split("\t")]
         except Exception as Err:
-            self.enumerate.debug("get_targets_via_arp Error: %s" % Err)
+            self.enumerate.debug("get_targets_via_arp Error: %s" % Err, color=Format.color_warning)
             return False
         return outlist  # Sorting via IP would be nice
 
