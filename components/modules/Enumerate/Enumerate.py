@@ -545,7 +545,7 @@ class Enumerate:
         :return: list of IP's that were seen to be alive
         """
 
-        command = ["fping", "-a", "--iface=" + interface]
+        command = ["fping", "-a", "-I " + interface]
 
         # Adding Flags
         if ping_count > 0:
@@ -596,9 +596,9 @@ class Enumerate:
         self.enumerate.debug("Command is: %s" % command)
 
         if ping_count > 0:
-            output = subprocess.run(command, stderr=subprocess.PIPE, shell=True).stderr.decode("utf-8").strip().split("\n")
+            output = subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
         else:
-            output = subprocess.run(command, stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8").strip().split("\n")
+            output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
 
         self.enumerate.debug("check_target_is_alive command output is: %s" % output)
 
