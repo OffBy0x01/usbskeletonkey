@@ -390,8 +390,8 @@ class Enumerate:
 
                     # Ignore the "Looking up status of [target]" line
                     if "up status of" in line:
-                        self.enumerate.debug("nbtstat for %s: " % target)
                         continue
+
                     # No results found for target
                     elif target in line:
                         break
@@ -403,7 +403,7 @@ class Enumerate:
                                 output.append("%s %s" % (line, descriptor))
                                 break
                         else:
-                            if hex_code in result[1] and group in result[2]:
+                            if hex_code in result[1] and group == bool(result[2]):
                                 output.append("%s %s" % (line, descriptor))
                                 break
                 else:  # If it didn't match the regex
