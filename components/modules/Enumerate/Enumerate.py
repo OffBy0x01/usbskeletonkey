@@ -378,7 +378,6 @@ class Enumerate:
         output = []
         for line in raw_nbt:
             # Get actual results
-            self.enumerate.debug("Current line: %s" % line)
             try:
                 result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
                 if result:  # If any matches the regex
