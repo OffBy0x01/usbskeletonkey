@@ -374,8 +374,6 @@ class Enumerate:
             self.enumerate.debug("get_nbt_stat Error: nmblookup failed", color=Format.color_warning)
             return False
 
-        self.enumerate.debug("raw_nbt is a %s" % raw_nbt.__class__, color=Format.color_info)
-
         # Fixing that output
         output = []
         for line in raw_nbt:
@@ -383,8 +381,8 @@ class Enumerate:
 
             try:
                 result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
-                if result:  # If it matches the regex
-                    result = [res if res is not None else "" for res in result.groups()]  # Need to replace None type with ""
+                result = [res if res is not None else "" for res in result.groups()]  # Need to replace None type with ""
+                if result:  # If any matches the regex
 
                     # Ignore the "Looking up status of [target]" line
                     if "up status of" in line:
@@ -412,7 +410,7 @@ class Enumerate:
                 self.enumerate.debug("Something went wrong %s" % what_went_wrong, color=Format.color_warning)
 
         self.enumerate.debug("get_nbt_stat: Output generated: %s" % output, color=Format.color_info)
-        return output
+        return output[2:]
 
     def get_rpcclient(self, user_list, password_list, target, ip):
         """
