@@ -545,7 +545,7 @@ class Enumerate:
         :return: list of IP's that were seen to be alive
         """
 
-        command = ["fping", "-a", "-I " + interface]
+        command = ["fping", "-a", "-I ", interface]
 
         # Adding Flags
         if ping_count > 0:
@@ -593,7 +593,7 @@ class Enumerate:
         else:
             return "Error: Target is not a valid IP, Range or list"
 
-        self.enumerate.debug("Command is: %s" % command)
+        self.enumerate.debug("check_target_is_alive command is: %s" % command)
 
         if ping_count > 0:
             output = subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
@@ -708,8 +708,7 @@ class Enumerate:
 
         return route_out, route_back
 
-    @staticmethod
-    def get_targets_via_arp(target, interface="usb0", source_ip="self", target_is_file=False,
+    def get_targets_via_arp(self, target, interface="usb0", source_ip="self", target_is_file=False,
                             original_out=False, randomise_targets=False):
         """
         Makes use of the arp-scan command.
@@ -765,7 +764,11 @@ class Enumerate:
             else:
                 return "Error: Target is not a string or list"
 
+        self.enumerate.debug("get_targets_via_arp command is: %s" % command)
+
         output = subprocess.run(command, stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
+
+        self.enumerate.debug("get_targets_via_arp raw output is: %s" % command)
 
         if original_out is True:
             return output
