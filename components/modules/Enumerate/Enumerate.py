@@ -374,39 +374,43 @@ class Enumerate:
             self.enumerate.debug("get_nbt_stat Error: nmblookup failed", color=Format.color_warning)
             return False
 
-
         self.enumerate.debug("raw_nbt is a %s" % raw_nbt.__class__, color=Format.color_info)
 
         # Fixing that output
         output = []
         for line in raw_nbt:
             # Get actual results
-            result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
-            if result:  # If it matches the regex
-                result = [res if not None else "" for res in result.groups()]  # Need to replace None type with ""
-                self.enumerate.debug(result)
 
-                # Ignore the "Looking up status of [target]" line
-                if "up status of" in line:
-                    self.enumerate.debug("nbtstat for %s: " % target)
-                    continue
-                # No results found for target
-                elif target in line:
-                    break
-                for nbt_line in self.nbt_info:
-                    service, hex_code, group, descriptor = nbt_line
-                    # if we need to check service or not (this is empty for some fields)
-                    if service:
-                        if service in result[0] and hex_code in result[1] and group in result[2]:
-                            output.append("%s %s" % (line, descriptor))
-                            break
-                    else:
-                        if hex_code in result[1] and group in result[2]:
-                            output.append("%s %s" % (line, descriptor))
-                            break
-            else:  # If it didn't match the regex
-                self.enumerate.debug("get_nbt_stat: No match found", color=Format.color_info)
-                output.append("%s" % line)
+            try:
+                result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
+                if result.groups():  # If it matches the regex
+                    result = [res if not None else "" for res in result.groups()]  # Need to replace None type with ""
+                    self.enumerate.debug("Result is: %s" % result)
+                    self.enumerate.debug("Result type is %s" % result.__class__)
+
+                    # Ignore the "Looking up status of [target]" line
+                    if "up status of" in line:
+                        self.enumerate.debug("nbtstat for %s: " % target)
+                        continue
+                    # No results found for target
+                    elif target in line:
+                        break
+                    for nbt_line in self.nbt_info:
+                        service, hex_code, group, descriptor = nbt_line
+                        # if we need to check service or not (this is empty for some fields)
+                        if service:
+                            if service in result[0] and hex_code in result[1] and group in result[2]:
+                                output.append("%s %s" % (line, descriptor))
+                                break
+                        else:
+                            if hex_code in result[1] and group in result[2]:
+                                output.append("%s %s" % (line, descriptor))
+                                break
+                else:  # If it didn't match the regex
+                    self.enumerate.debug("get_nbt_stat: No match found", color=Format.color_info)
+                    output.append("%s" % line)
+            except Exception as what_went_wrong:
+                self.enumerate.debug("Something went wrong %s" % what_went_wrong, color=Format.color_warning)
 
         self.enumerate.debug("get_nbt_stat: Output generated: %s" % output, color=Format.color_info)
         return output
