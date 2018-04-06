@@ -364,13 +364,15 @@ class Enumerate:
         # Also part of net
         return
 
-    def get_nbt_stat(self, target="127.0.0.1"):
+    def get_nbt_stat(self, target):
         """
         :return list string:
         """
-        raw_nbt = subprocess.run("nmblookup -A " + target, shell=True, stdout=subprocess.PIPE).stdout.decode(
-            'utf-8').split('\n')
+        raw_nbt = subprocess.run(["sudo", "nmblookup", "-A", target], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
+        if not raw_nbt:
+            self.enumerate.debug("get_nbt_stat Error: nmblookup failed", color=Format.color_warning)
+            return False
 
         # Fixing that output
         output = []
