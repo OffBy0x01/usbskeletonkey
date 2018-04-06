@@ -1,9 +1,11 @@
+import importlib
 try:
-    import yattag
+    importlib.import_module("yattag")
 except ImportError:
     import pip
-    pip.main(['install', '--user', 'yattag'])
-    from yattag import indent, Doc
+    pip.main(['install', "yattag"])
+finally:
+    globals()["yattag"] = importlib.import_module("yattag")
 
 
 from components.modules.Enumerate.TargetInfo import TargetInfo
@@ -35,10 +37,11 @@ def result2html(targets):
     print(info.PRINTER_INFO)
     print(info.PORTS)
 
+
+    doc, tag, text = yattag.Doc().tagtext()
+    doc.asis('<!DOCTYPE html>')
     return False
 
-    doc, tag, text = Doc().tagtext()
-    doc.asis('<!DOCTYPE html>')
     with tag('html', lang="en"):
         with tag('head'):
             doc.asis('<meta charset="utf-8">')
@@ -290,4 +293,4 @@ def result2html(targets):
                                             with tag('td'):
                                                 text(state)
 
-    return indent(doc.getvalue())
+    return yattag.indent(doc.getvalue())
