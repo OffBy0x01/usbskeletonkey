@@ -751,40 +751,47 @@ class Enumerate:
             if type(target) is list:
                 for current in target:
                     if not IpValidator.is_valid_ipv4_address(current, iprange=True):
-                        return "Error: Target " + str(current) + " in list is not a valid IP"
+                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target)
+                        return False
 
                 command += target
 
             elif type(target) is str:  # if target is just an IP
                 if not IpValidator.is_valid_ipv4_address(target, iprange=True):
-                    return "Error: Target is not a valid IP or Range"
+                    self.enumerate.debug("Error: Target is not a valid IP or Range")
+                    return False
 
                 command += [target]
 
             else:
-                return "Error: Target is not a string or list"
+                self.enumerate.debug("Error: Target is not a string or list")
+                return False
 
         self.enumerate.debug("get_targets_via_arp command is: %s" % command)
 
         output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
-        self.enumerate.debug("get_targets_via_arp raw output is: %s" % output)
+        self.enumerate.debug("get_targets_via_arp output captured: %s" % True if output else False)
 
         if original_out is True:
             return output
 
         output = output.splitlines()
 
+        self.enumerate.debug("get_targets_via_arp generating results...")
         # Removing generalised information out
         del output[0:2]
         del output[-3:]
 
-        outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
+        try:
+            outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
 
-        for line in output:
-            # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
-            outlist += [line.split("\t")]
-
+            for line in output:
+                # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
+                outlist += [line.split("\t")]
+        except Exception as Err:
+            self.enumerate.debug("get_targets_via_arp Error: %s" % Err)
+            return False
         return outlist  # Sorting via IP would be nice
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
