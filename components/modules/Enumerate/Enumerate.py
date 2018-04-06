@@ -525,8 +525,8 @@ class Enumerate:
         # current.DOMAIN.append(rids)
         return users, rids
 
-    @staticmethod
-    def check_target_is_alive(target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
+
+    def check_target_is_alive(self, target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
                               contain_random_data=True, randomise_targets=False, source_address="self", verbose=False):
         """
         Uses ICMP pings to check that hosts are online/responsive. This makes use of the FPing command line tool so is
@@ -593,10 +593,14 @@ class Enumerate:
         else:
             return "Error: Target is not a valid IP, Range or list"
 
+        self.enumerate.debug("Command is: %s" % command)
+
         if ping_count > 0:
             output = subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
         else:
             output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
+
+        self.enumerate.debug("Output is: %s" % output)
 
         if not output:
             return None
