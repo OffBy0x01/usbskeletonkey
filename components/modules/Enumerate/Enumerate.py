@@ -405,7 +405,8 @@ class Enumerate:
                                 break
                 else:  # If it didn't match the regex
                     self.enumerate.debug("get_nbt_stat: No match found", color=Format.color_info)
-                    output.append("%s" % line)
+                    if "".join(line.split()) != "":
+                        output.append("%s" % line)
             except Exception as what_went_wrong:
                 self.enumerate.debug("Something went wrong %s" % what_went_wrong, color=Format.color_warning)
 
