@@ -584,7 +584,7 @@ class Enumerate:
 
         output = [length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_anon_change, pw_no_change]
         self.enumerate.debug("get_password_policy: Output generated successfully", color=Format.color_success)
-
+        self.enumerate.debug(type(output).__str__(), color=Format.color_info)
         return output
 
     def extract_info_rpc(self, raw_command):
