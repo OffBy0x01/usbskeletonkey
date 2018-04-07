@@ -434,6 +434,9 @@ class Enumerate:
 
     def rpc_request(self, user, password, target):
         if self.rpc_timeout < self.rpc_max_timeout:
+            if self.rpc_timeout > 0:
+                sleep(self.rpc_timeout)
+
             try:
                 command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
                 self.enumerate.debug("Running command - " + command.__str__(), Format.color_info)
@@ -442,15 +445,14 @@ class Enumerate:
                 lsa_test_query = subprocess.run(command,
                                                 input=password + "\n",
                                                 encoding="ascii",
-                                                stdout=subprocess.PIPE).stdout
+                                                stdout=subprocess.PIPE)
 
-                self.enumerate.debug("lsaquery out\n" + lsa_test_query.__str__(), Format.color_info)
+                self.enumerate.debug("lsaquery out\n" + lsa_test_query.stdout, Format.color_info)
 
                 if lsa_test_query.check_returncode() != 0:
-                    if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query:
+                    if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query.stdout:
                         # Unable to connect
                         self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user)
-                        sleep(self.rpc_timeout)
 
                         self.rpc_timeout += self.rpc_timeout_increment
 
