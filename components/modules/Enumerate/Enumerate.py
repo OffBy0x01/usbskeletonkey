@@ -48,18 +48,18 @@ class Enumerate:
         self.enumerate.debug("Using interface: " + self.interface)
 
         # ~Produce list of usable ip addresses~
-        ip_targets = self.current_config.options["ip_targets"]
-        ip_exclusions = self.current_config.options["ip_exclusions"]
-        self.ip_list = [ip for ip in self.get_ip_list(ip_targets) if ip not in self.get_ip_list(ip_exclusions)]
+        self.raw_ip_targets = self.current_config.options["ip_targets"]
+        self.raw_ip_exclusions = self.current_config.options["ip_exclusions"]
+        self.ip_list = [ip for ip in self.get_ip_list(self.raw_ip_targets) if ip not in self.get_ip_list(self.raw_ip_exclusions)]
 
         # have to do it this way to avoid actions happening to both lists
         self.ip_list_shuffled = [ip for ip in self.ip_list]
         random.shuffle(self.ip_list_shuffled)
 
         # ~Produce list of usable ports~
-        ports = self.current_config.options["port_targets"]
-        port_exclusions = self.current_config.options["port_exclusions"]
-        self.port_list = [port for port in self.get_port_list(ports) if port not in self.get_port_list(port_exclusions)]
+        self.raw_ports = self.current_config.options["port_targets"]
+        self.raw_port_exclusions = self.current_config.options["port_exclusions"]
+        self.port_list = [port for port in self.get_port_list(self.raw_ports) if port not in self.get_port_list(self.raw_port_exclusions)]
 
         # ~Produce list of usable users.txt~
         self.user_list = []
@@ -320,9 +320,9 @@ class Enumerate:
             command = "-sV --version-light"
 
             if self.use_port_range == "true":  # If a port range has been specified use
-                nm.scan(host=target_ip, ports=", ".join(self.port_list), arguments=command)
+                nm.scan(hosts=target_ip, ports=self.raw_ports, arguments=command)
             else:
-                nm.scan(host=target_ip, arguments=command)
+                nm.scan(hosts=target_ip, arguments=command)
 
                 self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")  # debug for printing the command
 
@@ -335,9 +335,9 @@ class Enumerate:
             command = "-sV --version-all -T4"
 
             if self.use_port_range == "true":
-                nm.scan(host=target_ip, ports=", ".join(self.port_list), arguments=command)
+                nm.scan(hosts=target_ip, ports=self.raw_ports, arguments=command)
             else:
-                nm.scan(host=target_ip, arguments=command)
+                nm.scan(hosts=target_ip, arguments=command)
 
                 self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
