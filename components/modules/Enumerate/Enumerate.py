@@ -471,9 +471,11 @@ class Enumerate:
                         subprocess.run(command + ["getdompwinfo"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
+                    # rpcclient -U test 192.168.1.235 -c enumdomusers
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"], input=password + "\n",
-                                       encoding="ascii", stdout=subprocess.PIPE).stdout)
+                                       encoding="ascii", stdout=subprocess.PIPE).stdout,
+                        startrows=0, initchars=6)
 
                     self.enumerate.debug("First few characters of users - " + curr_user_info[0:20], Format.color_info)
 
@@ -491,6 +493,7 @@ class Enumerate:
         :param password_list:
         :param target:
         :param ip:
+
         :return none:
         """
 
@@ -585,46 +588,28 @@ class Enumerate:
 
         return output
 
-    def extract_info_rpc(self, raw_command):
-        """
-        :param raw_command:
-
-        :return list, list:
+    def extract_info_rpc(self, output, startrows=1, initchars=7):
         """
 
-        self.enumerate.debug(type(raw_command))
-        self.enumerate.debug(raw_command.__str__())
+        :param output:
+        :param startrows:
+        :param initchars:
 
-        index = 0
-        start = 0
-        counter = 0
-        users = []
-        rids = []
+        :return:
+        """
 
-        for char in raw_command:
-            if char == "\n":
-                counter += 1
+        output = output.split()
 
-        for times in range(0, counter + 1):
-            start = index
-            start = raw_command.find('[', index)
-            start += 1
-            end = raw_command.find(']', start)
-            users.append(raw_command[start:end])
-            index = end
-
-            start = raw_command.find('[', index)
-            start += 1
-            end = raw_command.find(']', start)
-            rids.append(raw_command[start:end])
-            index = end
-            times += 1
-
-        if users or rids:
-            self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
-            return users, rids
+        if startrows > 0:
+            del output[0:startrows]
         else:
-            return False
+            del output[0]
+
+        for line in output:
+            line[initchars:-1].split('] rid:[')
+
+        self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
+        return output
 
     def check_target_is_alive(self, target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
                               contain_random_data=True, randomise_targets=False, source_address="self", verbose=False):
