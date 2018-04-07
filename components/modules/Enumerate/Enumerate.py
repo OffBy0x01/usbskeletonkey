@@ -441,7 +441,7 @@ class Enumerate:
         # timeout = self.current_config.options['rpc_timeout_default']
         timeout = 0.2
 
-        for user in user_list.keys():
+        for user in user_list:
             for password in password_list:
                 while timeout < 2.4:
                     try:
@@ -462,7 +462,6 @@ class Enumerate:
                             del raw_rpc  # Unless lsaquery out is needed? IDK
                             command.pop()
 
-                            # true = users.txt / false = groups
                             curr_domain_info = self.extract_info_rpc(
                                 subprocess.run(command + ["enumdomgroups"],
                                                input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
@@ -479,7 +478,6 @@ class Enumerate:
                                 passwd_info += [curr_passwd_info]
                                 self.enumerate.debug("get_rpcclient: New password info added", color=Format.color_success)
 
-                            # true = users.txt / false = groups
                             curr_user_info = self.extract_info_rpc(
                                 subprocess.run(command + ["enumdomusers"],
                                                input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
@@ -487,8 +485,6 @@ class Enumerate:
                             if curr_user_info not in user_info:
                                 curr_user_info += [curr_user_info]
                                 self.enumerate.debug("get_rpcclient: New user info added", color=Format.color_success)
-
-                            # then run get_smbclient
 
                     except IOError as e:
                         self.enumerate.debug("Error: get_rpcclient: %s" % e)
