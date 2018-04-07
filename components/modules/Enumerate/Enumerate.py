@@ -442,7 +442,7 @@ class Enumerate:
                 lsa_test_query = subprocess.run(command,
                                                 input=password + "\n",
                                                 encoding="ascii",
-                                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                                stdout=subprocess.PIPE).stdout
 
                 if lsa_test_query.check_returncode() != 0:
                     if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query:
