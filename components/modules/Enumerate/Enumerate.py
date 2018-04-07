@@ -444,6 +444,8 @@ class Enumerate:
                                                 encoding="ascii",
                                                 stdout=subprocess.PIPE).stdout
 
+                self.enumerate.debug("lsaquery out\n" + lsa_test_query.__str__(), Format.color_info)
+
                 if lsa_test_query.check_returncode() != 0:
                     if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query:
                         # Unable to connect
@@ -462,6 +464,8 @@ class Enumerate:
                         subprocess.run(command + ["enumdomgroups"],
                                        input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
 
+                    self.enumerate.debug("First few characters of groups - " + curr_domain_info[0:20], Format.color_info)
+
                     curr_password_info = self.get_password_policy(
                         subprocess.run(command + ["getdompwinfo"],
                                        input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
@@ -469,6 +473,8 @@ class Enumerate:
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"],
                                        input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+
+                    self.enumerate.debug("First few characters of users - " + curr_user_info[0:20], Format.color_info)
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
@@ -552,21 +558,29 @@ class Enumerate:
             for s in raw_command.split():
                 if s.isdigit():
                     length = s
+                    self.enumerate.debug("Min Password Length: " + s, Format.color_info)
+
         if "DOMAIN_PASSWORD_STORE_CLEARTEXT" in raw_command:
             clear_text_pw = True
+            self.enumerate.debug("Password Store Cleartext Flag", Format.color_info)
         if "DOMAIN_REFUSE_PASSWORD_CHANGE" in raw_command:
             refuse_pw_change = True
+            self.enumerate.debug("Refuse Password Change Flag", Format.color_info)
         if "DOMAIN_PASSWORD_LOCKOUT_ADMINS" in raw_command:
             lockout_admins = True
+            self.enumerate.debug("Password Lockout Admins Flag", Format.color_info)
         if "DOMAIN_PASSWORD_COMPLEX" in raw_command:
             complex_pw = True
+            self.enumerate.debug("Password Complex Flag", Format.color_info)
         if "DOMAIN_PASSWORD_NO_ANON_CHANGE" in raw_command:
             pw_no_anon_change = True
+            self.enumerate.debug("Password No Anon Change Flag", Format.color_info)
         if "DOMAIN_PASSWORD_NO_CLEAR_CHANGE" in raw_command:
             pw_no_change = True
+            self.enumerate.debug("Password No Clear Change Flag", Format.color_info)
 
         self.enumerate.debug("get_password_policy: Output generated successfully", color=Format.color_success)
-        return length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change
+        return [length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change]
 
     def extract_info_rpc(self, raw_command):
         """
