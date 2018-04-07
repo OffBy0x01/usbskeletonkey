@@ -271,6 +271,7 @@ class Enumerate:
 
     # NMAP scans for service and operating system detection
     def nmap(self, target_ip):
+
         """
         :return list of list of list of strings:
         :return none:
@@ -283,10 +284,10 @@ class Enumerate:
 
             parsed_output = []
 
-            for protocol in nm[self.ip_list].all_protocols():
+            for protocol in nm[target_ip].all_protocols():
 
-                for port in nm[self.ip_list][protocol]:
-                    nmap_results = nm[self.ip_list][protocol][port]
+                for port in nm[target_ip][protocol]:
+                    nmap_results = nm[target_ip][protocol][port]
                     parsed_output.append(
                         [str(port), nmap_results['product'], nmap_results['version'], nmap_results['state']])
 
@@ -314,41 +315,45 @@ class Enumerate:
             output_list.append(parsed_output)
 
             return
+        try:
+            if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
+                self.enumerate.debug("NMAP: quiet mode", color=Format.color_secondary)
+                command = "-sV --version-light"
 
-        if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
-            self.enumerate.debug("NMAP: quiet mode", color=Format.color_secondary)
-            command = "-sV --version-light"
+                if self.use_port_range == "true":  # If a port range has been specified use
+                    nm.scan(hosts=target_ip, ports=self.raw_ports, arguments=command)
+                else:
+                    nm.scan(hosts=target_ip, arguments=command)
 
-            if self.use_port_range == "true":  # If a port range has been specified use
-                nm.scan(hosts=target_ip, ports=self.raw_ports, arguments=command)
-            else:
-                nm.scan(hosts=target_ip, arguments=command)
+                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")  # debug for printing the command
 
-                self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")  # debug for printing the command
+                # Run "quiet" nmap OS scan and save output to a variable for parsing
+                os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
+                                           stdout=subprocess.PIPE).stdout.decode('utf-8')
 
-            # Run "quiet" nmap OS scan and save output to a variable for parsing
-            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
-                                       stdout=subprocess.PIPE).stdout.decode('utf-8')
+            else:  # Use "loud" scan pre-sets
+                self.enumerate.debug("NMAP: loud mode", color=Format.color_secondary)
+                command = "-sV --version-all -T4"
 
-        else:  # Use "loud" scan pre-sets
-            self.enumerate.debug("NMAP: loud mode", color=Format.color_secondary)
-            command = "-sV --version-all -T4"
+                if self.use_port_range == "true":
+                    nm.scan(hosts=target_ip, ports=self.raw_ports, arguments=command)
+                else:
+                    nm.scan(hosts=target_ip, arguments=command)
 
-            if self.use_port_range == "true":
-                nm.scan(hosts=target_ip, ports=self.raw_ports, arguments=command)
-            else:
-                nm.scan(hosts=target_ip, arguments=command)
+                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
-                self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
+                # Run "loud" nmap OS scan and save output to a variable for parsing
+                os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
+                                           stdout=subprocess.PIPE).stdout.decode('utf-8')
 
-            # Run "loud" nmap OS scan and save output to a variable for parsing
-            os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
-                                       stdout=subprocess.PIPE).stdout.decode('utf-8')
+            self.enumerate.debug("NMAP: OS parsing", color=Format.color_info)
+            os_parsing(os_output)  # Call local function for nmap OS parsing
+            self.enumerate.debug("NMAP: Service parsing", color=Format.color_info)
+            service_parsing()  # Call local function for nmap service/port parsing
+        except Exception as another_nmap_error:
+            self.enumerate.debug("NMAP Error: %s" % another_nmap_error, color=Format.color_warning)
+            return False
 
-        self.enumerate.debug("NMAP: OS parsing", color=Format.color_info)
-        os_parsing(os_output)  # Call local function for nmap OS parsing
-        self.enumerate.debug("NMAP: Service parsing", color=Format.color_info)
-        service_parsing()  # Call local function for nmap service/port parsing
         self.enumerate.debug("NMAP: Output generated successfully", color=Format.color_success)
         return output_list  # return the output of scans in the form of a list
 
