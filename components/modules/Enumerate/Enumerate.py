@@ -591,6 +591,10 @@ class Enumerate:
 
         :return list, list:
         """
+
+        self.enumerate.debug(type(raw_command))
+        self.enumerate.debug(raw_command.__str__())
+
         index = 0
         start = 0
         counter = 0
@@ -616,11 +620,6 @@ class Enumerate:
             index = end
             times += 1
 
-        # current = TargetInfo
-        # users.txt = (ip, users.txt)
-        # rids = (ip, rids)
-        # current.DOMAIN.append(users.txt)
-        # current.DOMAIN.append(rids)
         if users or rids:
             self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
             return users, rids
