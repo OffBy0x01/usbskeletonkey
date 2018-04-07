@@ -201,7 +201,8 @@ class Enumerate:
 
             # self.other things that just uses IPs
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
-            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
+            domaingroups, domainusers, domainpasswdpolicy =\
+                self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
             #current.DOMAIN
 
 
@@ -488,6 +489,7 @@ class Enumerate:
 
                     except IOError as e:
                         self.enumerate.debug("Error: get_rpcclient: %s" % e)
+        return domain_info, user_info, passwd_info
 
     def get_password_policy(self, raw_command):
         """
