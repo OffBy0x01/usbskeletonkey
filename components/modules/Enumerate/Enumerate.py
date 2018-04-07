@@ -190,9 +190,12 @@ class Enumerate:
             # NMAP to determine OS, port and service info
             self.enumerate.debug("Starting NMAP", color=Format.color_info)
             nmap_output = self.nmap(ip)  # TODO portsCSV
-
-            current.PORTS += (nmap_output[0] if nmap_output[0] else False)
-            current.OS_INFO += (nmap_output[1] if nmap_output[1] else False)
+            if nmap_output:
+                current.PORTS += nmap_output[0]
+                current.OS_INFO += nmap_output[1]
+            else:
+                current.PORTS = False
+                current.OS_INFO = False # making it easier to parse
 
             # self.other things that just uses IPs
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
@@ -318,7 +321,7 @@ class Enumerate:
             return
         try:
             if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
-                self.enumerate.debug("NMAP: quiet mode", color=Format.color_secondary)
+                self.enumerate.debug("NMAP: quiet mode", color=Format.format_clear)
                 command = "-sV --version-light"
 
                 if self.use_port_range == "true":  # If a port range has been specified use
@@ -333,7 +336,7 @@ class Enumerate:
                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
 
             else:  # Use "loud" scan pre-sets
-                self.enumerate.debug("NMAP: loud mode", color=Format.color_secondary)
+                self.enumerate.debug("NMAP: loud mode", color=Format.format_clear)
                 command = "-sV --version-all -T4"
 
                 if self.use_port_range == "true":
