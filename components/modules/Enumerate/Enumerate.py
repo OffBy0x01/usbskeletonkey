@@ -35,24 +35,26 @@ class Enumerate:
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
 
         # import config data for this module
-        self.current_config = self.module_manager.get_module_by_name(self.enumerate._name)
+        self.current_config = self.module_manager.get_module_by_name(self.enumerate.name)
         if not self.current_config:
-            self.enumerate.debug("Error: could not import config of " + self.enumerate._name, color=Format.color_danger)
+            self.enumerate.debug("Error: could not import config of " + self.enumerate.name, color=Format.color_danger)
 
         # Import default system path
         self.path = path
 
         # Import interface else use default
-        self.interface = self.current_config.options["interface"] if self.current_config.options[
-                                                                         "interface"] == "wlan0" or \
-                                                                     self.current_config.options[
-                                                                         "interface"] == "usb0" else "wlan0"
+        self.interface = self.current_config.options["interface"]\
+            if self.current_config.options["interface"] == "wlan0"\
+            or self.current_config.options["interface"] == "usb0"\
+            else "wlan0"
+
         self.enumerate.debug("Using interface: " + self.interface)
 
         # ~Produce list of usable ip addresses~
         self.raw_ip_targets = self.current_config.options["ip_targets"]
         self.raw_ip_exclusions = self.current_config.options["ip_exclusions"]
-        self.ip_list = [ip for ip in self.get_ip_list(self.raw_ip_targets) if ip not in self.get_ip_list(self.raw_ip_exclusions)]
+        self.ip_list = [ip for ip in self.get_ip_list(self.raw_ip_targets)
+                        if ip not in self.get_ip_list(self.raw_ip_exclusions)]
 
         # have to do it this way to avoid actions happening to both lists
         self.ip_list_shuffled = [ip for ip in self.ip_list]
@@ -61,7 +63,8 @@ class Enumerate:
         # ~Produce list of usable ports~
         self.raw_ports = self.current_config.options["port_targets"]
         self.raw_port_exclusions = self.current_config.options["port_exclusions"]
-        self.port_list = [port for port in self.get_port_list(self.raw_ports) if port not in self.get_port_list(self.raw_port_exclusions)]
+        self.port_list = [port for port in self.get_port_list(self.raw_ports)
+                          if port not in self.get_port_list(self.raw_port_exclusions)]
 
         # ~Produce list of usable users.txt~
         self.user_list = []
@@ -76,9 +79,14 @@ class Enumerate:
             for line in password_file:
                 self.default_passwords.append(line)
 
+        self.rpc_timeout = float(self.current_config.options['rpc_timeout_start'])
+        self.rpc_max_timeout = float(self.current_config.options['rpc_timeout_max'])
+        self.rpc_timeout_increment = float(self.current_config.options['rpc_timeout_increment'])
+
         self.quiet = self.current_config.options["quiet"]
         self.verbose = self.current_config.options["verbose"]
         self.use_port_range = self.current_config.options["use_port_range"]
+
         ###############################################################################
         # The following  mappings for nmblookup (nbtstat) status codes to human readable
         # format is taken from nbtscan 1.5.1 "statusq.c".  This file in turn
@@ -147,7 +155,6 @@ class Enumerate:
         # ---------------------
         target_ips = defaultdict()  # Init of dictionary
 
-
         current_ip_in_list = 1
         ips_in_list = len(self.ip_list_shuffled)
 
@@ -182,7 +189,7 @@ class Enumerate:
             # # check route to this target
             # if self.interface != "usb0":
             #     current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
-            #     self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
+            #     self.enumerate.debug("Trace Route to %s:\n %s" % (ip, current.ROUTE))
             #
             # # NBT STAT
             # self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
@@ -201,10 +208,9 @@ class Enumerate:
 
             # self.other things that just uses IPs
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
-            domaingroups, domainusers, domainpasswdpolicy =\
-                self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
-            #current.DOMAIN
 
+            domaingroups, domainusers, domainpasswdpolicy =\
+                self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip)
 
             # Add target information to dict
             target_ips[ip] = current
@@ -426,8 +432,54 @@ class Enumerate:
         self.enumerate.debug("get_nbt_stat: Output generated successfully", color=Format.color_success)
         return output
 
-    def get_rpcclient(self, user_list, password_list, target, ip):
+    def rpc_request(self, user, password, target):
+        if self.rpc_timeout < self.rpc_max_timeout:
+            try:
+                command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
+                self.enumerate.debug("Running command - " + command.__str__(), Format.color_info)
+                self.enumerate.debug("Password - " + password, Format.color_info)
+
+                lsa_test_query = subprocess.run(command,
+                                                input=password + "\n",
+                                                encoding="ascii",
+                                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+                if lsa_test_query.check_returncode() != 0:
+                    if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query:
+                        # Unable to connect
+                        self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user)
+                        sleep(self.rpc_timeout)
+
+                        self.rpc_timeout += self.rpc_timeout_increment
+
+                    return
+
+                else:
+                    del lsa_test_query  # Unless lsaquery out is needed? IDK
+                    command.pop()
+
+                    curr_domain_info = self.extract_info_rpc(
+                        subprocess.run(command + ["enumdomgroups"],
+                                       input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+
+                    curr_password_info = self.get_password_policy(
+                        subprocess.run(command + ["getdompwinfo"],
+                                       input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+
+                    curr_user_info = self.extract_info_rpc(
+                        subprocess.run(command + ["enumdomusers"],
+                                       input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+
+                return [curr_domain_info, curr_user_info, curr_password_info]
+
+            except IOError as e:
+                self.enumerate.debug("Error: get_rpcrequest: %s" % e)
+                return
+
+    def get_rpcclient(self, user_list, password_list, target):
         """
+        Using RPC Client command to enumerate users, password policy and groups
+
         :param user_list:
         :param password_list:
         :param target:
@@ -437,61 +489,50 @@ class Enumerate:
 
         domain_info = []
         user_info = []
-        passwd_info = []
+        password_info = []
 
-        # timeout = self.current_config.options['rpc_timeout_default']
-        timeout = 0.2
+        for user, passwd in user_list:
+            if passwd:
+                try:
+                    current = self.rpc_request(user, passwd, target)
+                except IOError as e:
+                    self.enumerate.debug("Error: get_rpcrequest: %s" % e)
+                    continue
 
-        for user in user_list:
-            for password in password_list:
-                while timeout < 2.4:
+                # There must be a better way to do this I cant think of without utilising self
+                # If output from rpc_request
+                if current:
+                    # current = [curr_domain_info, curr_user_info, curr_password_info]
+                    if current[0] not in domain_info:
+                        domain_info += current[0]
+
+                    if current[1] not in user_info:
+                        user_info += current[1]
+
+                    if current[2] not in password_info:
+                        password_info += current[2]
+
+            else:
+                for password in password_list:
                     try:
-                        command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
-                        raw_rpc = subprocess.run(command,
-                                                 input=password + "\n",
-                                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
-
-                        if raw_rpc.check_returncode() != 0:
-                            if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
-                                # Unable to connect
-                                self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % user_list[user])
-                                self.enumerate.debug("Timeout is now " + timeout.__str__())
-                                timeout += 0.2
-                                sleep(timeout)
-
-                            continue
-
-                        else:
-                            del raw_rpc  # Unless lsaquery out is needed? IDK
-                            command.pop()
-
-                            curr_domain_info = self.extract_info_rpc(
-                                subprocess.run(command + ["enumdomgroups"],
-                                               input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
-
-                            if curr_domain_info not in domain_info:
-                                domain_info += [curr_domain_info]
-                                self.enumerate.debug("get_rpcclient: New domain info added", color=Format.color_success)
-
-                            curr_passwd_info = self.get_password_policy(
-                                subprocess.run(command + ["getdompwinfo"],
-                                               input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
-
-                            if curr_passwd_info not in passwd_info:
-                                passwd_info += [curr_passwd_info]
-                                self.enumerate.debug("get_rpcclient: New password info added", color=Format.color_success)
-
-                            curr_user_info = self.extract_info_rpc(
-                                subprocess.run(command + ["enumdomusers"],
-                                               input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
-
-                            if curr_user_info not in user_info:
-                                curr_user_info += [curr_user_info]
-                                self.enumerate.debug("get_rpcclient: New user info added", color=Format.color_success)
-
+                        current = self.rpc_request(user, password, target)
                     except IOError as e:
-                        self.enumerate.debug("Error: get_rpcclient: %s" % e)
-        return domain_info, user_info, passwd_info
+                        self.enumerate.debug("Error: get_rpcrequest: %s" % e)
+                        # If output from rpc_request
+                        continue
+
+                    if current:
+                        # current = [curr_domain_info, curr_user_info, curr_password_info]
+                        if current[0] not in domain_info:
+                            domain_info += current[0]
+
+                        if current[1] not in user_info:
+                            user_info += current[1]
+
+                        if current[2] not in password_info:
+                            password_info += current[2]
+
+        return domain_info, user_info, password_info
 
     def get_password_policy(self, raw_command):
         """
