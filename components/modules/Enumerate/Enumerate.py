@@ -189,7 +189,7 @@ class Enumerate:
 
             # NMAP to determine OS, port and service info
             self.enumerate.debug("Starting NMAP", color=Format.color_info)
-            nmap_output = self.nmap()  # TODO portsCSV
+            nmap_output = self.nmap(ip)  # TODO portsCSV
             current.PORTS += (nmap_output[0])
             current.OS_INFO += (nmap_output[1])
 
