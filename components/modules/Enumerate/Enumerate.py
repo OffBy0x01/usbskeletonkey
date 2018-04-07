@@ -1,4 +1,4 @@
-# This is why modules should share their package name.
+# This is why modules should share their package _name.
 import importlib
 
 try:
@@ -35,9 +35,9 @@ class Enumerate:
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
 
         # import config data for this module
-        self.current_config = self.module_manager.get_module_by_name(self.enumerate.name)
+        self.current_config = self.module_manager.get_module_by_name(self.enumerate._name)
         if not self.current_config:
-            self.enumerate.debug("Error: could not import config of " + self.enumerate.name, color=Format.color_danger)
+            self.enumerate.debug("Error: could not import config of " + self.enumerate._name, color=Format.color_danger)
 
         # Import default system path
         self.path = path
@@ -179,7 +179,7 @@ class Enumerate:
             #         current.ADAPTER_NAME = arp_response[0][2]
             #         self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
             #         self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
-            #         self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
+            #         self.enumerate.debug("%s's adapter _name is %s" % (ip, current.ADAPTER_NAME))
             #     except Exception as Err:
             #         self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
             # else:
@@ -619,8 +619,8 @@ class Enumerate:
         :param target: Either target via IPv4, IPv4 range, list of IPv4's, DNS Name(s?!)
         :param interface: Choose which interface the pings go from. Defaults to USB0
         :param ping_count: Will ping as many times as the input asks for
-        :param all_ips_from_dns: Scans all IP address's relating to that DNS name
-        :param get_dns_name: Will return with the DNS name for the IP scanned
+        :param all_ips_from_dns: Scans all IP address's relating to that DNS _name
+        :param get_dns_name: Will return with the DNS _name for the IP scanned
         :param contain_random_data: Will not just send empty packets like the default
         :param randomise_targets: Will go through the targets provided in a random order
         :param source_address: Changes where the ping says it came from
@@ -817,7 +817,7 @@ class Enumerate:
         :param randomise_targets: Binary Value for targets where they should not be scanned in the order given.
                 Defaults False
 
-        :return: list of lists containing IP, MAC address and Adapter name
+        :return: list of lists containing IP, MAC address and Adapter _name
 
 
         """
