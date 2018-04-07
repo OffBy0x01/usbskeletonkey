@@ -448,6 +448,7 @@ class Enumerate:
                                                 stdout=subprocess.PIPE)
 
                 self.enumerate.debug("lsaquery out\n" + lsa_test_query.stdout, Format.color_info)
+                self.enumerate.debug("Return Code - " + lsa_test_query.check_returncode().__str__(), Format.color_info)
 
                 if lsa_test_query.check_returncode() != 0:
                     if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query.stdout:
