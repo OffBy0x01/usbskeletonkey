@@ -431,9 +431,10 @@ class Enumerate:
         :param ip:
         :return none:
         """
+        self.enumerate.debug("Initializing get_rpcclient")
         # Pass usernames in otherwise test against defaults  # What defaults? -Corey
-        for user in user_list.keys():
-            raw_rpc = subprocess.Popen("rpcclient -U " + + " " + target + " -c 'lsaquery'", stdin=subprocess.PIPE,stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
+        for user in user_list:
+            raw_rpc = subprocess.Popen("rpcclient -U " + " " + target + " -c 'lsaquery'", shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
             try:
                 raw_rpc.stdin.write(user_list[user])
                 if user_list[user] == "":
@@ -441,33 +442,35 @@ class Enumerate:
                     for password in password_list:
                         raw_rpc.stdin.write(password)
 
-            except IOError as e:
-                self.enumerate.debug("Error: get_rpcclient: %s" % e)
+            except Exception as e:
+                self.enumerate.debug("Error: get_rpcclient: %s" % e, color=Format.color_warning)
 
             raw_rpc.stdin.close()
             raw_rpc.wait()
 
             if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
                 # Unable to connect
-                self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % user_list[user])
+                self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % user_list[user], color=Format.color_warning)
                 return None
             elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
                 # Incorrect username or password
-                self.enumerate.debug(
-                    "Error: get_rpcclient: Incorrect username or password under - %s : %s " % user % user_list[user])
+                self.enumerate.debug("Error: get_rpcclient: Incorrect username or password under - %s : %s " % user % user_list[user], color=Format.color_warning)
 
                 return None
             elif "rpcclient $>" in raw_rpc:
+                self.enumerate.debug("get_rpcclient/enumdomgroups ")
                 raw_command = subprocess.run("enumdomgroups", stdout=subprocess.PIPE).stdout.decode('utf-8')
                 users_or_groups = False
                 # true = users.txt / false = groups
                 domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
+                self.enumerate.debug("get_rpcclient/enumdomusers ")
                 raw_command = subprocess.run("enumdomusers", stdout=subprocess.PIPE).stdout.decode('utf-8')
                 users_or_groups = True
                 # true = users.txt / false = groups
                 userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
+                self.enumerate.debug("get_rpcclient/getdompwinfo: ")
                 raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
                 passwdinfo = self.get_password_policy(raw_command, ip)
 
@@ -476,7 +479,7 @@ class Enumerate:
                 # then run get_smbclient
 
             else:
-                self.enumerate.debug("Error: get_rpcclient: No reply from target")
+                self.enumerate.debug("Error: get_rpcclient: No reply from target", color=Format.color_warning)
                 return None
 
     def get_password_policy(self, raw_command, ip):
