@@ -218,7 +218,7 @@ class Enumerate:
             current_ip_in_list += 1
 
         # TODO use target_ips with Result2Html
-        with open(self.path + "/modules/enumerate/output.html") as out:
+        with open(self.path + "/modules/Enumerate/output.html") as out:
             out.write(result2html(target_ips))
 
         return  # End of run
