@@ -444,7 +444,7 @@ class Enumerate:
         for user, passwd in user_list:
             try:
                 if passwd:
-                    raw_rpc = subprocess.run(["rpcclient", "-U", user, "192.168.1.235"], stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="ascii").stdout
+                    raw_rpc = subprocess.run(["rpcclient", "-U", user, "192.168.1.235"], stdout=subprocess.PIPE, input="%s\n" % passwd).stdout
 
                     if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
                         # Unable to connect
@@ -462,24 +462,21 @@ class Enumerate:
 
                         self.enumerate.debug("get_rpcclient/enumdomgroups ", color=Format.color_info)
                         raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomgroups"],
-                                                     stdout=subprocess.PIPE, input="%s\n" % passwd,
-                                                     encoding="ascii").stdout
+                                                     stdout=subprocess.PIPE, input="%s\n" % passwd).stdout
                         users_or_groups = False
                         # true = users.txt / false = groups
                         domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                         self.enumerate.debug("get_rpcclient/enumdomusers ", color=Format.color_info)
                         raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomusers"],
-                                                     stdout=subprocess.PIPE, input="%s\n" % passwd,
-                                                     encoding="ascii").stdout
+                                                     stdout=subprocess.PIPE, input="%s\n" % passwd).stdout
                         users_or_groups = True
                         # true = users.txt / false = groups
                         userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                         self.enumerate.debug("get_rpcclient/getdompwinfo: ", color=Format.color_info)
                         raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "getdompwinfo"],
-                                                     stdout=subprocess.PIPE, input="%s\n" % passwd,
-                                                     encoding="ascii").stdout
+                                                     stdout=subprocess.PIPE, input="%s\n" % passwd).stdout
                         passwdinfo = self.get_password_policy(raw_command, ip)
 
                         self.enumerate.debug("get_rpcclient: Output generated successfully", color=Format.color_success)
@@ -505,25 +502,19 @@ class Enumerate:
                             self.enumerate.debug("get_rpcclient: Session obtained", color=Format.color_success)
 
                             self.enumerate.debug("get_rpcclient/enumdomgroups ", color=Format.color_info)
-                            raw_command = subprocess.run(
-                                ["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomgroups"],
-                                stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="ascii").stdout
+                            raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomgroups"], stdout=subprocess.PIPE, input="%s\n" % passwd).stdout
                             users_or_groups = False
                             # true = users.txt / false = groups
                             domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                             self.enumerate.debug("get_rpcclient/enumdomusers ", color=Format.color_info)
-                            raw_command = subprocess.run(
-                                ["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomusers"],
-                                stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="ascii").stdout
+                            raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomusers"], stdout=subprocess.PIPE, input="%s\n" % passwd).stdout
                             users_or_groups = True
                             # true = users.txt / false = groups
                             userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
 
                             self.enumerate.debug("get_rpcclient/getdompwinfo: ", color=Format.color_info)
-                            raw_command = subprocess.run(
-                                ["rpcclient", "-U", user, "192.168.1.235", "-c", "getdompwinfo"],
-                                stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="ascii").stdout
+                            raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "getdompwinfo"], stdout=subprocess.PIPE, input="%s\n" % passwd).stdout
                             passwdinfo = self.get_password_policy(raw_command, ip)
 
                             self.enumerate.debug("get_rpcclient: Output generated successfully",
