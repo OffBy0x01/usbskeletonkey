@@ -447,7 +447,9 @@ class Enumerate:
                 while timeout < 2.4:
                     try:
                         command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
-                        raw_rpc = subprocess.run(command, input=password + "\n", stdout=subprocess.PIPE, encoding='ascii')
+                        raw_rpc = subprocess.run(command,
+                                                 input=password + "\n",
+                                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
 
                         if raw_rpc.check_returncode() != 0:
                             if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
