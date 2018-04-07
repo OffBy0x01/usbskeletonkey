@@ -1,5 +1,6 @@
 # This is why modules should share their package name.
 import importlib
+
 try:
     importlib.import_module("nmap")
 except ImportError:
@@ -11,6 +12,7 @@ finally:
 import random
 import struct
 import subprocess
+from time import sleep
 from collections import defaultdict
 
 from components.framework.Debug import Debug
@@ -145,6 +147,7 @@ class Enumerate:
         # ---------------------
         target_ips = defaultdict()  # Init of dictionary
 
+
         current_ip_in_list = 1
         ips_in_list = len(self.ip_list_shuffled)
 
@@ -153,53 +156,52 @@ class Enumerate:
 
             current = TargetInfo()
 
-            #self.enumerate.debug("Starting ICMP", color=Format.color_info)
-            # check current IP responds to ICMP
-            #current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
-            #self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
-
-            #self.enumerate.debug("Starting ARP", color=Format.color_info)
-            # check current IP responds to ARP
-            #arp_response = self.get_targets_via_arp(ip, interface=self.interface)
-
-            #if arp_response is not False:
-            #    try:
-            #        current.RESPONDS_ARP = True
-            #        current.MAC_ADDRESS = arp_response[0][1]
-            #        current.ADAPTER_NAME = arp_response[0][2]
-            #        self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
-            #        self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
-            #        self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
-            #    except Exception as Err:
-            #        self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
-            #else:
-            #    self.enumerate.debug("No ARP response from %s" % ip)
-
-            #self.enumerate.debug("Starting Route", color=Format.color_info)
-            # check route to this target
-            #if self.interface != "usb0":
-             #   current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
-              #  self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
-
-            # NBT STAT
-            #self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
-            #current.NBT_STAT = self.get_nbt_stat(ip)
-            #self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
-
-            # NMAP to determine OS, port and service info
-            #self.enumerate.debug("Starting NMAP", color=Format.color_info)
-            #nmap_output = self.nmap(ip)  # TODO portsCSV
-            #if nmap_output:
-            #    current.PORTS += nmap_output[0]
-            #    current.OS_INFO += nmap_output[1]
-            #else:
-            #    current.PORTS = False
-            #    current.OS_INFO = False # making it easier to parse
+            # self.enumerate.debug("Starting ICMP", color=Format.color_info)
+            # # check current IP responds to ICMP
+            # current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
+            # self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
+            #
+            # self.enumerate.debug("Starting ARP", color=Format.color_info)
+            # # check current IP responds to ARP
+            # arp_response = self.get_targets_via_arp(ip, interface=self.interface)
+            #
+            # if arp_response is not False:
+            #     try:
+            #         current.RESPONDS_ARP = True
+            #         current.MAC_ADDRESS = arp_response[0][1]
+            #         current.ADAPTER_NAME = arp_response[0][2]
+            #         self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
+            #         self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
+            #         self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
+            #     except Exception as Err:
+            #         self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
+            # else:
+            #     self.enumerate.debug("No ARP response from %s" % ip)
+            #
+            # self.enumerate.debug("Starting Route", color=Format.color_info)
+            # # check route to this target
+            # if self.interface != "usb0":
+            #     current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+            #     self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
+            #
+            # # NBT STAT
+            # self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
+            # current.NBT_STAT = self.get_nbt_stat(ip)
+            # self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
+            #
+            # # NMAP to determine OS, port and service info
+            # self.enumerate.debug("Starting NMAP", color=Format.color_info)
+            # nmap_output = self.nmap(ip)  # TODO portsCSV
+            # if nmap_output:
+            #     current.PORTS += nmap_output[0]
+            #     current.OS_INFO += nmap_output[1]
+            # else:
+            #     current.PORTS = False
+            #     current.OS_INFO = False # making it easier to parse
 
             # self.other things that just uses IPs
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
-            domaingroups, domainusers, domainpasswdpolicy =\
-                self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
+            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
             #current.DOMAIN
 
 
@@ -431,58 +433,67 @@ class Enumerate:
         :param ip:
         :return none:
         """
-        self.enumerate.debug("Initializing get_rpcclient")
-        # Pass usernames in otherwise test against defaults  # What defaults? -Corey
-        for user in user_list:
-            raw_rpc = subprocess.Popen("rpcclient -U " + " " + target + " -c 'lsaquery'", shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
-            try:
-                raw_rpc.stdin.write(user_list[user])
-                if user_list[user] == "":
-                    # password list is empty - use default
-                    for password in password_list:
-                        raw_rpc.stdin.write(password)
 
-            except Exception as e:
-                self.enumerate.debug("Error: get_rpcclient: %s" % e, color=Format.color_warning)
+        domain_info = []
+        user_info = []
+        passwd_info = []
 
-            raw_rpc.stdin.close()
-            raw_rpc.wait()
+        # timeout = self.current_config.options['rpc_timeout_default']
+        timeout = 0.2
 
-            if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
-                # Unable to connect
-                self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % user_list[user], color=Format.color_warning)
-                return None
-            elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
-                # Incorrect username or password
-                self.enumerate.debug("Error: get_rpcclient: Incorrect username or password under - %s : %s " % user % user_list[user], color=Format.color_warning)
+        for user in user_list.keys():
+            for password in password_list:
+                while timeout < 2.4:
+                    try:
+                        command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
+                        raw_rpc = subprocess.run(command, input=password + "\n", stdout=subprocess.PIPE, encoding='ascii')
 
-                return None
-            elif "rpcclient $>" in raw_rpc:
-                self.enumerate.debug("get_rpcclient/enumdomgroups ")
-                raw_command = subprocess.run("enumdomgroups", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                users_or_groups = False
-                # true = users.txt / false = groups
-                domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+                        if raw_rpc.check_returncode() != 0:
+                            if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
+                                # Unable to connect
+                                self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % user_list[user])
+                                self.enumerate.debug("Timeout is now " + timeout.__str__())
+                                timeout += 0.2
+                                sleep(timeout)
 
-                self.enumerate.debug("get_rpcclient/enumdomusers ")
-                raw_command = subprocess.run("enumdomusers", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                users_or_groups = True
-                # true = users.txt / false = groups
-                userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+                            continue
 
-                self.enumerate.debug("get_rpcclient/getdompwinfo: ")
-                raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                passwdinfo = self.get_password_policy(raw_command, ip)
+                        else:
+                            del raw_rpc  # Unless lsaquery out is needed? IDK
+                            command.pop()
 
-                self.enumerate.debug("get_rpcclient: Output generated successfully", color=Format.color_success)
-                return domaininfo, userinfo, passwdinfo
-                # then run get_smbclient
+                            # true = users.txt / false = groups
+                            curr_domain_info = self.extract_info_rpc(
+                                subprocess.run(command + ["enumdomgroups"],
+                                               input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
 
-            else:
-                self.enumerate.debug("Error: get_rpcclient: No reply from target", color=Format.color_warning)
-                return None
+                            if curr_domain_info not in domain_info:
+                                domain_info += [curr_domain_info]
+                                self.enumerate.debug("get_rpcclient: New domain info added", color=Format.color_success)
 
-    def get_password_policy(self, raw_command, ip):
+                            curr_passwd_info = self.get_password_policy(
+                                subprocess.run(command + ["getdompwinfo"],
+                                               input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+
+                            if curr_passwd_info not in passwd_info:
+                                passwd_info += [curr_passwd_info]
+                                self.enumerate.debug("get_rpcclient: New password info added", color=Format.color_success)
+
+                            # true = users.txt / false = groups
+                            curr_user_info = self.extract_info_rpc(
+                                subprocess.run(command + ["enumdomusers"],
+                                               input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+
+                            if curr_user_info not in user_info:
+                                curr_user_info += [curr_user_info]
+                                self.enumerate.debug("get_rpcclient: New user info added", color=Format.color_success)
+
+                            # then run get_smbclient
+
+                    except IOError as e:
+                        self.enumerate.debug("Error: get_rpcclient: %s" % e)
+
+    def get_password_policy(self, raw_command):
         """
         :param raw_command:
         :param ip:
@@ -516,11 +527,10 @@ class Enumerate:
         self.enumerate.debug("get_password_policy: Output generated successfully", color=Format.color_success)
         return length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change
 
-    def extract_info_rpc(self, raw_command, ip, users_or_groups):
+    def extract_info_rpc(self, raw_command):
         """
         :param raw_command:
-        :param ip:
-        :param users_or_groups:
+
         :return list, list:
         """
         index = 0
@@ -532,7 +542,7 @@ class Enumerate:
         for char in raw_command:
             if char == "\n":
                 counter += 1
-        # Is this a diy regex? -Corey
+
         for times in range(0, counter + 1):
             start = index
             start = raw_command.find('[', index)
@@ -558,8 +568,6 @@ class Enumerate:
             return users, rids
         else:
             return False
-
-
 
     def check_target_is_alive(self, target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
                               contain_random_data=True, randomise_targets=False, source_address="self", verbose=False):
