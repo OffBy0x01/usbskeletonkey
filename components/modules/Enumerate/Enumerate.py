@@ -145,7 +145,6 @@ class Enumerate:
         # ---------------------
         target_ips = defaultdict()  # Init of dictionary
 
-
         current_ip_in_list = 1
         ips_in_list = len(self.ip_list_shuffled)
 
@@ -154,52 +153,53 @@ class Enumerate:
 
             current = TargetInfo()
 
-            self.enumerate.debug("Starting ICMP", color=Format.color_info)
+            #self.enumerate.debug("Starting ICMP", color=Format.color_info)
             # check current IP responds to ICMP
-            current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
-            self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
+            #current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
+            #self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
 
-            self.enumerate.debug("Starting ARP", color=Format.color_info)
+            #self.enumerate.debug("Starting ARP", color=Format.color_info)
             # check current IP responds to ARP
-            arp_response = self.get_targets_via_arp(ip, interface=self.interface)
+            #arp_response = self.get_targets_via_arp(ip, interface=self.interface)
 
-            if arp_response is not False:
-                try:
-                    current.RESPONDS_ARP = True
-                    current.MAC_ADDRESS = arp_response[0][1]
-                    current.ADAPTER_NAME = arp_response[0][2]
-                    self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
-                    self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
-                    self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
-                except Exception as Err:
-                    self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
-            else:
-                self.enumerate.debug("No ARP response from %s" % ip)
+            #if arp_response is not False:
+            #    try:
+            #        current.RESPONDS_ARP = True
+            #        current.MAC_ADDRESS = arp_response[0][1]
+            #        current.ADAPTER_NAME = arp_response[0][2]
+            #        self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
+            #        self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
+            #        self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
+            #    except Exception as Err:
+            #        self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
+            #else:
+            #    self.enumerate.debug("No ARP response from %s" % ip)
 
-            self.enumerate.debug("Starting Route", color=Format.color_info)
+            #self.enumerate.debug("Starting Route", color=Format.color_info)
             # check route to this target
-            if self.interface != "usb0":
-                current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
-                self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
+            #if self.interface != "usb0":
+             #   current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+              #  self.enumerate.debug("Tracert to %s:\n %s" % (ip, current.ROUTE))
 
             # NBT STAT
-            self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
-            current.NBT_STAT = self.get_nbt_stat(ip)
-            self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
+            #self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
+            #current.NBT_STAT = self.get_nbt_stat(ip)
+            #self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
 
             # NMAP to determine OS, port and service info
-            self.enumerate.debug("Starting NMAP", color=Format.color_info)
-            nmap_output = self.nmap(ip)  # TODO portsCSV
-            if nmap_output:
-                current.PORTS += nmap_output[0]
-                current.OS_INFO += nmap_output[1]
-            else:
-                current.PORTS = False
-                current.OS_INFO = False # making it easier to parse
+            #self.enumerate.debug("Starting NMAP", color=Format.color_info)
+            #nmap_output = self.nmap(ip)  # TODO portsCSV
+            #if nmap_output:
+            #    current.PORTS += nmap_output[0]
+            #    current.OS_INFO += nmap_output[1]
+            #else:
+            #    current.PORTS = False
+            #    current.OS_INFO = False # making it easier to parse
 
             # self.other things that just uses IPs
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
-            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
+            domaingroups, domainusers, domainpasswdpolicy =\
+                self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
             #current.DOMAIN
 
 
