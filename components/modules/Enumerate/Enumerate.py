@@ -434,7 +434,7 @@ class Enumerate:
         self.enumerate.debug("Initializing get_rpcclient")
         # Pass usernames in otherwise test against defaults  # What defaults? -Corey
         for user in user_list:
-            raw_rpc = subprocess.Popen("rpcclient -U " + + " " + target + " -c 'lsaquery'", stdin=subprocess.PIPE,stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
+            raw_rpc = subprocess.Popen("rpcclient -U " + " " + target + " -c 'lsaquery'", stdin=subprocess.PIPE,stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
             try:
                 raw_rpc.stdin.write(user_list[user])
                 if user_list[user] == "":
