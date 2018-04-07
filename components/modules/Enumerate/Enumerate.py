@@ -442,10 +442,8 @@ class Enumerate:
                 self.enumerate.debug("Running command - " + command.__str__(), Format.color_info)
                 self.enumerate.debug("Password - " + password, Format.color_info)
 
-                lsa_test_query = subprocess.run(command,
-                                                input=password + "\n",
-                                                encoding="ascii",
-                                                stdout=subprocess.PIPE)
+                lsa_test_query = subprocess.run(command, input=password + "\n",
+                                                encoding="ascii", stdout=subprocess.PIPE)
 
                 self.enumerate.debug("lsaquery out\n" + lsa_test_query.stdout, Format.color_info)
                 self.enumerate.debug("Return Code - " + lsa_test_query.check_returncode().__str__(), Format.color_info)
@@ -464,18 +462,18 @@ class Enumerate:
                     command.pop()
 
                     curr_domain_info = self.extract_info_rpc(
-                        subprocess.run(command + ["enumdomgroups"],
-                                       input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+                        subprocess.run(command + ["enumdomgroups"], input=password + "\n",
+                                       encoding="ascii", stdout=subprocess.PIPE).stdout)
 
                     self.enumerate.debug("First few characters of groups - " + curr_domain_info[0:20], Format.color_info)
 
                     curr_password_info = self.get_password_policy(
-                        subprocess.run(command + ["getdompwinfo"],
-                                       input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+                        subprocess.run(command + ["getdompwinfo"], input=password + "\n",
+                                       encoding="ascii", stdout=subprocess.PIPE).stdout)
 
                     curr_user_info = self.extract_info_rpc(
-                        subprocess.run(command + ["enumdomusers"],
-                                       input=password, stdout=subprocess.PIPE).stdout.decode('utf-8'))
+                        subprocess.run(command + ["enumdomusers"], input=password + "\n",
+                                       encoding="ascii", stdout=subprocess.PIPE).stdout)
 
                     self.enumerate.debug("First few characters of users - " + curr_user_info[0:20], Format.color_info)
 
@@ -616,7 +614,7 @@ class Enumerate:
             index = end
             times += 1
 
-        current = TargetInfo
+        # current = TargetInfo
         # users.txt = (ip, users.txt)
         # rids = (ip, rids)
         # current.DOMAIN.append(users.txt)
