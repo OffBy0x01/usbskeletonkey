@@ -172,7 +172,7 @@ class Enumerate:
                     self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
                     self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
                 except Exception as Err:
-                    self.enumerate.debug("Another error for corey: %s" % Err, color=Format.color_warning)
+                    self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
             else:
                 self.enumerate.debug("No ARP response from %s" % ip)
 
@@ -187,16 +187,8 @@ class Enumerate:
             current.NBT_STAT = self.get_nbt_stat(ip)
             self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
 
-            # use all port scanning tools against current ip
-            for port in self.port_list:
-                pass
-                # run things that use ports
-
-            for user in self.user_list:
-                pass
-                # things that need users.txt
-
-            # Use nmap to determine OS, port and service info then save to our current TargetInfo
+            # NMAP to determine OS, port and service info
+            self.enumerate.debug("Starting NMAP", color=Format.color_info)
             nmap_output = self.nmap()  # TODO portsCSV
             current.PORTS += (nmap_output[0])
             current.OS_INFO += (nmap_output[1])
@@ -283,7 +275,7 @@ class Enumerate:
         :return list of list of list of strings:
         :return none:
         """
-
+        self.enumerate.debug("Nmap initializing...", color=Format.color_secondary)
         nm = nmap.PortScanner()  # Declare python NMAP object
         output_list = []  # List for saving the output of the commands to
 
@@ -324,6 +316,7 @@ class Enumerate:
             return
 
         if self.quiet == "true":  # If quiet scan flag is set use "quiet" scan pre-sets
+            self.enumerate.debug("NMAP: quiet mode", color=Format.color_secondary)
             command = "-sV --version-light"
 
             if self.use_port_range == "true":  # If a port range has been specified use
@@ -331,14 +324,14 @@ class Enumerate:
             else:
                 nm.scan(hosts=self.ip_list, arguments=command)
 
-                self.enumerate.debug(
-                    "NMAP command = " + " '" + nm.command_line() + "'")  # debug for printing the command
+                self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")  # debug for printing the command
 
             # Run "quiet" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
                                        stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         else:  # Use "loud" scan pre-sets
+            self.enumerate.debug("NMAP: loud mode", color=Format.color_secondary)
             command = "-sV --version-all -T4"
 
             if self.use_port_range == "true":
@@ -346,14 +339,17 @@ class Enumerate:
             else:
                 nm.scan(hosts=self.ip_list, arguments=command)
 
-                self.enumerate.debug("NMAP command = " + " '" + nm.command_line() + "'")
+                self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
             # Run "loud" nmap OS scan and save output to a variable for parsing
             os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
                                        stdout=subprocess.PIPE).stdout.decode('utf-8')
 
+        self.enumerate.debug("NMAP: OS parsing", color=Format.color_info)
         os_parsing(os_output)  # Call local function for nmap OS parsing
+        self.enumerate.debug("NMAP: Service parsing", color=Format.color_info)
         service_parsing()  # Call local function for nmap service/port parsing
+        self.enumerate.debug("NMAP: Output generated successfully", color=Format.color_success)
         return output_list  # return the output of scans in the form of a list
 
     def get_local_groups(self):
@@ -416,7 +412,7 @@ class Enumerate:
                 self.enumerate.debug("Something went wrong %s" % what_went_wrong, color=Format.color_warning)
 
         self.enumerate.debug("get_nbt_stat: Output generated successfully", color=Format.color_success)
-        return output[2:]
+        return output
 
     def get_rpcclient(self, user_list, password_list, target, ip):
         """
@@ -466,6 +462,7 @@ class Enumerate:
                 raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
                 passwdinfo = self.get_password_policy(raw_command, ip)
 
+                self.enumerate.debug("get_rpcclient: Output generated successfully", color=Format.color_success)
                 return domaininfo, userinfo, passwdinfo
                 # then run get_smbclient
 
@@ -504,6 +501,7 @@ class Enumerate:
         if "DOMAIN_PASSWORD_NO_CLEAR_CHANGE" in raw_command:
             pw_no_change = True
 
+        self.enumerate.debug("get_password_policy: Output generated successfully", color=Format.color_success)
         return length, clear_text_pw, refuse_pw_change, lockout_admins, complex_pw, pw_no_change, pw_no_anon_change
 
     def extract_info_rpc(self, raw_command, ip, users_or_groups):
@@ -543,7 +541,12 @@ class Enumerate:
         # rids = (ip, rids)
         # current.DOMAIN.append(users.txt)
         # current.DOMAIN.append(rids)
-        return users, rids
+        if users or rids:
+            self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
+            return users, rids
+        else:
+            return False
+
 
 
     def check_target_is_alive(self, target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
@@ -587,18 +590,21 @@ class Enumerate:
             if IpValidator.is_valid_ipv4_address(source_address):
                 command += ["--src=" + source_address]
             else:
-                return "Error: The redirection should be to a IPv4"
+                self.enumerate.debug("Error: The redirection should be to a IPv4", color=Format.color_warning)
+                return False
 
         # Adding Targets
         if type(target) is list:
             if all_ips_from_dns:
                 for item in target:
                     if not re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
-                        return "Error: Target in list is not a valid IP or hostname (Does not accept ranges here)"
+                        self.enumerate.debug("Error: Target in list is not a valid IP or hostname (Does not accept ranges here)", color=Format.color_warning)
+                        return False
             else:
                 for item in target:
                     if not IpValidator.is_valid_ipv4_address(item):
-                        return "Error: Target in list is not a valid IP (Does not accept ranges here)"
+                        self.enumerate.debug("Error: Target in list is not a valid IP (Does not accept ranges here)", color=Format.color_warning)
+                        return False
 
             command += target
 
@@ -611,22 +617,19 @@ class Enumerate:
         elif re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*\Z", str(target).lower()) and all_ips_from_dns:
             command += ["-m", target]
         else:
-            return "Error: Target is not a valid IP, Range or list"
-
-        self.enumerate.debug("check_target_is_alive command is: %s" % command)
+            self.enumerate.debug("Error: Target is not a valid IP, Range or list", color=Format.color_warning)
+            return False
 
         if ping_count > 0:
             output = subprocess.run(command, stderr=subprocess.PIPE).stderr.decode("utf-8").strip().split("\n")
         else:
             output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
 
-        self.enumerate.debug("check_target_is_alive command output is: %s" % output)
-
         if not output:
-            return None
+            return False
 
         if source_address is not "self":
-            return None
+            return False
 
         if ping_count > 0:
             final_out = [[]]
@@ -642,12 +645,14 @@ class Enumerate:
                     final_out += [temp]
 
             del final_out[0]
+
+            self.enumerate.debug("check_target_is_alive: Output generated successfully", color=Format.color_success)
             return final_out
 
+        self.enumerate.debug("check_target_is_alive: Output generated successfully", color=Format.color_success)
         return output
 
-    @staticmethod
-    def get_route_to_target(target, interface="usb0", bypass_routing_tables=False, hop_back_checks=True,
+    def get_route_to_target(self, target, interface="usb0", bypass_routing_tables=False, hop_back_checks=True,
                             map_host_names=True, original_out=False):
         """
         Makes use of the traceroute command.
@@ -681,12 +686,13 @@ class Enumerate:
             if IpValidator.is_valid_ipv4_address(target):
                 command += [target]
         else:
-            return "Error: Wrong type"  # Trace route is not able to target multiple hosts
+            self.enumerate.debug("Error: Wrong type - ip should be <string>", color=Format.color_warning)
+            return False
 
         # Running command
         output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
 
-        if original_out is True:  # If user doesnt want output parsed
+        if original_out:  # If user doesnt want output parsed
             return output
 
         # Parsing output
@@ -726,6 +732,7 @@ class Enumerate:
         if type(route_out[0]) is list:
             route_out[0] = route_out[0][0]
 
+        self.enumerate.debug("get_route_to_target: Output generated successfully", color=Format.color_success)
         return route_out, route_back
 
     def get_targets_via_arp(self, target, interface="usb0", source_ip="self", target_is_file=False,
@@ -814,6 +821,8 @@ class Enumerate:
         except Exception as Err:
             self.enumerate.debug("get_targets_via_arp Error: %s" % Err, color=Format.color_warning)
             return False
+
+        self.enumerate.debug("get_targets_via_arp: Output generated successfully", color=Format.color_success)
         return outlist  # Sorting via IP would be nice
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
