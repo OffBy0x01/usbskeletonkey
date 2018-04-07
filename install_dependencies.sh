@@ -16,6 +16,8 @@ apt-get --assume-yes install inotify-tools
 apt-get --assume-yes install isc-dhcp-server
 apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
+apt-get --assume-yes install smbclient
+
 
 # Get required kernel version
 if ! uname -a | grep -q "4.4.50+"; then
