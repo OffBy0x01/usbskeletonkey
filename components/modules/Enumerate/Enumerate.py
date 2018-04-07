@@ -471,6 +471,8 @@ class Enumerate:
                         subprocess.run(command + ["getdompwinfo"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
+                    self.enumerate.debug("Password Policy - " + curr_password_info.__str__(), Format.color_info)
+
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
