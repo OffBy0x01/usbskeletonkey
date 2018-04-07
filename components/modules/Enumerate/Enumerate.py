@@ -190,11 +190,12 @@ class Enumerate:
             # NMAP to determine OS, port and service info
             self.enumerate.debug("Starting NMAP", color=Format.color_info)
             nmap_output = self.nmap(ip)  # TODO portsCSV
-            current.PORTS += (nmap_output[0])
-            current.OS_INFO += (nmap_output[1])
+
+            current.PORTS += (nmap_output[0] if nmap_output[0] else False)
+            current.OS_INFO += (nmap_output[1] if nmap_output[1] else False)
 
             # self.other things that just uses IPs
-
+            self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
             domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
             #current.DOMAIN
 
