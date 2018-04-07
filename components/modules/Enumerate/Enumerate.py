@@ -65,8 +65,11 @@ class Enumerate:
         self.user_list = []
         with open(self.path + "/modules/Enumerate/users.txt") as user_file:
             for line in user_file:
-                user, _, password = line.strip().partition(":")
-                self.user_list.append([user, password])
+                try:
+                    user, _, password = line.strip().partition(":")
+                    self.user_list.append([user, password])
+                except Exception as userlisterr:
+                    self.enumerate.debug("Error parsing users: %s" % userlisterr, color=Format.color_warning)
 
         # ~Produce list of default passwords~
         self.default_passwords = []
@@ -431,56 +434,107 @@ class Enumerate:
         :param ip:
         :return none:
         """
+        was_response = False
+
         self.enumerate.debug("Initializing get_rpcclient")
-        # Pass usernames in otherwise test against defaults  # What defaults? -Corey
-        for user in user_list:
-            raw_rpc = subprocess.Popen("rpcclient -U " + " " + target + " -c 'lsaquery'", shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE).stdout.decode('utf-8')  # Shut it PEP8, 1 line over 2 lines is minging
+        # Pass user:pass in otherwise test against default_passwords
+
+        raw_rpc=""
+        for user, passwd in user_list:
             try:
-                raw_rpc.stdin.write(user_list[user])
-                if user_list[user] == "":
-                    # password list is empty - use default
-                    for password in password_list:
-                        raw_rpc.stdin.write(password)
+                if passwd:
+                    raw_rpc = subprocess.run(["rpcclient", "-U", user, "192.168.1.235"], stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="ascii").stdout
+
+                    if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
+                        # Unable to connect
+                        was_response = True
+                        continue
+
+                    elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
+                        # Incorrect username or password
+                        was_response = True
+                        continue
+
+                    elif "rpcclient $>" in raw_rpc:
+                        was_response = True
+                        self.enumerate.debug("get_rpcclient: Session obtained", color=Format.color_success)
+
+                        self.enumerate.debug("get_rpcclient/enumdomgroups ", color=Format.color_info)
+                        raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomgroups"],
+                                                     stdout=subprocess.PIPE, input="%s\n" % passwd,
+                                                     encoding="utf-8").stdout
+                        users_or_groups = False
+                        # true = users.txt / false = groups
+                        domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+
+                        self.enumerate.debug("get_rpcclient/enumdomusers ", color=Format.color_info)
+                        raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomusers"],
+                                                     stdout=subprocess.PIPE, input="%s\n" % passwd,
+                                                     encoding="utf-8").stdout
+                        users_or_groups = True
+                        # true = users.txt / false = groups
+                        userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+
+                        self.enumerate.debug("get_rpcclient/getdompwinfo: ", color=Format.color_info)
+                        raw_command = subprocess.run(["rpcclient", "-U", user, "192.168.1.235", "-c", "getdompwinfo"],
+                                                     stdout=subprocess.PIPE, input="%s\n" % passwd,
+                                                     encoding="utf-8").stdout
+                        passwdinfo = self.get_password_policy(raw_command, ip)
+
+                        self.enumerate.debug("get_rpcclient: Output generated successfully", color=Format.color_success)
+                        return domaininfo, userinfo, passwdinfo
+                        # then run get_smbclient
+
+                else:
+                    for passwd in password_list:
+                        raw_rpc = subprocess.run(["rpcclient", "-U", user, "192.168.1.235"], stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="ascii").stdout
+
+                        if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
+                            # Unable to connect
+                            was_response = True
+                            continue
+
+                        elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
+                            # Incorrect username or password
+                            was_response = True
+                            continue
+
+                        elif "rpcclient $>" in raw_rpc:
+                            was_response = True
+                            self.enumerate.debug("get_rpcclient: Session obtained", color=Format.color_success)
+
+                            self.enumerate.debug("get_rpcclient/enumdomgroups ", color=Format.color_info)
+                            raw_command = subprocess.run(
+                                ["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomgroups"],
+                                stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="utf-8").stdout
+                            users_or_groups = False
+                            # true = users.txt / false = groups
+                            domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+
+                            self.enumerate.debug("get_rpcclient/enumdomusers ", color=Format.color_info)
+                            raw_command = subprocess.run(
+                                ["rpcclient", "-U", user, "192.168.1.235", "-c", "enumdomusers"],
+                                stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="utf-8").stdout
+                            users_or_groups = True
+                            # true = users.txt / false = groups
+                            userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
+
+                            self.enumerate.debug("get_rpcclient/getdompwinfo: ", color=Format.color_info)
+                            raw_command = subprocess.run(
+                                ["rpcclient", "-U", user, "192.168.1.235", "-c", "getdompwinfo"],
+                                stdout=subprocess.PIPE, input="%s\n" % passwd, encoding="utf-8").stdout
+                            passwdinfo = self.get_password_policy(raw_command, ip)
+
+                            self.enumerate.debug("get_rpcclient: Output generated successfully",
+                                                 color=Format.color_success)
+                            return domaininfo, userinfo, passwdinfo
+                            # then run get_smbclient
 
             except Exception as e:
                 self.enumerate.debug("Error: get_rpcclient: %s" % e, color=Format.color_warning)
 
-            raw_rpc.stdin.close()
-            raw_rpc.wait()
-
-            if "NT_STATUS_CONNECTION_REFUSED" in raw_rpc:
-                # Unable to connect
-                self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s : %s" % user % user_list[user], color=Format.color_warning)
-                return None
-            elif "NT_STATUS_LOGON_FAILURE" in raw_rpc:
-                # Incorrect username or password
-                self.enumerate.debug("Error: get_rpcclient: Incorrect username or password under - %s : %s " % user % user_list[user], color=Format.color_warning)
-
-                return None
-            elif "rpcclient $>" in raw_rpc:
-                self.enumerate.debug("get_rpcclient/enumdomgroups ")
-                raw_command = subprocess.run("enumdomgroups", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                users_or_groups = False
-                # true = users.txt / false = groups
-                domaininfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
-
-                self.enumerate.debug("get_rpcclient/enumdomusers ")
-                raw_command = subprocess.run("enumdomusers", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                users_or_groups = True
-                # true = users.txt / false = groups
-                userinfo = self.extract_info_rpc(raw_command, ip, users_or_groups)
-
-                self.enumerate.debug("get_rpcclient/getdompwinfo: ")
-                raw_command = subprocess.run("getdompwinfo", stdout=subprocess.PIPE).stdout.decode('utf-8')
-                passwdinfo = self.get_password_policy(raw_command, ip)
-
-                self.enumerate.debug("get_rpcclient: Output generated successfully", color=Format.color_success)
-                return domaininfo, userinfo, passwdinfo
-                # then run get_smbclient
-
-            else:
+            if was_response:
                 self.enumerate.debug("Error: get_rpcclient: No reply from target", color=Format.color_warning)
-                return None
 
     def get_password_policy(self, raw_command, ip):
         """
