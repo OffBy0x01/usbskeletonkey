@@ -270,7 +270,7 @@ class Enumerate:
         self.enumerate.debug(raw_shares)
 
     # NMAP scans for service and operating system detection
-    def nmap(self):
+    def nmap(self, target_ip):
         """
         :return list of list of list of strings:
         :return none:
@@ -320,9 +320,9 @@ class Enumerate:
             command = "-sV --version-light"
 
             if self.use_port_range == "true":  # If a port range has been specified use
-                nm.scan(hosts=self.ip_list, ports=self.port_list, arguments=command)
+                nm.scan(host=target_ip, ports=", ".join(self.port_list), arguments=command)
             else:
-                nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(host=target_ip, arguments=command)
 
                 self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")  # debug for printing the command
 
@@ -335,9 +335,9 @@ class Enumerate:
             command = "-sV --version-all -T4"
 
             if self.use_port_range == "true":
-                nm.scan(hosts=self.ip_list, ports=self.port_list, arguments=command)
+                nm.scan(host=target_ip, ports=", ".join(self.port_list), arguments=command)
             else:
-                nm.scan(hosts=self.ip_list, arguments=command)
+                nm.scan(host=target_ip, arguments=command)
 
                 self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
