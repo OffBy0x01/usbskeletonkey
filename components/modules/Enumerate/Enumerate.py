@@ -450,7 +450,7 @@ class Enumerate:
                 self.enumerate.debug("lsaquery out\n" + lsa_test_query.stdout, Format.color_info)
                 self.enumerate.debug("Return Code - " + lsa_test_query.check_returncode().__str__(), Format.color_info)
 
-                if lsa_test_query.check_returncode() != 0:
+                if lsa_test_query.check_returncode() is not None:
                     if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query.stdout:
                         # Unable to connect
                         self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user)
