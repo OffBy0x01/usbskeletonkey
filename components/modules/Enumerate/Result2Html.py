@@ -1,7 +1,6 @@
 import yattag
 
 from collections import defaultdict
-
 from components.modules.Enumerate.TargetInfo import TargetInfo
 from components.framework.Debug import Debug
 from components.helpers.Format import Format
@@ -46,7 +45,7 @@ class Result2Html:
 
         self.result2html_dbg.debug("Beginning html parsing", color=Format.color_info)
 
-        doc, tag, text = Doc().tagtext()
+        doc, tag, text = yattag.Doc().tagtext()
         doc.asis('<!DOCTYPE html>')
 
         with tag('html', lang="en"):
