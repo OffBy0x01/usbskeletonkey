@@ -210,6 +210,7 @@ class Enumerate:
             self.enumerate.debug("Saving results from %s" % ip, color=Format.color_success)
             # Add target information to dict
             target_ips[ip] = current
+            self.enumerate.debug("got this far")
             current_ip_in_list += 1
 
         # Write output to html
