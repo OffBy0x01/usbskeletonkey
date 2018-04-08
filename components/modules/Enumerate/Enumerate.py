@@ -278,28 +278,40 @@ class Enumerate:
         :param target:
         :param user:
         :param password:
-        :return list of 3 lists, first contains share name, second share type and third share description:
+        :return list of 3 lists first contains share name second share type and third share description:
         '''
+
+        # Get list of all smb shares at target IP
         shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + password, shell=True,
                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         self.enumerate.debug(shares)
+        shares = shares.splitlines()  # Spilt output into list
 
-        shares = shares.splitlines()
+        output = [[], [], []]  # Create list to hold output
 
-        for index in range(0, 2):
-            del shares[index]
+        # Delete first line (results in shares being empty if it failed)
         del shares[0]
 
-        output = [[], [], []]
+        # If content still exists in shares (it completed successfully)
+        if shares:
 
-        regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)
-        for line in shares:
-            result = re.search(regex, line)
-            if result:
-                result = [res if not None else "" for res in result.groups()]
-                for index in range(0, 3):
-                    output[index].append(result[index])
+            # Clean up formatting (Needs to be like this)
+            del shares[0]
+            del shares[0]
+
+            regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)  # Compile regex
+            for line in shares:  # For each share
+                result = re.search(regex, line)  # Search for a match to regex
+                if result:  # If found
+                    result = [res if not None else "" for res in result.groups()]  # Ensure valid
+                    for index in range(0, 3):
+                        output[index].append(result[index])  # Load result into the output list
+
+        if output:  # If valid output was captured
+            return output  # return it
+        else:
+            return False  # Something went wrong
 
     # NMAP scans for service and operating system detection
     def nmap(self, target_ip):
@@ -388,14 +400,6 @@ class Enumerate:
 
         self.enumerate.debug("NMAP: Output generated successfully", color=Format.color_success)
         return output_list  # return the output of scans in the form of a list
-
-    def get_local_groups(self):
-        # Part of net
-        return
-
-    def get_domain_groups(self):
-        # Also part of net
-        return
 
     def get_nbt_stat(self, target):
         """
