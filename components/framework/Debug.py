@@ -35,16 +35,19 @@ class Debug(object):
 
     def recursive_type(self, obj):
         # This assumes the first item in a list is the same as every item in that list (As it should be)
+        try:
+            this = type(obj[0])
+            result = "["
 
-        this = type(obj[0])
-        result = "["
+            if this is list or this is tuple:
+                for item in obj:
+                    result += "%s, " % self.recursive_type(item)
 
-        if this is list or this is tuple:
-            for item in obj:
-                result += "%s, " % self.recursive_type(item)
-
-            result = result[:-2] + "]"
-        else:
-            result = (str(type(obj[0]))[8:-2])
+                result = result[:-2] + "]"
+            else:
+                result = (str(type(obj[0]))[8:-2])
+        except Exception as Err:
+            print("Framework/Debug/recursive_type Error: %s" % Err)
+            result = ""
 
         return result
