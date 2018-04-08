@@ -333,6 +333,27 @@ class Enumerate:
         else:
             return False  # Something went wrong
 
+    def get_users(self, target, group, user, password):
+        '''
+        :param target:
+        :param group:
+        :param user:
+        :param password:
+        :return: List of users in a given samba group
+        '''
+
+        # Get all users in a given group
+        users = subprocess.run("net rpc group members \"" + group + "\" -I " + target + " -U " + user + "%" + password, shell=True,
+                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        self.enumerate.debug(users)
+
+        if not (re.search("Could not connect|Connection failed:", users, flags=re.M)):  # If successful
+            groups = users.splitlines()  # Split results into list
+            return users
+        else:
+            return False  # Something went wrong
+
 
     # NMAP scans for service and operating system detection
     def nmap(self, target_ip):
