@@ -460,7 +460,7 @@ class Enumerate:
                         subprocess.run(command + ["enumdomgroups"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
-                    self.enumerate.debug("First few characters of groups - " + curr_domain_info.__str__(), Format.decoration_bold)
+                    #self.enumerate.debug("First few characters of groups - " + curr_domain_info.__str__(), Format.decoration_bold)
 
                     curr_password_info = self.get_password_policy(
                         subprocess.run(command + ["getdompwinfo"], input=password + "\n",
@@ -472,7 +472,7 @@ class Enumerate:
                                        encoding="ascii", stdout=subprocess.PIPE).stdout,
                         startrows=0, initchars=6)
 
-                    self.enumerate.debug("First few characters of users - " + curr_user_info.__str__(), Format.decoration_bold)
+                    #self.enumerate.debug("First few characters of users - " + curr_user_info.__str__(), Format.decoration_bold)
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
@@ -595,6 +595,9 @@ class Enumerate:
 
         :return:
         """
+
+        # TODO REMOVE THIS
+        self.enumerate.debug(output.__str__())
 
         output = output.split()
 
