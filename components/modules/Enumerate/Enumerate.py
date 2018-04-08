@@ -20,7 +20,7 @@ from components.framework.Debug import Debug
 from components.helpers.Format import Format
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
-from components.modules.Enumerate.Result2Html import result2html
+from components.modules.Enumerate.Result2Html import Result2Html
 from components.modules.Enumerate.TargetInfo import TargetInfo
 
 
@@ -892,6 +892,7 @@ class Enumerate:
 
         self.enumerate.debug("get_targets_via_arp: Output generated successfully", color=Format.color_success)
         return outlist  # Sorting via IP would be nice
+
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
     # e.g. def for nbtstat, def for nmap, def for net etc...
