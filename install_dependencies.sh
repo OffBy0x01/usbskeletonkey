@@ -5,7 +5,6 @@
 # Install Dependencies
 apt-get update
 apt-get --assume-yes install rpi-update
-apt-get --assume-yes install python
 apt-get --assume-yes install git
 apt-get --assume-yes install python-dev
 apt-get --assume-yes install python-pip
@@ -16,6 +15,11 @@ apt-get --assume-yes install inotify-tools
 apt-get --assume-yes install isc-dhcp-server
 apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
+apt-get --assume-yes install smbclient
+apt-get --assume-yes install fping
+apt-get --assume-yes install nmap
+
+
 
 # Get required kernel version
 if ! uname -a | grep -q "4.4.50+"; then
