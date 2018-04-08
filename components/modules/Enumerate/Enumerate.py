@@ -321,16 +321,17 @@ class Enumerate:
         :return: List of samba groups on target
         '''
 
+        # Get all groups
         groups = subprocess.run("net rpc group LIST global -I " + target + " -U  " + user + "%" + password, shell=True,
                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         self.enumerate.debug(groups)
 
-        if not (re.search("Could not connect|Connection failed:", groups, flags=re.M)):
-            groups = groups.splitlines()
+        if not (re.search("Could not connect|Connection failed:", groups, flags=re.M)):  # If successful
+            groups = groups.splitlines()  # Split results into list
             return groups
         else:
-            return False
+            return False  # Something went wrong
 
 
     # NMAP scans for service and operating system detection
