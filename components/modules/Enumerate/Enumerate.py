@@ -301,7 +301,7 @@ class Enumerate:
                 for port in nm[target_ip][protocol]:
                     nmap_results = nm[target_ip][protocol][port]
                     parsed_output.append(
-                        [str(port), nmap_results['product'] if nmap_results['product'] else " ", nmap_results['version'] if nmap_results['version'] else " ", nmap_results['state'] if nmap_results['state'] else " "])
+                        [str(port), nmap_results['product'] if nmap_results['product'] else "null", nmap_results['version'] if nmap_results['version'] else "null", nmap_results['state'] if nmap_results['state'] else "null"])
 
 
 
