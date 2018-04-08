@@ -442,13 +442,11 @@ class Enumerate:
                 lsa_test_query = subprocess.run(command, input=password + "\n",
                                                 encoding="ascii", stdout=subprocess.PIPE)
 
-                self.enumerate.debug("lsaquery out\n" + lsa_test_query.stdout, Format.color_info)
-                self.enumerate.debug("Return Code - " + lsa_test_query.check_returncode().__str__(), Format.color_info)
-
                 if lsa_test_query.check_returncode() is not None:
                     if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query.stdout:
                         # Unable to connect
-                        self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user)
+                        self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user,
+                                             Format.color_danger)
 
                         self.rpc_timeout += self.rpc_timeout_increment
 
@@ -462,7 +460,7 @@ class Enumerate:
                         subprocess.run(command + ["enumdomgroups"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
-                    self.enumerate.debug("First few characters of groups - " + curr_domain_info[0], Format.color_info)
+                    self.enumerate.debug("First few characters of groups - " + curr_domain_info[1], Format.decoration_bold)
 
                     curr_password_info = self.get_password_policy(
                         subprocess.run(command + ["getdompwinfo"], input=password + "\n",
@@ -474,7 +472,7 @@ class Enumerate:
                                        encoding="ascii", stdout=subprocess.PIPE).stdout,
                         startrows=0, initchars=6)
 
-                    self.enumerate.debug("First few characters of users - " + curr_user_info[0], Format.color_info)
+                    self.enumerate.debug("First few characters of users - " + curr_user_info[1], Format.decoration_bold)
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
@@ -502,7 +500,7 @@ class Enumerate:
                 try:
                     current = self.rpc_request(user, passwd, target)
                 except IOError as e:
-                    self.enumerate.debug("Error: get_rpcrequest: %s" % e)
+                    self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
                     continue
 
                 # There must be a better way to do this I cant think of without utilising self
@@ -525,7 +523,7 @@ class Enumerate:
                     try:
                         current = self.rpc_request(user, password, target)
                     except IOError as e:
-                        self.enumerate.debug("Error: get_rpcrequest: %s" % e)
+                        self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
                         # If output from rpc_request
                         continue
 
