@@ -337,4 +337,5 @@ class Result2Html:
                                                 with tag('td'):
                                                     text(state)
 
-        return yattag.indent(doc.getvalue())
+        self.result2html_dbg.debug("Html generation success", color=Format.color_success)
+        return doc.getvalue()
