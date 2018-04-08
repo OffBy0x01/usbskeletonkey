@@ -593,7 +593,8 @@ class Enumerate:
         :param startrows:
         :param initchars:
 
-        :return:
+        :return: Returns a list of lists containing user/group followed by rid as a pair
+                 e.g.[[user/group, rid]]
         """
 
         rpc_out = rpc_out.split("\n")
@@ -608,7 +609,8 @@ class Enumerate:
         output = []
 
         for line in rpc_out:
-            output += line[initchars:-1].split('] rid:[')
+            # output will look like [[user/group, rid], [user/group, rid]]
+            output += [line[initchars:-1].split('] rid:[')]
 
         self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
         return output
