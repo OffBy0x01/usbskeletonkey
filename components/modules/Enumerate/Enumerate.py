@@ -586,25 +586,29 @@ class Enumerate:
 
         return output
 
-    def extract_info_rpc(self, output, startrows=1, initchars=7):
+    def extract_info_rpc(self, rpc_out, startrows=1, initchars=7):
         """
 
-        :param output:
+        :param rpc_out:
         :param startrows:
         :param initchars:
 
         :return:
         """
 
-        output = output.split("\n")
+        rpc_out = rpc_out.split("\n")
 
         if startrows > 0:
-            del output[0:startrows]
+            del rpc_out[0:startrows]
         else:
-            del output[0]
+            del rpc_out[0]
 
-        for line in output:
-            line = line[initchars:-1].split('] rid:[')
+        del rpc_out[-1]
+
+        output = []
+
+        for line in rpc_out:
+            output += line[initchars:-1].split('] rid:[')
 
         self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
         return output
