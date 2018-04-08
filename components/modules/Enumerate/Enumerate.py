@@ -354,6 +354,29 @@ class Enumerate:
         else:
             return False  # Something went wrong
 
+    def get_all_users(self, target, user, password):
+        '''
+        :param target:
+        :param user:
+        :param password:
+        :return: List of lists first contains a string group name, second contains list of string user
+        '''
+
+        output = [[], [[]]]  # Make output list
+
+        groups = self.get_groups(target, user, password)  # Get groups
+
+        if groups:  # If groups ran successfully
+            for group in groups:  # For each group
+                users = self.get_users(target, group, user, password)  # Attempt to harvest users
+                if users:  # If successful
+                    output[0].append(group)  # Load group into output
+                    output[1].append(users)  # Load user list into output
+
+        if output:  # If output was generated
+            return output
+        else:
+            return False  # Something went wrong
 
     # NMAP scans for service and operating system detection
     def nmap(self, target_ip):
