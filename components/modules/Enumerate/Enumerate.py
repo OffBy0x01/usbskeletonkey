@@ -507,6 +507,8 @@ class Enumerate:
             if passwd:
                 try:
                     current = self.rpc_request(user, passwd, target)
+                except subprocess.CalledProcessError as e:
+                    self.enumerate.debug("Likely Incorrect Credentials - Status %s" % e, Format.color_danger)
                 except IOError as e:
                     self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
                     continue
