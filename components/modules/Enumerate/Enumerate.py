@@ -167,11 +167,11 @@ class Enumerate:
             # check current IP responds to ARP
             arp_response = self.get_targets_via_arp(ip, interface=self.interface)
 
-            if arp_response is not False:
+            if arp_response:
                 try:
                     current.RESPONDS_ARP = True
-                    current.MAC_ADDRESS = arp_response[0][1]
-                    current.ADAPTER_NAME = arp_response[0][2]
+                    current.MAC_ADDRESS = arp_response[1]
+                    current.ADAPTER_NAME = arp_response[2]
                     self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
                     self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
                     self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
@@ -302,6 +302,8 @@ class Enumerate:
                     nmap_results = nm[target_ip][protocol][port]
                     parsed_output.append(
                         [str(port), nmap_results['product'], nmap_results['version'], nmap_results['state']])
+
+
 
             output_list.append(parsed_output)  # Add parsed data to the output list
 
