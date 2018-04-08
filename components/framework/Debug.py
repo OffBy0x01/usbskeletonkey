@@ -40,11 +40,11 @@ class Debug(object):
         result = "["
 
         if this is list or this is tuple:
-            for item in this:
+            for item in obj:
                 result += "%s, " % self.recursive_type(item)
 
             result = result[:-2] + "]"
         else:
-            result = (str(type(this))[8:-2])
+            result = (str(type(obj[0]))[8:-2])
 
         return result
