@@ -328,6 +328,7 @@ class Result2Html:
                                         for this_port in targets[IP].PORTS:
                                             self.result2html_dbg.debug("lists structure: %s" % this_port)
                                             for port, service, version, state in this_port:
+                                                self.result2html_dbg.debug("Got this far")
                                                 with tag('td'):
                                                     text(port)
                                                 with tag('td'):
