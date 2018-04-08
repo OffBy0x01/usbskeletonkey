@@ -201,8 +201,8 @@ class Enumerate:
             nmap_output = self.nmap(ip)  # TODO portsCSV
             if len(nmap_output) == 2:
                 self.enumerate.debug("NMAP parsing output")
-                current.PORTS += nmap_output[0]
-                current.OS_INFO += nmap_output[1]
+                current.PORTS += nmap_output[1]
+                current.OS_INFO += nmap_output[0]
             else:
                 self.enumerate.debug("Error: NMAP output did not match expectations", color=Format.color_warning)
                 current.PORTS = False
