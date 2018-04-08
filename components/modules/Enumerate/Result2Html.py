@@ -327,15 +327,15 @@ class Result2Html:
                                     with tag('tr'):
                                         for this_port in targets[IP].PORTS:
                                             self.result2html_dbg.debug("lists structure: %s" % this_port)
-                                            for port, service, in this_port:
+                                            for port, service, version, state in this_port:
                                                 with tag('td'):
                                                     text(port)
                                                 with tag('td'):
                                                     text(service)
                                                 with tag('td'):
-                                                    text("version")
+                                                    text(version)
                                                 with tag('td'):
-                                                    text("state")
+                                                    text(state)
 
         self.result2html_dbg.debug("Html generation success", color=Format.color_success)
         return doc.getvalue()
