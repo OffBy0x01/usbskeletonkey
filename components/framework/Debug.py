@@ -33,16 +33,17 @@ class Debug(object):
         if outcome:
             self._successful_operations += 1
 
-    def test_structure(self, object):
-        # This assumes the first item in a list is the same as every item in that list (As it should be)
 
-        this = type(object)
-        result = "["
+def recursive_type(obj):
+    # This assumes the first item in a list is the same as every item in that list (As it should be)
 
-        if this is list:
-            for item in this:
-                result += "%s, " % self.test_structure(item)
-        else:
-            result = (str(type(this))[8:-2])
+    this = type(obj)
+    result = "["
 
-        return result[:-2] + "]"
+    if this is list:
+        for item in this:
+            result += "%s, " % recursive_type(item)
+    else:
+        result = (str(type(this))[8:-2])
+
+    return result[:-2] + "]"
