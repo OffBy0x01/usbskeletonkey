@@ -21,6 +21,7 @@ from components.modules.Enumerate.TargetInfo import TargetInfo
 class Enumerate:
     def __init__(self, path, debug):
         self.enumerate = Debug(name="Enumerate", type="Module", debug=debug)
+        self._debug = debug
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -147,7 +148,7 @@ class Enumerate:
     def run(self):
         # ~Runs all the things~
         # ---------------------
-        target_ips = defaultdict()  # Init of dictionary
+        target_ips = defaultdict(TargetInfo)  # Init of dictionary
 
         current_ip_in_list = 1
         ips_in_list = len(self.ip_list_shuffled)
@@ -198,22 +199,26 @@ class Enumerate:
             # NMAP to determine OS, port and service info
             self.enumerate.debug("Starting NMAP", color=Format.color_info)
             nmap_output = self.nmap(ip)  # TODO portsCSV
-            if nmap_output:
+            if len(nmap_output) == 2:
+                self.enumerate.debug("NMAP parsing output")
                 current.PORTS += nmap_output[0]
                 current.OS_INFO += nmap_output[1]
             else:
+                self.enumerate.debug("Error: NMAP output did not match expectations", color=Format.color_warning)
                 current.PORTS = False
                 current.OS_INFO = False  # making it easier to parse
 
+            self.enumerate.debug("Saving results from %s" % ip, color=Format.color_success)
             # Add target information to dict
             target_ips[ip] = current
-
             current_ip_in_list += 1
 
         # Write output to html
         with open(self.path + "/modules/Enumerate/output.html", "w") as out:
-            html = Result2Html()
-            out.write(html.result2html(target_ips, self.ip_list))
+            self.enumerate.debug("Writing all results to output.html", color=Format.color_info)
+            html = Result2Html(debug=self._debug)
+            output = html.result2html(target_ips, self.ip_list)
+            out.write(output)
 
         return  # End of run
 
