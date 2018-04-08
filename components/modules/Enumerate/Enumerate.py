@@ -441,8 +441,9 @@ class Enumerate:
 
             try:
                 command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
-                self.enumerate.debug("Running command - " + command.__str__(), Format.color_info)
-                self.enumerate.debug("Password - " + password, Format.color_info)
+
+                self.enumerate.debug("RSA Request Username - %s" % user)
+                self.enumerate.debug("RPC Request Password - %s" % password)
 
                 lsa_test_query = subprocess.run(command, input=password + "\n",
                                                 encoding="ascii", stdout=subprocess.PIPE)
@@ -465,7 +466,8 @@ class Enumerate:
                         subprocess.run(command + ["enumdomgroups"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
-                    self.enumerate.debug("First few characters of groups - " + curr_domain_info[0].__str__(), Format.color_success)
+                    self.enumerate.debug("First few items - %s " %
+                                         curr_domain_info[0].__str__(), Format.color_success)
 
                     curr_password_info = self.get_password_policy(
                         subprocess.run(command + ["getdompwinfo"], input=password + "\n",
@@ -477,7 +479,8 @@ class Enumerate:
                                        encoding="ascii", stdout=subprocess.PIPE).stdout,
                         startrows=0, initchars=6)
 
-                    self.enumerate.debug("First few characters of users - " + curr_user_info[0].__str__(), Format.color_success)
+                    self.enumerate.debug("First few characters of users - %s" %
+                                         curr_user_info[0].__str__(), Format.color_success)
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
