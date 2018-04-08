@@ -41,7 +41,7 @@ class Debug(object):
 
             if this is list or this is tuple:
                 for item in obj:
-                    result += "%s, " % self.recursive_type(item)
+                    result += "[%s], " % self.recursive_type(item)
 
                 result = result[:-2] + "]"
             else:
