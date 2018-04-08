@@ -76,6 +76,7 @@ class Result2Html:
                                             text(IP)
                                         with tag('th'):
                                             text("Info")
+                                self.result2html_dbg.debug("ICMP, MAC & Adapter")
                                 # Table rows
                                 with tag('tbody'):
                                     with tag('tr'):
@@ -95,6 +96,7 @@ class Result2Html:
                                             text(targets[IP].ADAPTER_NAME if targets[IP].ADAPTER_NAME else "None")
 
                             self.result2html_dbg.debug("Formatting route")
+                            self.result2html_dbg.recursive_type(targets[IP].ROUTE)
                             # Route
                             with tag("h3"):
                                 text("Route to %s" % IP)
@@ -116,6 +118,7 @@ class Result2Html:
                                                 text(value)  # ip
 
                             self.result2html_dbg.debug("Formatting OS INFO")
+                            self.result2html_dbg.recursive_type(targets[IP].OS_INFO)
                             # OS Info
                             with tag("h3"):
                                 text("OS Info for %s" % IP)
@@ -136,6 +139,7 @@ class Result2Html:
                                                     text(suspected_os)
 
                             self.result2html_dbg.debug("Formatting Software INFO")
+                            self.result2html_dbg.recursive_type(targets[IP].SOFTWARE_INFO)
                             # SOFTWARE INFO
                             with tag("h3"):
                                 text("Software Info for %s" % IP)
@@ -150,7 +154,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Workgroup")
+                            self.result2html_dbg.debug("Workgroup not implemented")
                             # WORKGROUP
                             with tag("h3"):
                                 text("Workgroup Info for %s" % IP)
@@ -165,7 +169,8 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Domain")
+                            self.result2html_dbg.debug("Formatting Domain groups")
+                            self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS)
                             # DOMAIN
                             with tag("h3"):
                                 text("Domain Info for %s" % IP)
@@ -180,7 +185,24 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Local")
+                            self.result2html_dbg.debug("Formatting Domain groups")
+                            self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS)
+                            # DOMAIN
+                            with tag("h3"):
+                                text("Domain Info for %s" % IP)
+                            with tag('table', klass="table table-condensed"):
+                                # Table headings
+                                with tag('thead'):
+                                    with tag('tr'):
+                                        with tag('th'):
+                                            text("Domain Info")
+                                with tag('tbody'):
+                                    with tag('tr'):
+                                        with tag('td'):
+                                            text("Not currently implemented :(")
+
+
+                            self.result2html_dbg.debug("Local not implemented")
                             # LOCAL
                             with tag("h3"):
                                 text("Local Info for %s" % IP)
