@@ -596,7 +596,7 @@ class Enumerate:
         :return:
         """
 
-        output = output.split()
+        output = output.split("\n")
 
         if startrows > 0:
             del output[0:startrows]
@@ -604,7 +604,7 @@ class Enumerate:
             del output[0]
 
         for line in output:
-            line[initchars:-1].split('] rid:[')
+            line = line[initchars:-1].split('] rid:[')
 
         self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
         return output
