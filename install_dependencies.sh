@@ -132,6 +132,9 @@ fi
 mv /home/pi/usbskeletonkey/components/framework/shell_scripts/g_hid.ko /lib/modules/4.4.50+/kernel/drivers/usb/gadget/legacy/g_hid.ko
 chmod +x /home/pi/usbskeletonkey/components/framework/shell_scripts/hid-gadget-test
 
+# install dependencies for enumerate.py (we will find a better way to do this at a later date)
+pip3 install python-nmap yattag blinkt
+
 reboot now
 
 # sed -i -r "1,16{s,first_run .*,first_run = false,g}" ./config.ini

@@ -1,12 +1,4 @@
-import importlib
-try:
-    importlib.import_module("yattag")
-except ImportError:
-    import pip
-    pip.main(['install', "yattag"])
-finally:
-    globals()["yattag"] = importlib.import_module("yattag")
-
+import yattag
 
 from collections import defaultdict
 
