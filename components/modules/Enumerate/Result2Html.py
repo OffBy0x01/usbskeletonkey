@@ -325,8 +325,9 @@ class Result2Html:
                                             text("State")
                                 with tag('tbody'):
                                     with tag('tr'):
-                                        for lists in targets[IP].PORTS:
-                                            for port, service, version, state in lists:
+                                        for this_port in targets[IP].PORTS:
+                                            self.result2html_dbg.debug("lists structure: %s" % this_port)
+                                            for port, service, version, state in this_port:
                                                 with tag('td'):
                                                     text(port)
                                                 with tag('td'):
