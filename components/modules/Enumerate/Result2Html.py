@@ -95,8 +95,8 @@ class Result2Html:
                                         with tag('td'):
                                             text(targets[IP].ADAPTER_NAME if targets[IP].ADAPTER_NAME else "None")
 
-                            self.result2html_dbg.debug("Formatting route")
-                            self.result2html_dbg.recursive_type(targets[IP].ROUTE)
+                            self.result2html_dbg.debug("Formatting route %s" % self.result2html_dbg.recursive_type(targets[IP].ROUTE))
+
                             # Route
                             with tag("h3"):
                                 text("Route to %s" % IP)
@@ -169,8 +169,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Domain groups")
-                            self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS)
+                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS))
                             # DOMAIN
                             with tag("h3"):
                                 text("Domain Info for %s" % IP)
@@ -185,8 +184,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Domain groups")
-                            self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS)
+                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS))
                             # DOMAIN
                             with tag("h3"):
                                 text("Domain Info for %s" % IP)
