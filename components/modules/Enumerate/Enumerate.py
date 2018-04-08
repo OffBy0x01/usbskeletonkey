@@ -190,9 +190,8 @@ class Enumerate:
             current.NBT_STAT = self.get_nbt_stat(ip)
             self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
 
-            # self.other things that just uses IPs
+            # RPC CLIENT
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
-
             domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip)
             # current.DOMAIN
 
@@ -211,9 +210,10 @@ class Enumerate:
 
             current_ip_in_list += 1
 
-        # TODO use target_ips with Result2Html
-        with open(self.path + "/modules/Enumerate/output.html") as out:
-            out.write(Result2Html(target_ips))
+        # Write output to html
+        with open(self.path + "/modules/Enumerate/output.html", "w") as out:
+            html = Result2Html()
+            out.write(html.result2html(target_ips, self.ip_list))
 
         return  # End of run
 
