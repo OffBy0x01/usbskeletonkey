@@ -64,8 +64,8 @@ class Enumerate:
                 try:
                     user, _, password = line.strip().partition(":")
                     self.user_list.append([user, password])
-                except Exception as userlisterr:
-                    self.enumerate.debug("Error parsing users: %s" % userlisterr, color=Format.color_warning)
+                except Exception as user_list_err:
+                    self.enumerate.debug("Error parsing users: %s" % user_list_err, color=Format.color_warning)
 
         # ~Produce list of default passwords~
         self.default_passwords = []
@@ -192,7 +192,7 @@ class Enumerate:
 
             # self.other things that just uses IPs
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
-            # This will be outputting a list of strings when I'm done with it -Corey
+
             domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
             # current.DOMAIN
 
@@ -476,8 +476,6 @@ class Enumerate:
 
                     self.enumerate.debug("First few characters of users - " + curr_user_info[0], Format.color_info)
 
-                # TODO Merge lists here?
-
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
             except Exception as e:
@@ -511,6 +509,8 @@ class Enumerate:
                 # If output from rpc_request
                 if current:
                     # current = [curr_domain_info, curr_user_info, curr_password_info]
+
+                    # There may be a quicker way to do this but it would likely require another structure
                     if current[0] not in domain_info:
                         domain_info += current[0]
 
@@ -531,14 +531,17 @@ class Enumerate:
 
                     if current:
                         # current = [curr_domain_info, curr_user_info, curr_password_info]
-                        if current[0] not in domain_info:
-                            domain_info += current[0]
+                        for line in current[0]:
+                            if line not in domain_info:
+                                domain_info += line
 
-                        if current[1] not in user_info:
-                            user_info += current[1]
+                        for line in current[1]:
+                            if line not in user_info:
+                                user_info += line
 
-                        if current[2] not in password_info:
-                            password_info += current[2]
+                        for line in current[2]:
+                            if line not in password_info:
+                                password_info += line
 
         return domain_info, user_info, password_info
 
