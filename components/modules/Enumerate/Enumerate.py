@@ -193,7 +193,7 @@ class Enumerate:
 
             # RPC CLIENT
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
-            domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip)
+            current.DOMAIN_GROUPS, current.DOMAIN_USERS, current.PASSWD_POLICY = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip)
             # current.DOMAIN
 
             # NMAP to determine OS, port and service info
