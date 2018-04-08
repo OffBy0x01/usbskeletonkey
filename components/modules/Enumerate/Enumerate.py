@@ -21,6 +21,7 @@ from components.modules.Enumerate.TargetInfo import TargetInfo
 class Enumerate:
     def __init__(self, path, debug):
         self.enumerate = Debug(name="Enumerate", type="Module", debug=debug)
+        self._debug = debug
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -210,13 +211,12 @@ class Enumerate:
             self.enumerate.debug("Saving results from %s" % ip, color=Format.color_success)
             # Add target information to dict
             target_ips[ip] = current
-            self.enumerate.debug("got this far")
             current_ip_in_list += 1
 
         # Write output to html
         with open(self.path + "/modules/Enumerate/output.html", "w") as out:
-            self.enumerate.debug("Writing all results to output.html")
-            html = Result2Html()
+            self.enumerate.debug("Writing all results to output.html", color=Format.color_info)
+            html = Result2Html(debug=self._debug)
             output = html.result2html(target_ips, self.ip_list)
             out.write(output)
 
