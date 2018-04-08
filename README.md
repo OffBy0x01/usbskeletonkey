@@ -107,28 +107,33 @@ Try searching for the problem or error message on Google, if nothing comes up pl
 
 network.py
 ===========
-This framework component of Skeleton Key requires no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules to operate:
+This framework component of Skeleton Key requires no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules that have been developed by "Team" to operate:
 
-	LIST OF MODULES (COME BACK TO)
+	- Responder
 
 
 Network Features
 ---------
-- Turns the rapsberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device)
-- can be used with the "Responder" project to allow the pi to act as a DHCP server and capture network traffic:
-	- Adds routes for all ipv4 addresses
-	- Starts DHCP server and enables ipv4 forwarding
-	- Binds port 80 to port 1337
-	- Starts dnsspoof on port 53
-
+- Turns the raspberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device).
+	- This "ethernet" adapter is recognised as usb0 under network devices on the pi.
+	- It can be configured to appear as a specific type of "ethernet" adapter by editing "vendor_id" and "product_id" in the source
+	code of this component.
+	- From there the pi can be used to capture network traffic from a target over usb0.
+	
+- network.py can be used in conjunction with Spiderlab's Responder to make an attempt at obtaining a target's NLTM password hash (if a windows system) by:
+	1. Adding routes for all ipv4 addresses to usb0.
+	2. Starting a DHCP server (using dhcpd) and enabling ipv4 forwarding.
+	3. Binding usb0's port 80 to port 1337 using the iptables file.
+	4. Starting dnsspoof on usb0's port 53.
+		- dnsspoof is part of the dsniff toolset and forges DNS responses over a local network.
+	5. Run Spiderlab's Responder over the usb0 interface.
 
 Network Bugs
 -----
 As user interaction is pretty much non-existant with this componenent there is very little to worry about regarding bugs (that we have been able to find). Please note the following however:
 
-- Due to how Linux and Mac systems interact with network devices the capturing of network traffic is only possible on Windows systems currently. (NEED TO RE-TEST THIS)
+- Due to how some target systems may be configured with regards to driver installation usb0 may fail to be recognised. As a result of this a little tinkering with the values "vendor_id" and "product_id" may have to ensue for network.py to work as intended. 
 
-- Windows systems prioritise "new" ethernet network devices over existing ones, so unfortunately it is only possible to use network emulation to capture network traffic once during an attack. This is due to fact that the target system won't automatically connect to the "ethernet" adapter as the device will be known to the system after its first use.
 
 
 keyboard.py
