@@ -133,7 +133,7 @@ mv /home/pi/usbskeletonkey/components/framework/shell_scripts/g_hid.ko /lib/modu
 chmod +x /home/pi/usbskeletonkey/components/framework/shell_scripts/hid-gadget-test
 
 # install dependencies for enumerate.py (we will find a better way to do this at a later date)
-pip3 install python-nmap yattag blinkt
+pip install python-nmap yattag blinkt
 
 reboot now
 
