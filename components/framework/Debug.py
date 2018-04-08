@@ -43,7 +43,9 @@ def recursive_type(obj):
     if this is list:
         for item in this:
             result += "%s, " % recursive_type(item)
+            
+        result = result[:-2] + "]"
     else:
         result = (str(type(this))[8:-2])
 
-    return result[:-2] + "]"
+    return result
