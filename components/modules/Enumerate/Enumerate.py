@@ -877,7 +877,7 @@ class Enumerate:
 
         self.enumerate.debug("get_targets_via_arp command is: %s" % command)
 
-        output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+        output = subprocess.run(command, stdout=subprocess.PIPE, shell=False).stdout.decode("utf-8")
 
         self.enumerate.debug("get_targets_via_arp output captured: %s" % True if output else False)
 
