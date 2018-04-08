@@ -34,16 +34,16 @@ class Debug(object):
             self._successful_operations += 1
 
 
-def recursive_type(obj):
-    # This assumes the first item in a list is the same as every item in that list (As it should be)
+    def recursive_type(self, obj):
+        # This assumes the first item in a list is the same as every item in that list (As it should be)
 
-    this = type(obj)
-    result = "["
+        this = type(obj)
+        result = "["
 
     if this is list:
         for item in this:
-            result += "%s, " % recursive_type(item)
-            
+            result += "%s, " % self.recursive_type(item)
+
         result = result[:-2] + "]"
     else:
         result = (str(type(this))[8:-2])

@@ -48,6 +48,8 @@ class Result2Html:
         self.result2html_dbg.debug("Beginning html parsing", color=Format.color_info)
 
         doc, tag, text = yattag.Doc().tagtext()
+
+        self.result2html_dbg.debug("Beginning formatting")
         doc.asis('<!DOCTYPE html>')
 
         with tag('html', lang="en"):
@@ -74,6 +76,7 @@ class Result2Html:
                                             text(IP)
                                         with tag('th'):
                                             text("Info")
+                                self.result2html_dbg.debug("ICMP, MAC & Adapter")
                                 # Table rows
                                 with tag('tbody'):
                                     with tag('tr'):
@@ -91,6 +94,8 @@ class Result2Html:
                                             text("Adapter name")
                                         with tag('td'):
                                             text(targets[IP].ADAPTER_NAME if targets[IP].ADAPTER_NAME else "None")
+
+                            self.result2html_dbg.debug("Formatting route %s" % self.result2html_dbg.recursive_type(targets[IP].ROUTE))
 
                             # Route
                             with tag("h3"):
@@ -111,6 +116,9 @@ class Result2Html:
                                                 text(index)  # hop
                                             with tag('td'):
                                                 text(value)  # ip
+
+                            self.result2html_dbg.debug("Formatting OS INFO")
+                            self.result2html_dbg.recursive_type(targets[IP].OS_INFO)
                             # OS Info
                             with tag("h3"):
                                 text("OS Info for %s" % IP)
@@ -130,6 +138,8 @@ class Result2Html:
                                                 with tag('td'):
                                                     text(suspected_os)
 
+                            self.result2html_dbg.debug("Formatting Software INFO")
+                            self.result2html_dbg.recursive_type(targets[IP].SOFTWARE_INFO)
                             # SOFTWARE INFO
                             with tag("h3"):
                                 text("Software Info for %s" % IP)
@@ -144,6 +154,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Workgroup not implemented")
                             # WORKGROUP
                             with tag("h3"):
                                 text("Workgroup Info for %s" % IP)
@@ -158,6 +169,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS))
                             # DOMAIN
                             with tag("h3"):
                                 text("Domain Info for %s" % IP)
@@ -172,6 +184,23 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS))
+                            # DOMAIN
+                            with tag("h3"):
+                                text("Domain Info for %s" % IP)
+                            with tag('table', klass="table table-condensed"):
+                                # Table headings
+                                with tag('thead'):
+                                    with tag('tr'):
+                                        with tag('th'):
+                                            text("Domain Info")
+                                with tag('tbody'):
+                                    with tag('tr'):
+                                        with tag('td'):
+                                            text("Not currently implemented :(")
+
+
+                            self.result2html_dbg.debug("Local not implemented")
                             # LOCAL
                             with tag("h3"):
                                 text("Local Info for %s" % IP)
@@ -186,6 +215,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Formatting Sessions")
                             # SESSIONS
                             with tag("h3"):
                                 text("%s Sessions" % IP)
@@ -200,6 +230,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Formatting NBT STAT")
                             # NBT STAT
                             with tag("h3"):
                                 text("%s NBT Stat" % IP)
@@ -215,6 +246,7 @@ class Result2Html:
                                             with tag('td'):
                                                 text(NBT_INFO)
 
+                            self.result2html_dbg.debug("Formatting Shares")
                             # SHARE INFO
                             with tag("h3"):
                                 text("%s Share Info" % IP)
@@ -229,7 +261,8 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            # SHARE INFO
+                            self.result2html_dbg.debug("Formatting Local")
+                            # Local INFO
                             with tag("h3"):
                                 text("%s Share Info" % IP)
                             with tag('table', klass="table table-condensed"):
@@ -243,6 +276,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Formatting Password Policy")
                             # PASSWD POLICY
                             with tag("h3"):
                                 text("%s Password Policy" % IP)
@@ -257,6 +291,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Formatting Printer Info")
                             # Printer Info
                             with tag("h3"):
                                 text("%s Printer Info" % IP)
@@ -271,6 +306,7 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
+                            self.result2html_dbg.debug("Formatting Ports")
                             # PORTS
                             with tag("h3"):
                                 text("Ports for %s" % IP)
