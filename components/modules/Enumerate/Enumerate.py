@@ -273,14 +273,33 @@ class Enumerate:
             return None
 
     # This is not being called so I don't have usage example to work with
-    def get_share(self, target, user, password, work_group):
-        raw_shares = subprocess.run("net rpc share " +
-                                    " -W " + work_group +
-                                    " -I " + target +
-                                    " -U " + user +
-                                    "  % " + password,
-                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
-        self.enumerate.debug(raw_shares)
+    def get_share(self, target, user, password):
+        '''
+        :param target:
+        :param user:
+        :param password:
+        :return list of 3 lists, first contains share name, second share type and third share description:
+        '''
+        shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + password, shell=True,
+                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        self.enumerate.debug(shares)
+
+        shares = shares.splitlines()
+
+        for index in range(0, 2):
+            del shares[index]
+        del shares[0]
+
+        output = [[], [], []]
+
+        regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)
+        for line in shares:
+            result = re.search(regex, line)
+            if result:
+                result = [res if not None else "" for res in result.groups()]
+                for index in range(0, 3):
+                    output[index].append(result[index])
 
     # NMAP scans for service and operating system detection
     def nmap(self, target_ip):
