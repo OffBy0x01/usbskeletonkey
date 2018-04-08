@@ -147,7 +147,7 @@ class Enumerate:
     def run(self):
         # ~Runs all the things~
         # ---------------------
-        target_ips = defaultdict()  # Init of dictionary
+        target_ips = defaultdict(TargetInfo)  # Init of dictionary
 
         current_ip_in_list = 1
         ips_in_list = len(self.ip_list_shuffled)
