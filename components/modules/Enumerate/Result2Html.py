@@ -8,6 +8,8 @@ from components.helpers.Format import Format
 
 class Result2Html:
 
+    # [ [user, pass], [user2, pass], [user3, pass]]
+
     def __init__(self):
         self.result2html_dbg = Debug(name="Result2Html", type="Module/Enumerate/helper")
         self.result2html_dbg.debug("Initializing Result2Html")

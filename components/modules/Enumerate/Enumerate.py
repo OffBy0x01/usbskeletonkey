@@ -198,20 +198,22 @@ class Enumerate:
             # NMAP to determine OS, port and service info
             self.enumerate.debug("Starting NMAP", color=Format.color_info)
             nmap_output = self.nmap(ip)  # TODO portsCSV
-            if nmap_output:
+            if len(nmap_output) == 2:
                 current.PORTS += nmap_output[0]
                 current.OS_INFO += nmap_output[1]
             else:
+                self.enumerate.debug("Error: NMAP output did not match expectations", color=Format.color_warning)
                 current.PORTS = False
                 current.OS_INFO = False  # making it easier to parse
 
+            self.enumerate.debug("Saving results from %s" % ip, color=Format.color_success)
             # Add target information to dict
             target_ips[ip] = current
-
             current_ip_in_list += 1
 
         # Write output to html
         with open(self.path + "/modules/Enumerate/output.html", "w") as out:
+            self.enumerate.debug("Writing all results to output.html")
             html = Result2Html()
             out.write(html.result2html(target_ips, self.ip_list))
 
