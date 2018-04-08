@@ -199,6 +199,7 @@ class Enumerate:
             self.enumerate.debug("Starting NMAP", color=Format.color_info)
             nmap_output = self.nmap(ip)  # TODO portsCSV
             if len(nmap_output) == 2:
+                self.enumerate.debug("NMAP parsing output")
                 current.PORTS += nmap_output[0]
                 current.OS_INFO += nmap_output[1]
             else:
@@ -215,7 +216,8 @@ class Enumerate:
         with open(self.path + "/modules/Enumerate/output.html", "w") as out:
             self.enumerate.debug("Writing all results to output.html")
             html = Result2Html()
-            out.write(html.result2html(target_ips, self.ip_list))
+            output = html.result2html(target_ips, self.ip_list)
+            out.write(output)
 
         return  # End of run
 
