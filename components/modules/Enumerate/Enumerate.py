@@ -192,9 +192,9 @@ class Enumerate:
 
             # self.other things that just uses IPs
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
+            # This will be outputting a list of strings when I'm done with it -Corey
             domaingroups, domainusers, domainpasswdpolicy = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip, ip=ip)
-            #current.DOMAIN
-
+            # current.DOMAIN
 
             # NMAP to determine OS, port and service info
             self.enumerate.debug("Starting NMAP", color=Format.color_info)
@@ -204,8 +204,7 @@ class Enumerate:
                 current.OS_INFO += nmap_output[1]
             else:
                 current.PORTS = False
-                current.OS_INFO = False # making it easier to parse
-
+                current.OS_INFO = False  # making it easier to parse
 
             # Add target information to dict
             target_ips[ip] = current
@@ -214,7 +213,7 @@ class Enumerate:
 
         # TODO use target_ips with Result2Html
         with open(self.path + "/modules/Enumerate/output.html") as out:
-            out.write(result2html(target_ips))
+            out.write(Result2Html(target_ips))
 
         return  # End of run
 
@@ -333,7 +332,8 @@ class Enumerate:
                 else:
                     nm.scan(hosts=target_ip, arguments=command)
 
-                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")  # debug for printing the command
+                    # debug for printing the command
+                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
                 # Run "quiet" nmap OS scan and save output to a variable for parsing
                 os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
@@ -377,7 +377,8 @@ class Enumerate:
         """
         :return list string:
         """
-        raw_nbt = subprocess.run(["sudo", "nmblookup", "-A", target], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+        raw_nbt = subprocess.run(["sudo", "nmblookup", "-A", target],
+                                 stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
         if not raw_nbt:
             self.enumerate.debug("get_nbt_stat Error: nmblookup failed", color=Format.color_warning)
@@ -391,7 +392,8 @@ class Enumerate:
                 result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
                 if result:  # If any matches the regex
 
-                    result = [res if res is not None else "" for res in result.groups()]  # Need to replace None type with ""
+                    # Need to replace None type with ""
+                    result = [res if res is not None else "" for res in result.groups()]
 
                     for nbt_line in self.nbt_info:
                         service, hex_code, group, descriptor = nbt_line
@@ -489,7 +491,6 @@ class Enumerate:
         :param user_list:
         :param password_list:
         :param target:
-        :param ip:
 
         :return none:
         """
@@ -544,7 +545,6 @@ class Enumerate:
     def get_password_policy(self, raw_command):
         """
         :param raw_command:
-        :param ip:
         :return int, bool, bool, bool, bool, bool, bool:
         """
         length = 0
@@ -657,12 +657,14 @@ class Enumerate:
             if all_ips_from_dns:
                 for item in target:
                     if not re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
-                        self.enumerate.debug("Error: Target in list is not a valid IP or hostname (Does not accept ranges here)", color=Format.color_warning)
+                        self.enumerate.debug("Error: Target in list is not a valid IP or hostname"
+                                             "(Does not accept ranges here)", color=Format.color_warning)
                         return False
             else:
                 for item in target:
                     if not IpValidator.is_valid_ipv4_address(item):
-                        self.enumerate.debug("Error: Target in list is not a valid IP (Does not accept ranges here)", color=Format.color_warning)
+                        self.enumerate.debug("Error: Target in list is not a valid IP (Does not accept ranges here)",
+                                             color=Format.color_warning)
                         return False
 
             command += target
@@ -872,7 +874,7 @@ class Enumerate:
             del output[-3:]
 
 
-            outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
+            outlist = []
 
             for line in output:
                 # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
@@ -883,7 +885,6 @@ class Enumerate:
 
         self.enumerate.debug("get_targets_via_arp: Output generated successfully", color=Format.color_success)
         return outlist  # Sorting via IP would be nice
-
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
     # e.g. def for nbtstat, def for nmap, def for net etc...
