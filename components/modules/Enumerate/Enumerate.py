@@ -326,6 +326,7 @@ class Enumerate:
                         new_line = line.strip('OS details:')
                         parsed_output.append(new_line)
 
+            self.enumerate.debug("NMAP OS DETECTION: %s" % parsed_output, color=Format.color_secondary)
             output_list.append(parsed_output)
 
             return
