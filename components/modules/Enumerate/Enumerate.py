@@ -442,16 +442,16 @@ class Enumerate:
                 sleep(self.rpc_timeout)
 
             try:
-                command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
+                command = ["rpcclient", "-U", user, target, "-c", "getdompwinfo"]
 
                 self.enumerate.debug("RSA Request Username - %s" % user)
                 self.enumerate.debug("RPC Request Password - %s" % password)
 
-                lsa_test_query = subprocess.run(command, input=password + "\n",
-                                                encoding="ascii", stdout=subprocess.PIPE)
+                dompwpolicy_test_query = subprocess.run(command, input=password + "\n",
+                                                        encoding="ascii", stdout=subprocess.PIPE)
 
-                if lsa_test_query.check_returncode() is not None:
-                    if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query.stdout:
+                if dompwpolicy_test_query.check_returncode() is not None:
+                    if "NT_STATUS_CONNECTION_REFUSED" in dompwpolicy_test_query.stdout:
                         # Unable to connect
                         self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user,
                                              Format.color_danger)
@@ -461,7 +461,6 @@ class Enumerate:
                     return
 
                 else:
-                    del lsa_test_query  # Unless lsaquery out is needed? IDK
                     command.pop()
 
                     curr_domain_info = self.extract_info_rpc(
@@ -471,11 +470,6 @@ class Enumerate:
                     self.enumerate.debug("First few items - %s " %
                                          curr_domain_info[0].__str__(), Format.color_success)
 
-                    curr_password_info = self.get_password_policy(
-                        subprocess.run(command + ["getdompwinfo"], input=password + "\n",
-                                       encoding="ascii", stdout=subprocess.PIPE).stdout)
-
-                    # rpcclient -U test 192.168.1.235 -c enumdomusers
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout,
@@ -483,6 +477,8 @@ class Enumerate:
 
                     self.enumerate.debug("First few characters of users - %s" %
                                          curr_user_info[0].__str__(), Format.color_success)
+
+                    curr_password_info = self.get_password_policy(dompwpolicy_test_query.stdout)
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
@@ -530,9 +526,9 @@ class Enumerate:
                         if line not in user_info:
                             user_info += line
 
-                    for line in current[2]:
-                        if line not in password_info:
-                            password_info += line
+                    if not password_info:
+                        password_info = current[2]
+
 
             else:
                 for password in password_list:
@@ -553,9 +549,8 @@ class Enumerate:
                             if line not in user_info:
                                 user_info += line
 
-                        for line in current[2]:
-                            if line not in password_info:
-                                password_info += line
+                        if not password_info:
+                            password_info = current[2]
 
                         break
 
