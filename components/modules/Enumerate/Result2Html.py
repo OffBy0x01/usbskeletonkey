@@ -95,49 +95,61 @@ class Result2Html:
                                         with tag('td'):
                                             text(targets[IP].ADAPTER_NAME if targets[IP].ADAPTER_NAME else "None")
 
-                            if targets[IP].ROUTE[0]:
-                                self.result2html_dbg.debug(
-                                    "Formatting route to target %s" % self.result2html_dbg.recursive_type(targets[IP].ROUTE))
 
-                                # Route
-                                with tag("h3"):
-                                    text("Route to %s" % IP)
-                                with tag('table', klass="table table-condensed"):
-                                    # Table headings
-                                    with tag('thead'):
-                                        with tag('tr'):
-                                            with tag('th'):
-                                                text("HOP #")
-                                            with tag('th'):
-                                                text("IP/Domain")
-                                    # Table rows
-                                    for index, value in enumerate(targets[IP].ROUTE[0]):
-                                        with tag('tbody'):
+                            self.result2html_dbg.debug(
+                                "Formatting route to target %s" % self.result2html_dbg.recursive_type(targets[IP].ROUTE))
+
+                            # Route
+                            with tag("h3"):
+                                text("Route to %s" % IP)
+                            with tag('table', klass="table table-condensed"):
+                                # Table headings
+                                with tag('thead'):
+                                    with tag('tr'):
+                                        with tag('th'):
+                                            text("HOP #")
+                                        with tag('th'):
+                                            text("IP/Domain")
+                                # Table rows
+                                    with tag('tbody'):
+                                        if targets[IP].ROUTE[0]:
+                                            for index, value in enumerate(targets[IP].ROUTE[0]):
+                                                with tag('tr'):
+                                                    with tag('td'):
+                                                        text(1 + index)  # hop
+                                                    with tag('td'):
+                                                        text(value)  # ip
+                                        else:
                                             with tag('tr'):
                                                 with tag('td'):
-                                                    text(index)  # hop
+                                                    text("*")  # hop
                                                 with tag('td'):
-                                                    text(value)  # ip
-                            if targets[IP].OS_INFO:
-                                self.result2html_dbg.debug("Formatting OS INFO %s" % self.result2html_dbg.recursive_type(targets[IP].OS_INFO))
-                                # OS Info
-                                with tag("h3"):
-                                    text("OS Info for %s" % IP)
-                                with tag('table', klass="table table-condensed"):
-                                    # Table headings
-                                    with tag('thead'):
-                                        with tag('tr'):
-                                            with tag('th'):
-                                                text("Suspected OS ")
+                                                    text("*")  # ip
 
-                                    with tag('tbody'):
-                                        # Table rows
-                                        # TODO check that not list of suspected OS rather than list of list of suspected OS
+                            self.result2html_dbg.debug("Formatting OS INFO %s" % self.result2html_dbg.recursive_type(targets[IP].OS_INFO))
+                            # OS Info
+                            with tag("h3"):
+                                text("OS Info for %s" % IP)
+                            with tag('table', klass="table table-condensed"):
+                                # Table headings
+                                with tag('thead'):
+                                    with tag('tr'):
+                                        with tag('th'):
+                                            text("Suspected OS ")
+
+                                with tag('tbody'):
+                                    # Table rows
+                                    # TODO check that not list of suspected OS rather than list of list of suspected OS
+                                    if targets[IP].OS_INFO:
                                         for lists in targets[IP].OS_INFO:
                                             for suspected_os in lists:
                                                 with tag('tr'):
                                                     with tag('td'):
                                                         text(suspected_os)
+                                    else:
+                                        with tag('tr'):
+                                            with tag('td'):
+                                                text("No results")
 
                             self.result2html_dbg.debug("Formatting Software INFO %s" %  self.result2html_dbg.recursive_type(targets[IP].SOFTWARE_INFO))
                             # SOFTWARE INFO
@@ -324,11 +336,9 @@ class Result2Html:
                                         with tag('th'):
                                             text("State")
                                 with tag('tbody'):
-                                    with tag('tr'):
-                                        for this_port in targets[IP].PORTS:
-                                            self.result2html_dbg.debug("lists structure: %s" % this_port)
+                                    for this_port in targets[IP].PORTS:
+                                        with tag('tr'):
                                             port, service, version, state = this_port
-                                            self.result2html_dbg.debug("Got this far")
                                             with tag('td'):
                                                 text(port)
                                             with tag('td'):
