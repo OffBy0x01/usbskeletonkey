@@ -227,7 +227,7 @@ class Result2Html:
                             # NBT STAT
                             self.result2html_dbg.debug("Formatting NBT STAT")
                             with tag("h3", klass=".text-primary"):
-                                text("%S NBTSTAT" % IP)
+                                text("%s NBTSTAT" % IP)
                             if targets[IP].NBT_STAT:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
