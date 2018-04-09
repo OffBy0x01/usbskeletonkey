@@ -102,6 +102,9 @@ class Result2Html:
                             # Route
                             with tag("h3"):
                                 text("Route to %s" % IP)
+                            with tag("h5"):
+                                text("'*' is used to signify a failed jump")
+                                text("Return path populate where applicable")
                             with tag('table', klass="table table-condensed"):
                                 # Table headings
                                 with tag('thead'):
@@ -109,7 +112,9 @@ class Result2Html:
                                         with tag('th'):
                                             text("HOP #")
                                         with tag('th'):
-                                            text("IP/Domain")
+                                            text("IP/Domain Path Out")
+                                        with tag('th'):
+                                            text("IP/Domain Other Return Path(s)")
                                 # Table rows
                                     with tag('tbody'):
                                         if targets[IP].ROUTE[0]:
@@ -119,10 +124,20 @@ class Result2Html:
                                                         text(1 + index)  # hop
                                                     with tag('td'):
                                                         text(value)  # ip
+                                                    with tag('td'):
+                                                        if targets[IP].ROUTE[1]:
+                                                            routeout = ""
+                                                            for ip in targets[IP].ROUTE[1][index]:
+                                                                routeout += "%s, " % ip
+                                                            text(routeout[:-2])
+                                                        else:
+                                                            text("*")
                                         else:
                                             with tag('tr'):
                                                 with tag('td'):
                                                     text("*")  # hop
+                                                with tag('td'):
+                                                    text("*")  # ip
                                                 with tag('td'):
                                                     text("*")  # ip
 
