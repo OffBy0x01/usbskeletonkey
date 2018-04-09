@@ -903,6 +903,7 @@ class Enumerate:
             return False
 
         self.enumerate.debug("get_targets_via_arp: Output generated successfully", color=Format.color_success)
+        self.enumerate.debug("get_targets_via_arp: %s" % outlist.__str__())
         return outlist  # Sorting via IP would be nice
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
