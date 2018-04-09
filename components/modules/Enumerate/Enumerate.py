@@ -358,7 +358,7 @@ class Enumerate:
                     self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
                 # Run "loud" nmap OS scan and save output to a variable for parsing
-                os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
+                os_output = subprocess.run(["nmap", "-O", "--osscan-guess", "-T5", target_ip], shell=True,
                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
 
             self.enumerate.debug("NMAP: OS parsing", color=Format.color_info)
