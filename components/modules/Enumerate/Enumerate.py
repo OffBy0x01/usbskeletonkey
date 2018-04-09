@@ -625,7 +625,7 @@ class Enumerate:
 
         for line in rpc_out:
             # output will look like [[user/group, rid], [user/group, rid]]
-            output += [line[initchars:-1].split('] rid:[')]
+            output += [[line[initchars:-1].split('] rid:[')]]
 
         self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
         return output
