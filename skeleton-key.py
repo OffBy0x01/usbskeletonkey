@@ -137,10 +137,10 @@ class SkeletonKey:
                         runnable.run()
 
                     else:
-                        self.main.debug(txt=str(this_module) + " is disabled", color=Format.color_danger)
+                        self.main.debug(txt=str(this_module) + " is disabled", color=Format.color_warning)
 
                 except Exception as WTF:
-                    self.main.debug("RUN ERROR: " + str(WTF), color=Format.color_warning)
+                    self.main.debug("RUN ERROR: " + str(WTF), color=Format.color_danger)
 
             self.main.debug("~~~End of " + str(this_module) + "~~~", color=Format.color_primary)
 
@@ -355,7 +355,7 @@ class SkeletonKey:
                 print("Please enter a valid command")
                 self.display_help()
             else:
-            # If the users enters one word - i.e. a keyword such as 'show', 'set' or 'exit' run
+            # If the users.txt enters one word - i.e. a keyword such as 'show', 'set' or 'exit' run
                 if len(config_selection) == 1:
                     if config_selection[0] == "exit":
                         if not save_flag:
@@ -396,7 +396,7 @@ class SkeletonKey:
                         pass
                     else:
                         print("Please enter a valid keyword.")
-                # If the users enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
+                # If the users.txt enters two words - i.e. a keyword such as 'show name' or 'set rhosts'
                 elif len(config_selection) == 2:
                     if config_selection[0] == "show":
                         # run method to show selected attribute

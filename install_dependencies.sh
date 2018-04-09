@@ -3,9 +3,9 @@
 
 # ~Run First~
 # Install Dependencies
+# TODO unify apt-get install
 apt-get update
 apt-get --assume-yes install rpi-update
-apt-get --assume-yes install python
 apt-get --assume-yes install git
 apt-get --assume-yes install python-dev
 apt-get --assume-yes install python-pip
@@ -16,6 +16,12 @@ apt-get --assume-yes install inotify-tools
 apt-get --assume-yes install isc-dhcp-server
 apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
+apt-get --assume-yes install smbclient
+
+apt-get --assume-yes install fping
+apt-get --assume-yes install arp-scan
+apt-get --assume-yes install nmap
+
 
 # Get required kernel version
 if ! uname -a | grep -q "4.4.50+"; then
@@ -127,6 +133,9 @@ fi
 # Required for keyboard framework component
 mv /home/pi/usbskeletonkey/components/framework/shell_scripts/g_hid.ko /lib/modules/4.4.50+/kernel/drivers/usb/gadget/legacy/g_hid.ko
 chmod +x /home/pi/usbskeletonkey/components/framework/shell_scripts/hid-gadget-test
+
+# install dependencies for enumerate.py (we will find a better way to do this at a later date)
+pip install python-nmap yattag blinkt
 
 reboot now
 

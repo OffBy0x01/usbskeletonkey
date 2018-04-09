@@ -1,4 +1,3 @@
-import os
 import subprocess
 import time
 
@@ -28,8 +27,7 @@ class Keyboard(FwComponentGadget):
               ValueError on bad delay/string_delay
       """
 
-    def __init__(self, path, keyboard_layout="default.keyboard", language_layout="default.language", enabled=False,
-                 debug=False):
+    def __init__(self, path, keyboard_layout="default.keyboard", language_layout="default.language", enabled=False, debug=False):
         super().__init__(driver_name="g_hid", enabled=enabled, debug=debug, name="keyboard", type="component")
 
         # Debug params
@@ -158,16 +156,15 @@ class Keyboard(FwComponentGadget):
                 if keypress:
                     self.__send_data(keypress)
 
-    def run(self, script):
+    def resolve_script(self, script, script_name=""):
         """
-        :param script:
+        :param script:          contents of script
+        :param script_name:     name of script
         :return :
         """
-        path = os.path.dirname(os.path.realpath(__file__))
-        with open(path + "/../scripts/" + script, "r") as file:
-            for line in file:
-                self.resolve_line(current_line=line)
-            self.debug("RESOLVE DONE",  color=Format.color_info)
+        for line in script:
+            self.resolve_line(current_line=line)
+        self.debug("Script %s resolved" % script_name,  color=Format.color_info)
         return
 
     def __send_data(self, data):
@@ -180,17 +177,16 @@ class Keyboard(FwComponentGadget):
 
         self.debug("SENDING DATA: " + data)
         try:
-            # Set timeout at 1s as it will otherwise expect more input
-            output = subprocess.call("echo "+data+" | " + self.keyboard_path + " /dev/hidg0 keyboard > /dev/null", timeout=0)
+            # Set timeout at 1s as it will otherwise wait for ages expecting more input
+            output = subprocess.call("echo "+data+" | " + self.keyboard_path + " /dev/hidg0 keyboard > /dev/null", timeout=1)
             # if "rror" in output:
             #     self.debug("ERROR: "+output)
             #     raise IOError("Failure to send data")
 
-        except Exception:
-            self.debug("Response time exceeded max")
+        except Exception as e:
+            self.debug("Warning: %s" % e, color=Format.color_warning)
             return False
         return True
-
 
     def __resolve_ascii(self, character):
         """
@@ -251,8 +247,8 @@ class Keyboard(FwComponentGadget):
         command, whitespace, args = current_line.strip('\n').partition(" ")
 
         # Input debugging
-        self.debug("COMMAND IN = " + command)
-        self.debug("ARG/S IN = " + args)
+        self.debug("command in = " + command)
+        self.debug("arg/s in = " + args)
 
         # Resolve current line:
         # ------------------
@@ -277,12 +273,12 @@ class Keyboard(FwComponentGadget):
                     delay /= 1000.0
                 except ValueError:
                     # Delay was not an int
-                    self.debug("BAD DELAY FORMAT")
-                    self.debug("USING DEFAULT DELAY ( " + str(self.default_delay) + "ms)")
+                    self.debug("Resolve Error: bad delay format", color=Format.color_warning)
+                    self.debug("Using default delay( " + str(self.default_delay) + "ms)", color=Format.color_warning)
                     delay = self.default_delay / 1000.0
                 else:
                     # Delay was an int
-                    self.debug("DELAY_STRING FOR " + str(delay))
+                    self.debug("delay string for " + str(delay))
 
                 for character in string:
                     keypress = self.__resolve_ascii(character)
@@ -300,12 +296,12 @@ class Keyboard(FwComponentGadget):
                     delay /= 1000.0
                 except ValueError:
                     # Delay was not an int
-                    self.debug("BAD DELAY FORMAT")
-                    self.debug("USING DEFAULT DELAY ( " + str(self.default_delay) + "ms)")
+                    self.debug("Resolve Error: bad delay format", color=Format.color_warning)
+                    self.debug("Using default delay( " + str(self.default_delay) + "ms)", color=Format.color_warning)
                     delay = self.default_delay / 1000.0
                 else:
                     # Delay was an int
-                    self.debug("DELAY_STRING FOR " + str(delay))
+                    self.debug("delay for " + str(delay))
                 time.sleep(delay)
 
         elif command in self.__key_equivalent:
@@ -336,3 +332,6 @@ class Keyboard(FwComponentGadget):
 
             # Done in a "weird" way so that delays etc still work
         self.last_command = current_line
+
+    def __del__(self):
+        super().disable()  # Disable keyboard driver

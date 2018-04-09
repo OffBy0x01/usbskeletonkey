@@ -1,9 +1,14 @@
 try:
     from blinkt import set_brightness, set_pixel, show, clear
+    blinktImported = True
 except ImportError:
-    import pip
-    pip.main(['install', '--user', 'blinkt'])
-    from blinkt import set_brightness, set_pixel, show, clear
+    try:
+        import pip
+        pip.main(['install', '--user', 'blinkt'])
+        from blinkt import set_brightness, set_pixel, show, clear
+        blinktImported = True
+    except ImportError:
+        blinktImported = False
 
 
 class Blinkt:
@@ -19,23 +24,28 @@ class Blinkt:
 
     @staticmethod
     def unset_pixel(pixel):
-        set_pixel(pixel, 0, 0, 0)
-        show()
+        if blinktImported:
+            set_pixel(pixel, 0, 0, 0)
+            show()
         return
 
     def set_pixel(self, pixel):
-        set_pixel(pixel, self.colours[0], self.colours[1], self.colours[2])
-        show()
+        if blinktImported:
+            set_pixel(pixel, self.colours[0], self.colours[1], self.colours[2])
+            show()
         return
 
     @staticmethod
     def clear():
-        clear()
-        show()
+        if blinktImported:
+            clear()
+            show()
+        return
 
     @staticmethod
     def new_brightness(brightness):
-        set_brightness(brightness)
+        if blinktImported:
+            set_brightness(brightness)
         return
 
     def new_colours(self, red, green, blue):
