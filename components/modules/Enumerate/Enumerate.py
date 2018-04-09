@@ -317,8 +317,8 @@ class Enumerate:
             for line in output.splitlines():
                 if "OS" in line and "detection" not in line and "matches" not in line:
 
-                    if "Running: " in line:
-                        new_line = line.strip('Running: ').split(', ')
+                    if "Running:" in line:
+                        new_line = line.strip('Running:').split(',')
                         parsed_output.append(new_line)
 
                     elif "Aggressive OS guesses" in line:
@@ -329,7 +329,6 @@ class Enumerate:
                         new_line = line.strip('OS details:')
                         parsed_output.append(new_line)
 
-            self.enumerate.debug("NMAP OS DETECTION: %s" % parsed_output, color=Format.color_secondary)
             output_list.append(parsed_output)
 
             return
