@@ -511,6 +511,7 @@ class Enumerate:
                     current = self.rpc_request(user, passwd, target)
                 except subprocess.CalledProcessError as e:
                     self.enumerate.debug("Likely Incorrect Credentials - Status %s" % e, Format.color_danger)
+                    continue
                 except IOError as e:
                     self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
                     continue
@@ -859,7 +860,8 @@ class Enumerate:
             if type(target) is list:
                 for current in target:
                     if not IpValidator.is_valid_ipv4_address(current, iprange=True):
-                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target, color=Format.color_warning)
+                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target,
+                                             color=Format.color_warning)
                         return False
 
                 command += target
@@ -892,7 +894,6 @@ class Enumerate:
             del output[0:2]
             del output[-3:]
 
-
             outlist = []
 
             for line in output:
@@ -903,7 +904,6 @@ class Enumerate:
             return False
 
         self.enumerate.debug("get_targets_via_arp: Output generated successfully", color=Format.color_success)
-        self.enumerate.debug("get_targets_via_arp: %s" % outlist.__str__())
         return outlist  # Sorting via IP would be nice
 
     # Extracting the information we need is going to look disguisting, try to keep each tool in a single def.
