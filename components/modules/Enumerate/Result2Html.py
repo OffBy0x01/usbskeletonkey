@@ -38,21 +38,21 @@ class Result2Html:
             with tag('head'):
                 doc.asis('<meta charset="utf-8">')
                 doc.asis('<meta name="viewport" content="width=device-width, initial-scale=1">')
-                doc.asis('<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">')
+                doc.asis('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">')
                 with tag('script', src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"):
                     pass
-                with tag('script', src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"):
+                with tag('script', src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"):
                     pass
                 with tag('body'):
                     with tag('div', klass="container"):
                         # Table for current IP
                         for IP in ip_list:  # Read Ips from list so that they are in order
                             # Basic Info
-                            with tag("h3"):
+                            with tag("h3", klass=".text-primary"):
                                 text("%s Basic Info" % IP)
                             with tag('table', klass="table table-condensed"):
                                 # Table headings
-                                with tag('thead'):
+                                with tag('thead', klass=".thead-dark"):
                                     with tag('tr'):
                                         with tag('th'):
                                             text(IP)
@@ -80,9 +80,9 @@ class Result2Html:
 
                             # Route
                             self.result2html_dbg.debug(
-                                "Formatting route to target %s" % self.result2html_dbg.recursive_type(targets[IP].ROUTE))
+                                "Formatting route to target")
                             if targets[IP].ROUTE:
-                                with tag("h3"):
+                                with tag("h3", klass=".text-primary"):
                                     text("Route to %s" % IP)
                                 with tag("h5"):
                                     text("'*' is used to signify a failed jump")
@@ -90,7 +90,7 @@ class Result2Html:
                                     text("Return path populate where applicable")
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("HOP #")
@@ -118,9 +118,11 @@ class Result2Html:
                             # OS Info
                             self.result2html_dbg.debug("Formatting OS INFO")
                             if targets[IP].OS_INFO:
+                                with tag("h3", klass=".text-primary"):
+                                    text("OS info for %s" % IP)
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Suspected OS ")
@@ -143,7 +145,7 @@ class Result2Html:
                             if targets[IP].SOFTWARE_INFO:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Software Info")
@@ -157,7 +159,7 @@ class Result2Html:
                             if targets[IP].WORKGROUP:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Workgroup Info")
@@ -169,11 +171,11 @@ class Result2Html:
                             # Domain Groups
                             self.result2html_dbg.debug("Formatting Domain groups ")
                             if targets[IP].DOMAIN_GROUPS:
-                                with tag("h4"):
+                                with tag("h3", klass=".text-primary"):
                                     text("Domain Groups for %s" % IP)
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Groups")
@@ -190,11 +192,11 @@ class Result2Html:
                             # Domain Users
                             self.result2html_dbg.debug("Formatting Domain users")
                             if targets[IP].DOMAIN_USERS:
-                                with tag("h4"):
+                                with tag("h3", klass=".text-primary"):
                                     text("Domain Users for %s" % IP)
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Username")
@@ -213,7 +215,7 @@ class Result2Html:
                             if targets[IP].SESSIONS:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Session Info")
@@ -224,10 +226,12 @@ class Result2Html:
 
                             # NBT STAT
                             self.result2html_dbg.debug("Formatting NBT STAT")
+                            with tag("h3", klass=".text-primary"):
+                                text("%S NBTSTAT" % IP)
                             if targets[IP].NBT_STAT:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("NBT STAT Info")
@@ -240,9 +244,11 @@ class Result2Html:
                             # SHARE INFO
                             self.result2html_dbg.debug("Formatting Shares")
                             if targets[IP].SHARE_INFO:
+                                with tag("h3", klass=".text-primary"):
+                                    text("%s's Shares" % IP)
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Sharename")
@@ -265,7 +271,7 @@ class Result2Html:
                             if targets[IP].LOCAL_USERS and targets[IP].LOCAL_GROUPS:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Local Info")
@@ -277,11 +283,11 @@ class Result2Html:
                             # PASSWD_POLICY
                             self.result2html_dbg.debug("Formatting Password Policy")
                             if targets[IP].PASSWD_POLICY:
-                                with tag("h4"):
+                                with tag("h3", klass=".text-primary"):
                                     text("%s Password Policy" % IP)
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Flag Name")
@@ -304,7 +310,7 @@ class Result2Html:
                             if targets[IP].PRINTER_INFO:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Printer Info")
@@ -316,10 +322,12 @@ class Result2Html:
                             # PORTS
                             self.result2html_dbg.debug("Formatting Ports")
                             if targets[IP].PORTS:
+                                with tag("h3", klass=".text-primary"):
+                                    text("Port scan of %s" % IP)
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
                                     # Port Service Version State
-                                    with tag('thead'):
+                                    with tag('thead', klass=".thead-dark"):
                                         with tag('tr'):
                                             with tag('th'):
                                                 text("Port")

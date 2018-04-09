@@ -576,7 +576,7 @@ class Enumerate:
             try:
                 command = ["rpcclient", "-U", user, target, "-c", "getdompwinfo"]
 
-                self.enumerate.debug("RSA Request Username - %s" % user)
+                self.enumerate.debug("RPC Request Username - %s" % user)
                 self.enumerate.debug("RPC Request Password - %s" % password)
 
                 dompwpolicy_test_query = subprocess.run(command, input=password + "\n",
