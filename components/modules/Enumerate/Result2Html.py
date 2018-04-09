@@ -165,7 +165,7 @@ class Result2Html:
                                             with tag('td'):
                                                 text("No results")
 
-                            self.result2html_dbg.debug("Formatting Software INFO %s" %  self.result2html_dbg.recursive_type(targets[IP].SOFTWARE_INFO))
+                            self.result2html_dbg.debug("Formatting Software INFO")
                             # SOFTWARE INFO
                             with tag("h3"):
                                 text("Software Info for %s" % IP)
@@ -195,39 +195,35 @@ class Result2Html:
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS))
-                            # DOMAIN
-                            with tag("h3"):
-                                text("Domain Info for %s" % IP)
+                            # DOMAIN groups
+                            self.result2html_dbg.debug("Formatting Domain groups ")
                             with tag('table', klass="table table-condensed"):
                                 # Table headings
                                 with tag('thead'):
                                     with tag('tr'):
                                         with tag('th'):
-                                            text("Domain Info")
+                                            text("Domain Groups")
                                 with tag('tbody'):
                                     with tag('tr'):
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS))
-                            # DOMAIN
-                            with tag("h3"):
-                                text("Domain Info for %s" % IP)
+                            # DOMAIN users
+                            self.result2html_dbg.debug("Formatting Domain Users")
                             with tag('table', klass="table table-condensed"):
                                 # Table headings
                                 with tag('thead'):
                                     with tag('tr'):
                                         with tag('th'):
-                                            text("Domain Info")
+                                            text("Domain Users")
                                 with tag('tbody'):
                                     with tag('tr'):
                                         with tag('td'):
                                             text("Not currently implemented :(")
 
 
-                            self.result2html_dbg.debug("Local not implemented")
                             # LOCAL
+                            self.result2html_dbg.debug("Local not implemented")
                             with tag("h3"):
                                 text("Local Info for %s" % IP)
                             with tag('table', klass="table table-condensed"):
