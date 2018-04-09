@@ -283,7 +283,7 @@ class Enumerate:
         :param target:
         :return list of 3 lists first contains share name second share type and third share description:
         """
-        def prevent_code_duplication(shares):
+        def parse_this_share(shares):
             self.enumerate.debug(shares)
             shares = shares.splitlines()  # Spilt output into list
 
@@ -325,7 +325,7 @@ class Enumerate:
                         self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
                         return False
                 else:
-                    prevent_code_duplication(shares)
+                    return parse_this_share(shares)
 
             else:
                 for password in self.default_passwords:
@@ -344,7 +344,7 @@ class Enumerate:
                             self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
                             return False
                     else:
-                        prevent_code_duplication(shares)
+                        return parse_this_share(shares)
 
 
 
