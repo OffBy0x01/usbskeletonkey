@@ -141,11 +141,10 @@ class Result2Html:
                                     # Table rows
                                     # TODO check that not list of suspected OS rather than list of list of suspected OS
                                     if targets[IP].OS_INFO:
-                                        for lists in targets[IP].OS_INFO:
-                                            for suspected_os in lists:
-                                                with tag('tr'):
-                                                    with tag('td'):
-                                                        text(suspected_os)
+                                        for suspected_os in targets[IP].OS_INFO:
+                                            with tag('tr'):
+                                                with tag('td'):
+                                                    text(suspected_os)
                                     else:
                                         with tag('tr'):
                                             with tag('td'):
