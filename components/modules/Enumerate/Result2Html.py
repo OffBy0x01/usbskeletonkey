@@ -254,13 +254,13 @@ class Result2Html:
                                         for index in range(len(targets[IP].SHARE_INFO)):
                                             with tag('tr'):
                                                 with tag('td'):
-                                                    text(targets[IP].LOCAL[x][0])
+                                                    text(targets[IP].SHARE_INFO[x][0])
                                             with tag('tr'):
                                                 with tag('td'):
-                                                    text(targets[IP].LOCAL[x][1])
+                                                    text(targets[IP].SHARE_INFO[x][1])
                                             with tag('tr'):
                                                 with tag('td'):
-                                                    text(targets[IP].LOCAL[x][2])
+                                                    text(targets[IP].SHARE_INFO[x][2])
 
                             # Local INFO
                             self.result2html_dbg.debug("Formatting Local")
