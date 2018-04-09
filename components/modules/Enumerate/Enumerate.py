@@ -301,9 +301,9 @@ class Enumerate:
                 for port in nm[target_ip][protocol]:
                     nmap_results = nm[target_ip][protocol][port]
                     parsed_output.append(
-                        [str(port), nmap_results['product'] if nmap_results['product'] else "null", nmap_results['version'] if nmap_results['version'] else "null", nmap_results['state'] if nmap_results['state'] else "null"])
-
-
+                        [str(port), nmap_results['product'] if nmap_results['product'] else "null",
+                         nmap_results['version'] if nmap_results['version'] else "null",
+                         nmap_results['state'] if nmap_results['state'] else "null"])
 
             output_list.append(parsed_output)  # Add parsed data to the output list
 
@@ -522,14 +522,17 @@ class Enumerate:
                     # current = [curr_domain_info, curr_user_info, curr_password_info]
 
                     # There may be a quicker way to do this but it would likely require another structure
-                    if current[0] not in domain_info:
-                        domain_info += current[0]
+                    for line in current[0]:
+                        if line not in domain_info:
+                            domain_info += line
 
-                    if current[1] not in user_info:
-                        user_info += current[1]
+                    for line in current[1]:
+                        if line not in user_info:
+                            user_info += line
 
-                    if current[2] not in password_info:
-                        password_info += current[2]
+                    for line in current[2]:
+                        if line not in password_info:
+                            password_info += line
 
             else:
                 for password in password_list:
@@ -553,6 +556,8 @@ class Enumerate:
                         for line in current[2]:
                             if line not in password_info:
                                 password_info += line
+
+                        break
 
         return domain_info, user_info, password_info
 
