@@ -218,8 +218,6 @@ class Enumerate:
             target_ips[ip] = current
             current_ip_in_list += 1
 
-            s
-
         # Write output to html
         with open(self.path + "/modules/Enumerate/output.html", "w") as out:
             self.enumerate.debug("Writing all results to output.html", color=Format.color_info)
@@ -284,7 +282,6 @@ class Enumerate:
         :return list of 3 lists first contains share name second share type and third share description:
         """
         def parse_this_share(shares):
-            self.enumerate.debug(shares)
             shares = shares.splitlines()  # Spilt output into list
 
             output = [[], [], []]  # Create list to hold output
@@ -307,6 +304,7 @@ class Enumerate:
                         for index in range(0, 3):
                             output[index].append(result[index])  # Load result into the output list
 
+            self.enumerate.debug("get_share: output generated successfully", color=Format.color_success)
             return output
 
         for user, passwd in self.user_list:
@@ -325,6 +323,9 @@ class Enumerate:
                         self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
                         return False
                 else:
+                    if "NT_STATUS_CONNECTION_REFUSED" in shares or "NT_STATUS_LOGON_FAILURE" in shares:
+                        continue
+
                     return parse_this_share(shares)
 
             else:
@@ -336,7 +337,7 @@ class Enumerate:
                     except Exception as e:
                         if "non-zero" in e:
                             if "NT_STATUS_CONNECTION_REFUSED" in shares:
-                                self.enumerate.debug("get_share: Error NT_STATUS_CONNECTION_REFUSED")
+                                self.enumerate.debug("get_share: Error NT_STATUS_CONNECTION_REFUSED ")
                                 continue
 
                             # 99% of the time, errors here are subprocess calls returning non-zero
@@ -344,6 +345,9 @@ class Enumerate:
                             self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
                             return False
                     else:
+                        if "NT_STATUS_CONNECTION_REFUSED" in shares or "NT_STATUS_LOGON_FAILURE" in shares:
+                            continue
+
                         return parse_this_share(shares)
 
 
