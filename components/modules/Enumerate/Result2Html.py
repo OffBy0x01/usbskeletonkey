@@ -20,6 +20,15 @@ class Result2Html:
         :param targets:     List containing TargetInfo Objects
         :return:            Bootstrap-based HTML5 page of results
         """
+
+        password_policy_items = [["Password Min Length is", "MIN_PASSWORD_LENGTH"],
+                                 ["Passwords Stored in Plaintext", "DOMAIN_PASSWORD_STORE_CLEARTEXT"],
+                                 ["No need for weekly password changes", "DOMAIN_REFUSE_PASSWORD_CHANGE"],
+                                 ["Has Admin been locked out from remote logons", "DOMAIN_PASSWORD_LOCKOUT_ADMINS"],
+                                 ["Password Must be Complex", "DOMAIN_PASSWORD_COMPLEX"],
+                                 ["Password Cannot be changed without logging on", "DOMAIN_PASSWORD_NO_ANON_CHANGE"],
+                                 ["No logons that exchange passwords via plaintext", "DOMAIN_PASSWORD_NO_CLEAR_CHANGE"]]
+
         self.result2html_dbg.debug("Starting Result2Html...", color=Format.color_info)
 
         self.result2html_dbg.debug("TargetInfo output:")
@@ -104,6 +113,7 @@ class Result2Html:
                                 text("Route to %s" % IP)
                             with tag("h5"):
                                 text("'*' is used to signify a failed jump")
+                            with tag("h5"):
                                 text("Return path populate where applicable")
                             with tag('table', klass="table table-condensed"):
                                 # Table headings
@@ -284,6 +294,7 @@ class Result2Html:
                                             text("Not currently implemented :(")
 
                             self.result2html_dbg.debug("Formatting Local")
+
                             # Local INFO
                             with tag("h3"):
                                 text("%s Share Info" % IP)
@@ -299,7 +310,8 @@ class Result2Html:
                                             text("Not currently implemented :(")
 
                             self.result2html_dbg.debug("Formatting Password Policy")
-                            # PASSWD POLICY
+
+                            # PASSWD_POLICY
                             with tag("h3"):
                                 text("%s Password Policy" % IP)
                             with tag('table', klass="table table-condensed"):
@@ -307,26 +319,37 @@ class Result2Html:
                                 with tag('thead'):
                                     with tag('tr'):
                                         with tag('th'):
-                                            text("Password Policy")
+                                            text("Flag Name")
+                                        with tag('th'):
+                                            text("Policy Flag Desc")
+                                        with tag('th'):
+                                            text("State")
                                 with tag('tbody'):
                                     with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
+                                            for x in range(len(targets[IP].PASSWD_POLICY)):
+                                                with tag('td'):
+                                                    text(password_policy_items[x][1])
+                                                with tag('td'):
+                                                    text(password_policy_items[x][0])
+                                                with tag('td'):
+                                                    text(str(targets[IP].PASSWD_POLICY[x]))
 
                             self.result2html_dbg.debug("Formatting Printer Info")
-                            # Printer Info
-                            with tag("h3"):
-                                text("%s Printer Info" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Password Policy")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
+
+                            # PRINTER_INFO
+                            if targets[IP].PRINTER_INFO:
+                                with tag("h3"):
+                                    text("%s Printer Info" % IP)
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Printer Info")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            with tag('td'):
+                                                text("Not currently implemented :(")
 
                             self.result2html_dbg.debug("Formatting Ports")
                             # PORTS
