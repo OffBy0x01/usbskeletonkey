@@ -1,3 +1,4 @@
+
 import random
 import struct
 import subprocess
@@ -148,6 +149,7 @@ class Enumerate:
     def run(self):
         # ~Runs all the things~
         # ---------------------
+
         target_ips = defaultdict(TargetInfo)  # Init of dictionary
 
         current_ip_in_list = 1
@@ -209,6 +211,7 @@ class Enumerate:
             # SMBCLIENT / SHARE INFO
             self.enumerate.debug("Starting SMBCLIENT", color=Format.color_info)
             current.SHARE_INFO = self.get_share(ip)
+
 
             # SAVE RESULTS
             self.enumerate.debug("Saving results from %s" % ip, color=Format.color_success)
@@ -347,8 +350,6 @@ class Enumerate:
                             continue
 
                         return parse_this_share(shares)
-
-
 
     def get_groups(self, target, user, password):
         '''
@@ -504,14 +505,6 @@ class Enumerate:
         self.enumerate.debug("NMAP: Output generated successfully", color=Format.color_success)
         return output_list  # return the output of scans in the form of a list
 
-    def get_local_groups(self):
-        # Part of net
-        return
-
-    def get_domain_groups(self):
-        # Also part of net
-        return
-
     def get_nbt_stat(self, target):
         """
         :return list string:
@@ -574,6 +567,7 @@ class Enumerate:
                 sleep(self.rpc_timeout)
 
             try:
+
                 command = ["rpcclient", "-U", user, target, "-c", "getdompwinfo"]
 
                 self.enumerate.debug("RPC Request Username - %s" % user)
@@ -599,9 +593,9 @@ class Enumerate:
                         subprocess.run(command + ["enumdomgroups"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
+
                     self.enumerate.debug("First few items - %s " %
                                          curr_domain_info[0])
-
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout,
@@ -624,7 +618,6 @@ class Enumerate:
         :param user_list:
         :param password_list:
         :param target:
-
         :return none:
         """
 
@@ -636,15 +629,18 @@ class Enumerate:
             if passwd:
                 try:
                     current = self.rpc_request(user, passwd, target)
+
                 except Exception as e:
                     if "non-zero" in e:
                         continue  # 99% of the time, errors here are subprocess calls returning non-zero
                     else:
                         self.enumerate.debug("get_rpcclient: Error %s" % e, color=Format.color_danger)
+
                 # There must be a better way to do this I cant think of without utilising self
                 # If output from rpc_request
                 if current:
                     # current = [curr_domain_info, curr_user_info, curr_password_info]
+
 
                     # There may be a quicker way to do this but it would likely require another structure
                     for line in current[0]:
@@ -657,18 +653,21 @@ class Enumerate:
 
                     if not password_info:
                         password_info = current[2]
-
+                        
             else:
                 for password in password_list:
                     try:
                         current = self.rpc_request(user, password, target)
                     except IOError as e:
+
                         self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
+
                         # If output from rpc_request
                         continue
 
                     if current:
                         # current = [curr_domain_info, curr_user_info, curr_password_info]
+
                         for line in current[0]:
                             if line not in domain_info:
                                 domain_info += line
@@ -765,8 +764,8 @@ class Enumerate:
         :param target: Either target via IPv4, IPv4 range, list of IPv4's, DNS Name(s?!)
         :param interface: Choose which interface the pings go from. Defaults to USB0
         :param ping_count: Will ping as many times as the input asks for
-        :param all_ips_from_dns: Scans all IP address's relating to that DNS name
-        :param get_dns_name: Will return with the DNS name for the IP scanned
+        :param all_ips_from_dns: Scans all IP address's relating to that DNS _name
+        :param get_dns_name: Will return with the DNS _name for the IP scanned
         :param contain_random_data: Will not just send empty packets like the default
         :param randomise_targets: Will go through the targets provided in a random order
         :param source_address: Changes where the ping says it came from
@@ -965,7 +964,7 @@ class Enumerate:
         :param randomise_targets: Binary Value for targets where they should not be scanned in the order given.
                 Defaults False
 
-        :return: list of lists containing IP, MAC address and Adapter name
+        :return: list of lists containing IP, MAC address and Adapter _name
 
 
         """

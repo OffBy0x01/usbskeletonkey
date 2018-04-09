@@ -17,10 +17,10 @@ apt-get --assume-yes install isc-dhcp-server
 apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
 apt-get --assume-yes install smbclient
+
 apt-get --assume-yes install fping
 apt-get --assume-yes install arp-scan
 apt-get --assume-yes install nmap
-
 
 
 # Get required kernel version
