@@ -757,7 +757,7 @@ class Enumerate:
             # output will look like [[user/group, rid], [user/group, rid]]
             output += [[line[initchars:-1].split('] rid:[')]]
 
-        self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
+        # self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
         return output
 
     def check_target_is_alive(self, target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
