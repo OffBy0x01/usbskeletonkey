@@ -614,8 +614,7 @@ class Enumerate:
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
-            except Exception as e:
-                self.enumerate.debug("Error: get_rpcrequest - %s" % e, Format.color_info)
+            except Exception:
                 return
 
     def get_rpcclient(self, user_list, password_list, target):

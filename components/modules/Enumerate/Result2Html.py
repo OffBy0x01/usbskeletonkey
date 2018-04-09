@@ -180,8 +180,8 @@ class Result2Html:
                                             with tag('th'):
                                                 text("RID")
                                     with tag('tbody'):
-                                        with tag('tr'):
-                                            for item in targets[IP].DOMAIN_GROUPS:
+                                        for item in targets[IP].DOMAIN_GROUPS:
+                                            with tag('tr'):
                                                 with tag('td'):
                                                     text(item[0])
                                                 with tag('td'):
@@ -201,8 +201,8 @@ class Result2Html:
                                             with tag('th'):
                                                 text("RID")
                                     with tag('tbody'):
-                                        with tag('tr'):
-                                            for item in targets[IP].DOMAIN_USERS:
+                                        for item in targets[IP].DOMAIN_USERS:
+                                            with tag('tr'):
                                                 with tag('td'):
                                                     text(item[0])
                                                 with tag('td'):
@@ -254,13 +254,11 @@ class Result2Html:
                                         for x in range(len(targets[IP].SHARE_INFO)):
                                             with tag('tr'):
                                                 with tag('td'):
-                                                    text(targets[IP].SHARE_INFO[x][0])
-                                            with tag('tr'):
+                                                    text(targets[IP].SHARE_INFO[0][x])
                                                 with tag('td'):
-                                                    text(targets[IP].SHARE_INFO[x][1])
-                                            with tag('tr'):
+                                                    text(targets[IP].SHARE_INFO[1][x])
                                                 with tag('td'):
-                                                    text(targets[IP].SHARE_INFO[x][2])
+                                                    text(targets[IP].SHARE_INFO[2][x])
 
                             # Local INFO
                             self.result2html_dbg.debug("Formatting Local")
@@ -292,8 +290,8 @@ class Result2Html:
                                             with tag('th'):
                                                 text("State")
                                     with tag('tbody'):
-                                        with tag('tr'):
-                                            for x in range(len(targets[IP].PASSWD_POLICY)):
+                                        for x in range(len(targets[IP].PASSWD_POLICY)):
+                                            with tag('tr'):
                                                 with tag('td'):
                                                     text(password_policy_items[x][1])
                                                 with tag('td'):
