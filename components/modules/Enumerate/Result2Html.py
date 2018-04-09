@@ -105,29 +105,28 @@ class Result2Html:
                                             text(targets[IP].ADAPTER_NAME if targets[IP].ADAPTER_NAME else "None")
 
 
+                            # Route
                             self.result2html_dbg.debug(
                                 "Formatting route to target %s" % self.result2html_dbg.recursive_type(targets[IP].ROUTE))
-
-                            # Route
-                            with tag("h3"):
-                                text("Route to %s" % IP)
-                            with tag("h5"):
-                                text("'*' is used to signify a failed jump")
-                            with tag("h5"):
-                                text("Return path populate where applicable")
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("HOP #")
-                                        with tag('th'):
-                                            text("IP/Domain Path Out")
-                                        with tag('th'):
-                                            text("IP/Domain Other Return Path(s)")
-                                # Table rows
-                                    with tag('tbody'):
-                                        if targets[IP].ROUTE[0]:
+                            if targets[IP].ROUTE:
+                                with tag("h3"):
+                                    text("Route to %s" % IP)
+                                with tag("h5"):
+                                    text("'*' is used to signify a failed jump")
+                                with tag("h5"):
+                                    text("Return path populate where applicable")
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("HOP #")
+                                            with tag('th'):
+                                                text("IP/Domain Path Out")
+                                            with tag('th'):
+                                                text("IP/Domain Other Return Path(s)")
+                                        # Table rows
+                                        with tag('tbody'):
                                             for index, value in enumerate(targets[IP].ROUTE[0]):
                                                 with tag('tr'):
                                                     with tag('td'):
@@ -142,181 +141,163 @@ class Result2Html:
                                                             text(routeout[:-2])
                                                         else:
                                                             text("*")
+
+                            # OS Info
+                            self.result2html_dbg.debug("Formatting OS INFO %s" % self.result2html_dbg.recursive_type(targets[IP].OS_INFO))
+                            if targets[IP].OS_INFO:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Suspected OS ")
+
+                                    with tag('tbody'):
+                                        # Table rows
+                                        # TODO check that not list of suspected OS rather than list of list of suspected OS
+                                        if targets[IP].OS_INFO:
+                                            for suspected_os in targets[IP].OS_INFO:
+                                                with tag('tr'):
+                                                    with tag('td'):
+                                                        text(suspected_os)
                                         else:
                                             with tag('tr'):
                                                 with tag('td'):
-                                                    text("*")  # hop
-                                                with tag('td'):
-                                                    text("*")  # ip
-                                                with tag('td'):
-                                                    text("*")  # ip
+                                                    text("No results")
 
-                            self.result2html_dbg.debug("Formatting OS INFO %s" % self.result2html_dbg.recursive_type(targets[IP].OS_INFO))
-                            # OS Info
-                            with tag("h3"):
-                                text("OS Info for %s" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Suspected OS ")
+                            # SOFTWARE INFO
+                            self.result2html_dbg.debug("Formatting Software INFO %s" %
+                                                       self.result2html_dbg.recursive_type(targets[IP].SOFTWARE_INFO))
+                            if targets[IP].SOFTWARE_INFO:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Software Info")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            with tag('td'):
+                                                text("Not currently implemented :(")
 
-                                with tag('tbody'):
-                                    # Table rows
-                                    # TODO check that not list of suspected OS rather than list of list of suspected OS
-                                    if targets[IP].OS_INFO:
-                                        for suspected_os in targets[IP].OS_INFO:
+                            # WORKGROUP
+                            self.result2html_dbg.debug("Workgroup not implemented")
+                            if targets[IP].WORKGROUP:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Workgroup Info")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            with tag('td'):
+                                                text("Not currently implemented :(")
+
+                            # Domain Groups
+                            self.result2html_dbg.debug("Formatting Domain groups %s" %
+                                                       self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS))
+                            if targets[IP].DOMAIN_GROUPS:
+                                with tag("h4"):
+                                    text("Domain Groups for %s" % IP)
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Groups")
+                                            with tag('th'):
+                                                text("RID")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            for item in targets[IP].DOMAIN_GROUPS:
+                                                with tag('td'):
+                                                    text(item[0])
+                                                with tag('td'):
+                                                    text(item[1])
+
+                            # Domain Users
+                            self.result2html_dbg.debug("Formatting Domain users %s" %
+                                                       self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS))
+                            if targets[IP].DOMAIN_USERS:
+                                with tag("h4"):
+                                    text("Domain Users for %s" % IP)
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Username")
+                                            with tag('th'):
+                                                text("RID")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            for item in targets[IP].DOMAIN_USERS:
+                                                with tag('td'):
+                                                    text(item[0])
+                                                with tag('td'):
+                                                    text(item[1])
+
+                            # SESSIONS
+                            self.result2html_dbg.debug("Formatting Sessions")
+                            if targets[IP].SESSIONS:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Session Info")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            with tag('td'):
+                                                text("Not currently implemented :(")
+
+                            # NBT STAT
+                            self.result2html_dbg.debug("Formatting NBT STAT")
+                            if targets[IP].NBT_STAT:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("NBT STAT Info")
+                                    with tag('tbody'):
+                                        for NBT_INFO in targets[IP].NBT_STAT:
                                             with tag('tr'):
                                                 with tag('td'):
-                                                    text(suspected_os)
-                                    else:
-                                        with tag('tr'):
-                                            with tag('td'):
-                                                text("No results")
+                                                    text(NBT_INFO)
 
-                            self.result2html_dbg.debug("Formatting Software INFO %s" %  self.result2html_dbg.recursive_type(targets[IP].SOFTWARE_INFO))
-                            # SOFTWARE INFO
-                            with tag("h3"):
-                                text("Software Info for %s" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Software Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-                            self.result2html_dbg.debug("Workgroup not implemented")
-                            # WORKGROUP
-                            with tag("h3"):
-                                text("Workgroup Info for %s" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Workgroup Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS))
-                            # DOMAIN
-                            with tag("h3"):
-                                text("Domain Info for %s" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Domain Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-                            self.result2html_dbg.debug("Formatting Domain groups %s" % self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS))
-                            # DOMAIN
-                            with tag("h3"):
-                                text("Domain Info for %s" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Domain Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-
-                            self.result2html_dbg.debug("Local not implemented")
-                            # LOCAL
-                            with tag("h3"):
-                                text("Local Info for %s" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Local Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-                            self.result2html_dbg.debug("Formatting Sessions")
-                            # SESSIONS
-                            with tag("h3"):
-                                text("%s Sessions" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Session Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-                            self.result2html_dbg.debug("Formatting NBT STAT")
-                            # NBT STAT
-                            with tag("h3"):
-                                text("%s NBT Stat" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("NBT STAT Info")
-                                with tag('tbody'):
-                                    for NBT_INFO in targets[IP].NBT_STAT:
-                                        with tag('tr'):
-                                            with tag('td'):
-                                                text(NBT_INFO)
-
-                            self.result2html_dbg.debug("Formatting Shares")
                             # SHARE INFO
-                            with tag("h3"):
-                                text("%s Share Info" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Share Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-                            self.result2html_dbg.debug("Formatting Local")
+                            self.result2html_dbg.debug("Formatting Shares")
+                            if targets[IP].SHARE_INFO:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Share Info")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            with tag('td'):
+                                                text("Not currently implemented :(")
 
                             # Local INFO
-                            with tag("h3"):
-                                text("%s Share Info" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Local Info")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        with tag('td'):
-                                            text("Not currently implemented :(")
-
-                            self.result2html_dbg.debug("Formatting Password Policy")
+                            self.result2html_dbg.debug("Formatting Local")
+                            if targets[IP].LOCAL_USERS and targets[IP].LOCAL_GROUPS:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Local Info")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            with tag('td'):
+                                                text("Not currently implemented :(")
 
                             # PASSWD_POLICY
-                            with tag("h3"):
+                            self.result2html_dbg.debug("Formatting Password Policy")
+                            with tag("h4"):
                                 text("%s Password Policy" % IP)
                             with tag('table', klass="table table-condensed"):
                                 # Table headings
@@ -330,20 +311,17 @@ class Result2Html:
                                             text("State")
                                 with tag('tbody'):
                                     with tag('tr'):
-                                            for x in range(len(targets[IP].PASSWD_POLICY)):
-                                                with tag('td'):
-                                                    text(password_policy_items[x][1])
-                                                with tag('td'):
-                                                    text(password_policy_items[x][0])
-                                                with tag('td'):
-                                                    text(str(targets[IP].PASSWD_POLICY[x]))
-
-                            self.result2html_dbg.debug("Formatting Printer Info")
+                                        for x in range(len(targets[IP].PASSWD_POLICY)):
+                                            with tag('td'):
+                                                text(password_policy_items[x][1])
+                                            with tag('td'):
+                                                text(password_policy_items[x][0])
+                                            with tag('td'):
+                                                text(str(targets[IP].PASSWD_POLICY[x]))
 
                             # PRINTER_INFO
+                            self.result2html_dbg.debug("Formatting Printer Info")
                             if targets[IP].PRINTER_INFO:
-                                with tag("h3"):
-                                    text("%s Printer Info" % IP)
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
                                     with tag('thead'):
@@ -355,35 +333,34 @@ class Result2Html:
                                             with tag('td'):
                                                 text("Not currently implemented :(")
 
-                            self.result2html_dbg.debug("Formatting Ports")
                             # PORTS
-                            with tag("h3"):
-                                text("Ports for %s" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                # Port Service Version State
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Port")
-                                        with tag('th'):
-                                            text("Service")
-                                        with tag('th'):
-                                            text("Version")
-                                        with tag('th'):
-                                            text("State")
-                                with tag('tbody'):
-                                    for this_port in targets[IP].PORTS:
+                            self.result2html_dbg.debug("Formatting Ports")
+                            if targets[IP].PORTS:
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    # Port Service Version State
+                                    with tag('thead'):
                                         with tag('tr'):
-                                            port, service, version, state = this_port
-                                            with tag('td'):
-                                                text(port)
-                                            with tag('td'):
-                                                text(service)
-                                            with tag('td'):
-                                                text(version)
-                                            with tag('td'):
-                                                text(state)
+                                            with tag('th'):
+                                                text("Port")
+                                            with tag('th'):
+                                                text("Service")
+                                            with tag('th'):
+                                                text("Version")
+                                            with tag('th'):
+                                                text("State")
+                                    with tag('tbody'):
+                                        for this_port in targets[IP].PORTS:
+                                            with tag('tr'):
+                                                port, service, version, state = this_port
+                                                with tag('td'):
+                                                    text(port)
+                                                with tag('td'):
+                                                    text(service)
+                                                with tag('td'):
+                                                    text(version)
+                                                with tag('td'):
+                                                    text(state)
 
         self.result2html_dbg.debug("Html generation success", color=Format.color_success)
         return doc.getvalue()
