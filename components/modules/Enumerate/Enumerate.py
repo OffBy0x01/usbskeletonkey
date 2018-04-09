@@ -313,7 +313,7 @@ class Enumerate:
             # (required as python NMAP OS isn't working correctly)
 
             parsed_output = []
-
+            self.enumerate.debug("NMAP: Received output: %s" % output)
             # Separating OS info and appending it to the output list
             for line in output.splitlines():
                 if "OS" in line and "detection" not in line and "matches" not in line:
