@@ -301,9 +301,9 @@ class Enumerate:
                 for port in nm[target_ip][protocol]:
                     nmap_results = nm[target_ip][protocol][port]
                     parsed_output.append(
-                        [str(port), nmap_results['product'] if nmap_results['product'] else "null", nmap_results['version'] if nmap_results['version'] else "null", nmap_results['state'] if nmap_results['state'] else "null"])
-
-
+                        [str(port), nmap_results['product'] if nmap_results['product'] else "null",
+                         nmap_results['version'] if nmap_results['version'] else "null",
+                         nmap_results['state'] if nmap_results['state'] else "null"])
 
             output_list.append(parsed_output)  # Add parsed data to the output list
 
@@ -343,7 +343,7 @@ class Enumerate:
                     self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
                 # Run "quiet" nmap OS scan and save output to a variable for parsing
-                os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
+                os_output = subprocess.run(["nmap", "-O", target_ip], shell=True,
                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
 
             else:  # Use "loud" scan pre-sets
@@ -442,16 +442,16 @@ class Enumerate:
                 sleep(self.rpc_timeout)
 
             try:
-                command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
+                command = ["rpcclient", "-U", user, target, "-c", "getdompwinfo"]
 
                 self.enumerate.debug("RSA Request Username - %s" % user)
                 self.enumerate.debug("RPC Request Password - %s" % password)
 
-                lsa_test_query = subprocess.run(command, input=password + "\n",
-                                                encoding="ascii", stdout=subprocess.PIPE)
+                dompwpolicy_test_query = subprocess.run(command, input=password + "\n",
+                                                        encoding="ascii", stdout=subprocess.PIPE)
 
-                if lsa_test_query.check_returncode() is not None:
-                    if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query.stdout:
+                if dompwpolicy_test_query.check_returncode() is not None:
+                    if "NT_STATUS_CONNECTION_REFUSED" in dompwpolicy_test_query.stdout:
                         # Unable to connect
                         self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user,
                                              Format.color_danger)
@@ -461,7 +461,6 @@ class Enumerate:
                     return
 
                 else:
-                    del lsa_test_query  # Unless lsaquery out is needed? IDK
                     command.pop()
 
                     curr_domain_info = self.extract_info_rpc(
@@ -471,11 +470,6 @@ class Enumerate:
                     self.enumerate.debug("First few items - %s " %
                                          curr_domain_info[0].__str__(), Format.color_success)
 
-                    curr_password_info = self.get_password_policy(
-                        subprocess.run(command + ["getdompwinfo"], input=password + "\n",
-                                       encoding="ascii", stdout=subprocess.PIPE).stdout)
-
-                    # rpcclient -U test 192.168.1.235 -c enumdomusers
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout,
@@ -483,6 +477,8 @@ class Enumerate:
 
                     self.enumerate.debug("First few characters of users - %s" %
                                          curr_user_info[0].__str__(), Format.color_success)
+
+                    curr_password_info = self.get_password_policy(dompwpolicy_test_query.stdout)
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
@@ -522,14 +518,16 @@ class Enumerate:
                     # current = [curr_domain_info, curr_user_info, curr_password_info]
 
                     # There may be a quicker way to do this but it would likely require another structure
-                    if current[0] not in domain_info:
-                        domain_info += current[0]
+                    for line in current[0]:
+                        if line not in domain_info:
+                            domain_info += line
 
-                    if current[1] not in user_info:
-                        user_info += current[1]
+                    for line in current[1]:
+                        if line not in user_info:
+                            user_info += line
 
-                    if current[2] not in password_info:
-                        password_info += current[2]
+                    if not password_info:
+                        password_info = current[2]
 
             else:
                 for password in password_list:
@@ -550,9 +548,10 @@ class Enumerate:
                             if line not in user_info:
                                 user_info += line
 
-                        for line in current[2]:
-                            if line not in password_info:
-                                password_info += line
+                        if not password_info:
+                            password_info = current[2]
+
+                        break
 
         return domain_info, user_info, password_info
 
