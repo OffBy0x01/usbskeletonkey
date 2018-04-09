@@ -330,7 +330,7 @@ class Result2Html:
                                             text("State")
                                 with tag('tbody'):
                                     with tag('tr'):
-                                            for x in len(targets[IP].PASSWD_POLICY):
+                                            for x in range(len(targets[IP].PASSWD_POLICY)):
                                                 with tag('td'):
                                                     text(password_policy_items[x][1])
                                                 with tag('td'):
