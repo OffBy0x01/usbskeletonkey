@@ -272,14 +272,110 @@ class Enumerate:
             return None
 
     # This is not being called so I don't have usage example to work with
-    def get_share(self, target, user, password, work_group):
-        raw_shares = subprocess.run("net rpc share " +
-                                    " -W " + work_group +
-                                    " -I " + target +
-                                    " -U " + user +
-                                    "  % " + password,
-                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
-        self.enumerate.debug(raw_shares)
+    def get_share(self, target, user, password):
+        '''
+        :param target:
+        :param user:
+        :param password:
+        :return list of 3 lists first contains share name second share type and third share description:
+        '''
+
+        # Get list of all smb shares at target IP
+        shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + password, shell=True,
+                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        self.enumerate.debug(shares)
+        shares = shares.splitlines()  # Spilt output into list
+
+        output = [[], [], []]  # Create list to hold output
+
+        # Delete first line (results in shares being empty if it failed)
+        del shares[0]
+
+        # If content still exists in shares (it completed successfully)
+        if shares:
+
+            # Clean up formatting (Needs to be like this)
+            del shares[0]
+            del shares[0]
+
+            regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)  # Compile regex
+            for line in shares:  # For each share
+                result = re.search(regex, line)  # Search for a match to regex
+                if result:  # If found
+                    result = [res if not None else "" for res in result.groups()]  # Ensure valid
+                    for index in range(0, 3):
+                        output[index].append(result[index])  # Load result into the output list
+
+        if output:  # If valid output was captured
+            return output  # return it
+        else:
+            return False  # Something went wrong
+
+    def get_groups(self, target, user, password):
+        '''
+        :param target:
+        :param user:
+        :param password:
+        :return: List of samba groups on target
+        '''
+
+        # Get all groups
+        groups = subprocess.run("net rpc group LIST global -I " + target + " -U  " + user + "%" + password, shell=True,
+                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        self.enumerate.debug(groups)
+
+        if not (re.search("Could not connect|Connection failed:", groups, flags=re.M)):  # If successful
+            groups = groups.splitlines()  # Split results into list
+            return groups
+        else:
+            return False  # Something went wrong
+
+    def get_users(self, target, group, user, password):
+        '''
+        :param target:
+        :param group:
+        :param user:
+        :param password:
+        :return: List of users in a given samba group
+        '''
+
+        # Get all users in a given group
+        users = subprocess.run("net rpc group members \"" + group + "\" -I " + target + " -U " + user + "%" + password, shell=True,
+                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        self.enumerate.debug(users)
+
+        if not (re.search("Could not connect|Connection failed:", users, flags=re.M)):  # If successful
+            groups = users.splitlines()  # Split results into list
+            return users
+        else:
+            return False  # Something went wrong
+
+    def get_all_users(self, target, user, password):
+        '''
+        :param target:
+        :param user:
+        :param password:
+        :return: List of lists first contains a string group name, second contains list of string user
+        '''
+
+        output = [[], [[]]]  # Make output list
+
+        groups = self.get_groups(target, user, password)  # Get groups
+
+        if groups:  # If groups ran successfully
+            for group in groups:  # For each group
+                users = self.get_users(target, group, user, password)  # Attempt to harvest users
+                if users:  # If successful
+                    output[0].append(group)  # Load group into output
+                    output[1].append(users)  # Load user list into output
+
+        if output:  # If output was generated
+            return output
+        else:
+            return False  # Something went wrong
 
     # NMAP scans for service and operating system detection
     def nmap(self, target_ip):
@@ -457,7 +553,7 @@ class Enumerate:
                     if "NT_STATUS_CONNECTION_REFUSED" in dompwpolicy_test_query.stdout:
                         # Unable to connect
                         self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user,
-                                             Format.color_danger)
+                                             Format.color_warning)
 
                         self.rpc_timeout += self.rpc_timeout_increment
 
@@ -471,7 +567,7 @@ class Enumerate:
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
                     self.enumerate.debug("First few items - %s " %
-                                         curr_domain_info[0].__str__(), Format.color_success)
+                                         curr_domain_info[0])
 
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"], input=password + "\n",
@@ -479,7 +575,7 @@ class Enumerate:
                         startrows=0, initchars=6)
 
                     self.enumerate.debug("First few characters of users - %s" %
-                                         curr_user_info[0].__str__(), Format.color_success)
+                                         curr_user_info[0])
 
                     curr_password_info = self.get_password_policy(dompwpolicy_test_query.stdout)
 
@@ -508,13 +604,11 @@ class Enumerate:
             if passwd:
                 try:
                     current = self.rpc_request(user, passwd, target)
-                except subprocess.CalledProcessError as e:
-                    self.enumerate.debug("Likely Incorrect Credentials - Status %s" % e, Format.color_danger)
-                    continue
-                except IOError as e:
-                    self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
-                    continue
-
+                except Exception as e:
+                    if "non-zero" in e:
+                        continue  # 99% of the time, errors here are subprocess calls returning non-zero
+                    else:
+                        self.enumerate.debug("get_rpcclient: Error %s" % e, color=Format.color_danger)
                 # There must be a better way to do this I cant think of without utilising self
                 # If output from rpc_request
                 if current:
@@ -625,7 +719,7 @@ class Enumerate:
 
         for line in rpc_out:
             # output will look like [[user/group, rid], [user/group, rid]]
-            output += [line[initchars:-1].split('] rid:[')]
+            output += [[line[initchars:-1].split('] rid:[')]]
 
         self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
         return output
