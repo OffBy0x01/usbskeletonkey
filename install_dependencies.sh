@@ -3,6 +3,7 @@
 
 # ~Run First~
 # Install Dependencies
+# TODO unify apt-get install
 apt-get update
 apt-get --assume-yes install rpi-update
 apt-get --assume-yes install git
@@ -17,6 +18,7 @@ apt-get --assume-yes install dsniff
 apt-get --assume-yes install screen
 apt-get --assume-yes install smbclient
 apt-get --assume-yes install fping
+apt-get --assume-yes install arp-scan
 apt-get --assume-yes install nmap
 
 

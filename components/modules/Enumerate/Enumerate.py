@@ -208,10 +208,17 @@ class Enumerate:
                 current.PORTS = False
                 current.OS_INFO = False  # making it easier to parse
 
+            # SMBCLIENT / SHARE INFO
+            self.enumerate.debug("Starting SMBCLIENT", color=Format.color_info)
+            current.SHARE_INFO = self.get_share(ip)
+
+            # SAVE RESULTS
             self.enumerate.debug("Saving results from %s" % ip, color=Format.color_success)
             # Add target information to dict
             target_ips[ip] = current
             current_ip_in_list += 1
+
+            s
 
         # Write output to html
         with open(self.path + "/modules/Enumerate/output.html", "w") as out:
@@ -271,46 +278,75 @@ class Enumerate:
             self.enumerate.debug("Error: Invalid type, must be lower_ip-upper_ip or ip1, ip2, ip3, etc...")
             return None
 
-    # This is not being called so I don't have usage example to work with
-    def get_share(self, target, user, password):
-        '''
+    def get_share(self, target):
+        """
         :param target:
-        :param user:
-        :param password:
         :return list of 3 lists first contains share name second share type and third share description:
-        '''
+        """
+        def prevent_code_duplication(shares):
+            self.enumerate.debug(shares)
+            shares = shares.splitlines()  # Spilt output into list
 
-        # Get list of all smb shares at target IP
-        shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + password, shell=True,
-                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+            output = [[], [], []]  # Create list to hold output
 
-        self.enumerate.debug(shares)
-        shares = shares.splitlines()  # Spilt output into list
-
-        output = [[], [], []]  # Create list to hold output
-
-        # Delete first line (results in shares being empty if it failed)
-        del shares[0]
-
-        # If content still exists in shares (it completed successfully)
-        if shares:
-
-            # Clean up formatting (Needs to be like this)
-            del shares[0]
+            # Delete first line (results in shares being empty if it failed)
             del shares[0]
 
-            regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)  # Compile regex
-            for line in shares:  # For each share
-                result = re.search(regex, line)  # Search for a match to regex
-                if result:  # If found
-                    result = [res if not None else "" for res in result.groups()]  # Ensure valid
-                    for index in range(0, 3):
-                        output[index].append(result[index])  # Load result into the output list
+            # If content still exists in shares (it completed successfully)
+            if shares:
 
-        if output:  # If valid output was captured
-            return output  # return it
-        else:
-            return False  # Something went wrong
+                # Clean up formatting (Needs to be like this)
+                del shares[0]
+                del shares[0]
+
+                regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)  # Compile regex
+                for line in shares:  # For each share
+                    result = re.search(regex, line)  # Search for a match to regex
+                    if result:  # If found
+                        result = [res if not None else "" for res in result.groups()]  # Ensure valid
+                        for index in range(0, 3):
+                            output[index].append(result[index])  # Load result into the output list
+
+            return output
+
+        for user, passwd in self.user_list:
+            if passwd:
+                try:
+                    shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + passwd, shell=True,
+                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
+                except Exception as e:
+                    if "non-zero" in e:
+                        if "NT_STATUS_CONNECTION_REFUSED" in shares:
+                            self.enumerate.debug("get_share: Error NT_STATUS_CONNECTION_REFUSED")
+                            continue
+
+                        # 99% of the time, errors here are subprocess calls returning non-zero
+                    else:
+                        self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
+                        return False
+                else:
+                    prevent_code_duplication(shares)
+
+            else:
+                for password in self.default_passwords:
+                    try:
+                        shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + passwd,
+                                                shell=True,
+                                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+                    except Exception as e:
+                        if "non-zero" in e:
+                            if "NT_STATUS_CONNECTION_REFUSED" in shares:
+                                self.enumerate.debug("get_share: Error NT_STATUS_CONNECTION_REFUSED")
+                                continue
+
+                            # 99% of the time, errors here are subprocess calls returning non-zero
+                        else:
+                            self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
+                            return False
+                    else:
+                        prevent_code_duplication(shares)
+
+
 
     def get_groups(self, target, user, password):
         '''
