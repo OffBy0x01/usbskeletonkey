@@ -251,7 +251,7 @@ class Result2Html:
                                             with tag('th'):
                                                 text("Comment")
                                     with tag('tbody'):
-                                        for index in range(len(targets[IP].SHARE_INFO)):
+                                        for x in range(len(targets[IP].SHARE_INFO)):
                                             with tag('tr'):
                                                 with tag('td'):
                                                     text(targets[IP].SHARE_INFO[x][0])
