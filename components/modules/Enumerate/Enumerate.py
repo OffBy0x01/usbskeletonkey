@@ -343,7 +343,7 @@ class Enumerate:
                     self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
                 # Run "quiet" nmap OS scan and save output to a variable for parsing
-                os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
+                os_output = subprocess.run(["nmap", "-O", target_ip], shell=True,
                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
 
             else:  # Use "loud" scan pre-sets
@@ -528,7 +528,6 @@ class Enumerate:
 
                     if not password_info:
                         password_info = current[2]
-
 
             else:
                 for password in password_list:
