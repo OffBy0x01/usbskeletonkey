@@ -170,8 +170,8 @@ class Enumerate:
             if arp_response:
                 try:
                     current.RESPONDS_ARP = True
-                    current.MAC_ADDRESS = arp_response[1]
-                    current.ADAPTER_NAME = arp_response[2]
+                    current.MAC_ADDRESS = arp_response[0][1]
+                    current.ADAPTER_NAME = arp_response[0][2]
                     self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
                     self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
                     self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
@@ -511,6 +511,7 @@ class Enumerate:
                     current = self.rpc_request(user, passwd, target)
                 except subprocess.CalledProcessError as e:
                     self.enumerate.debug("Likely Incorrect Credentials - Status %s" % e, Format.color_danger)
+                    continue
                 except IOError as e:
                     self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
                     continue
@@ -859,7 +860,8 @@ class Enumerate:
             if type(target) is list:
                 for current in target:
                     if not IpValidator.is_valid_ipv4_address(current, iprange=True):
-                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target, color=Format.color_warning)
+                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target,
+                                             color=Format.color_warning)
                         return False
 
                 command += target
@@ -877,7 +879,7 @@ class Enumerate:
 
         self.enumerate.debug("get_targets_via_arp command is: %s" % command)
 
-        output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+        output = subprocess.run(command, stdout=subprocess.PIPE, shell=False).stdout.decode("utf-8")
 
         self.enumerate.debug("get_targets_via_arp output captured: %s" % True if output else False)
 
@@ -891,7 +893,6 @@ class Enumerate:
         try:
             del output[0:2]
             del output[-3:]
-
 
             outlist = []
 
