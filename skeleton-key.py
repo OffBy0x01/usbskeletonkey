@@ -137,10 +137,10 @@ class SkeletonKey:
                         runnable.run()
 
                     else:
-                        self.main.debug(txt=str(this_module) + " is disabled", color=Format.color_danger)
+                        self.main.debug(txt=str(this_module) + " is disabled", color=Format.color_warning)
 
                 except Exception as WTF:
-                    self.main.debug("RUN ERROR: " + str(WTF), color=Format.color_warning)
+                    self.main.debug("RUN ERROR: " + str(WTF), color=Format.color_danger)
 
             self.main.debug("~~~End of " + str(this_module) + "~~~", color=Format.color_primary)
 

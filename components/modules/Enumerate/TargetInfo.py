@@ -11,8 +11,10 @@ class TargetInfo:
         self.OS_INFO = []
         self.SOFTWARE_INFO = []
         self.WORKGROUP = []
-        self.DOMAIN = []  # USERS + GROUPS
-        self.LOCAL = []  # USERS + GROUPS
+        self.DOMAIN_USERS = []  # USERS
+        self.DOMAIN_GROUPS = []  # GROUPS
+        self.LOCAL_USERS = []  # USERS
+        self.LOCAL_GROUPS = []  # GROUPS
         self.SESSIONS = []
         self.NBT_STAT = []
         self.SHARE_INFO = []  # include SMB info?

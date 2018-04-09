@@ -1,17 +1,9 @@
-# This is why modules should share their package _name.
-import importlib
-
-try:
-    importlib.import_module("nmap")
-except ImportError:
-    import pip
-    pip.main(['install', "python-nmap"])
-finally:
-    globals()["nmap"] = importlib.import_module("nmap")
 
 import random
 import struct
 import subprocess
+import nmap
+
 from time import sleep
 from collections import defaultdict
 
@@ -20,7 +12,7 @@ from components.framework.Debug import Debug
 from components.helpers.Format import Format
 from components.helpers.IpValidator import *
 from components.helpers.ModuleManager import ModuleManager
-from components.modules.Enumerate.Result2Html import result2html
+from components.modules.Enumerate.Result2Html import Result2Html
 from components.modules.Enumerate.TargetInfo import TargetInfo
 
 
@@ -30,6 +22,7 @@ from components.modules.Enumerate.TargetInfo import TargetInfo
 class Enumerate:
     def __init__(self, path, debug):
         self.enumerate = Debug(name="Enumerate", type="Module", debug=debug)
+        self._debug = debug
 
         # Setup module manager
         self.module_manager = ModuleManager(debug=debug, save_needs_confirm=True)
@@ -70,8 +63,11 @@ class Enumerate:
         self.user_list = []
         with open(self.path + "/modules/Enumerate/users.txt") as user_file:
             for line in user_file:
-                user, _, password = line.strip().partition(":")
-                self.user_list.append([user, password])
+                try:
+                    user, _, password = line.strip().partition(":")
+                    self.user_list.append([user, password])
+                except Exception as user_list_err:
+                    self.enumerate.debug("Error parsing users: %s" % user_list_err, color=Format.color_warning)
 
         # ~Produce list of default passwords~
         self.default_passwords = []
@@ -153,7 +149,8 @@ class Enumerate:
     def run(self):
         # ~Runs all the things~
         # ---------------------
-        target_ips = defaultdict()  # Init of dictionary
+
+        target_ips = defaultdict(TargetInfo)  # Init of dictionary
 
         current_ip_in_list = 1
         ips_in_list = len(self.ip_list_shuffled)
@@ -163,63 +160,71 @@ class Enumerate:
 
             current = TargetInfo()
 
-            # self.enumerate.debug("Starting ICMP", color=Format.color_info)
-            # # check current IP responds to ICMP
-            # current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
-            # self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
-            #
-            # self.enumerate.debug("Starting ARP", color=Format.color_info)
-            # # check current IP responds to ARP
-            # arp_response = self.get_targets_via_arp(ip, interface=self.interface)
-            #
-            # if arp_response is not False:
-            #     try:
-            #         current.RESPONDS_ARP = True
-            #         current.MAC_ADDRESS = arp_response[0][1]
-            #         current.ADAPTER_NAME = arp_response[0][2]
-            #         self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
-            #         self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
-            #         self.enumerate.debug("%s's adapter _name is %s" % (ip, current.ADAPTER_NAME))
-            #     except Exception as Err:
-            #         self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
-            # else:
-            #     self.enumerate.debug("No ARP response from %s" % ip)
-            #
-            # self.enumerate.debug("Starting Route", color=Format.color_info)
-            # # check route to this target
-            # if self.interface != "usb0":
-            #     current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
-            #     self.enumerate.debug("Trace Route to %s:\n %s" % (ip, current.ROUTE))
-            #
-            # # NBT STAT
-            # self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
-            # current.NBT_STAT = self.get_nbt_stat(ip)
-            # self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
-            #
-            # # NMAP to determine OS, port and service info
-            # self.enumerate.debug("Starting NMAP", color=Format.color_info)
-            # nmap_output = self.nmap(ip)  # TODO portsCSV
-            # if nmap_output:
-            #     current.PORTS += nmap_output[0]
-            #     current.OS_INFO += nmap_output[1]
-            # else:
-            #     current.PORTS = False
-            #     current.OS_INFO = False # making it easier to parse
+            self.enumerate.debug("Starting ICMP", color=Format.color_info)
+            # check current IP responds to ICMP
+            current.RESPONDS_ICMP = self.check_target_is_alive(ip, interface=self.interface)
+            self.enumerate.debug("%s responds to ICMP? %s" % (ip, current.RESPONDS_ICMP))
 
-            # self.other things that just uses IPs
+            self.enumerate.debug("Starting ARP", color=Format.color_info)
+            # check current IP responds to ARP
+            arp_response = self.get_targets_via_arp(ip, interface=self.interface)
+
+            if arp_response:
+                try:
+                    current.RESPONDS_ARP = True
+                    current.MAC_ADDRESS = arp_response[0][1]
+                    current.ADAPTER_NAME = arp_response[0][2]
+                    self.enumerate.debug("%s responds to ARP? %s" % (ip, current.RESPONDS_ARP))
+                    self.enumerate.debug("%s's physical address is %s" % (ip, current.MAC_ADDRESS))
+                    self.enumerate.debug("%s's adapter name is %s" % (ip, current.ADAPTER_NAME))
+                except Exception as Err:
+                    self.enumerate.debug("ARP Err: %s" % Err, color=Format.color_warning)
+            else:
+                self.enumerate.debug("No ARP response from %s" % ip)
+
+            # check route to this target
+            if self.interface != "usb0":
+                self.enumerate.debug("Starting Route", color=Format.color_info)
+                current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
+
+            # NBT STAT
+            self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
+            current.NBT_STAT = self.get_nbt_stat(ip)
+
+            # RPC CLIENT
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)
+            current.DOMAIN_GROUPS, current.DOMAIN_USERS, current.PASSWD_POLICY = self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip)
+            # current.DOMAIN
 
-            domaingroups, domainusers, domainpasswdpolicy =\
-                self.get_rpcclient(user_list=self.user_list, password_list=self.default_passwords, target=ip)
+            # NMAP to determine OS, port and service info
+            self.enumerate.debug("Starting NMAP", color=Format.color_info)
+            nmap_output = self.nmap(ip)  # TODO portsCSV
+            if len(nmap_output) == 2:
+                self.enumerate.debug("NMAP parsing output")
+                current.PORTS += nmap_output[1]
+                current.OS_INFO += nmap_output[0]
+            else:
+                self.enumerate.debug("Error: NMAP output did not match expectations", color=Format.color_warning)
+                current.PORTS = False
+                current.OS_INFO = False  # making it easier to parse
 
+            # SMBCLIENT / SHARE INFO
+            self.enumerate.debug("Starting SMBCLIENT", color=Format.color_info)
+            current.SHARE_INFO = self.get_share(ip)
+
+
+            # SAVE RESULTS
+            self.enumerate.debug("Saving results from %s" % ip, color=Format.color_success)
             # Add target information to dict
             target_ips[ip] = current
-
             current_ip_in_list += 1
 
-        # TODO use target_ips with Result2Html
-        with open(self.path + "/modules/Enumerate/output.html") as out:
-            out.write(result2html(target_ips))
+        # Write output to html
+        with open(self.path + "/modules/Enumerate/output.html", "w") as out:
+            self.enumerate.debug("Writing all results to output.html", color=Format.color_info)
+            html = Result2Html(debug=self._debug)
+            output = html.result2html(target_ips, self.ip_list)
+            out.write(output)
 
         return  # End of run
 
@@ -272,46 +277,79 @@ class Enumerate:
             self.enumerate.debug("Error: Invalid type, must be lower_ip-upper_ip or ip1, ip2, ip3, etc...")
             return None
 
-    # This is not being called so I don't have usage example to work with
-    def get_share(self, target, user, password):
-        '''
+    def get_share(self, target):
+        """
         :param target:
-        :param user:
-        :param password:
         :return list of 3 lists first contains share name second share type and third share description:
-        '''
+        """
+        def parse_this_share(shares):
+            shares = shares.splitlines()  # Spilt output into list
 
-        # Get list of all smb shares at target IP
-        shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + password, shell=True,
-                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+            output = [[], [], []]  # Create list to hold output
 
-        self.enumerate.debug(shares)
-        shares = shares.splitlines()  # Spilt output into list
-
-        output = [[], [], []]  # Create list to hold output
-
-        # Delete first line (results in shares being empty if it failed)
-        del shares[0]
-
-        # If content still exists in shares (it completed successfully)
-        if shares:
-
-            # Clean up formatting (Needs to be like this)
-            del shares[0]
+            # Delete first line (results in shares being empty if it failed)
             del shares[0]
 
-            regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)  # Compile regex
-            for line in shares:  # For each share
-                result = re.search(regex, line)  # Search for a match to regex
-                if result:  # If found
-                    result = [res if not None else "" for res in result.groups()]  # Ensure valid
-                    for index in range(0, 3):
-                        output[index].append(result[index])  # Load result into the output list
+            # If content still exists in shares (it completed successfully)
+            if shares:
 
-        if output:  # If valid output was captured
-            return output  # return it
-        else:
-            return False  # Something went wrong
+                # Clean up formatting (Needs to be like this)
+                del shares[0]
+                del shares[0]
+
+                regex = re.compile("^\s+([^\s]*)\s*([^\s]*)\s*([^\n]*)", flags=re.M)  # Compile regex
+                for line in shares:  # For each share
+                    result = re.search(regex, line)  # Search for a match to regex
+                    if result:  # If found
+                        result = [res if not None else "" for res in result.groups()]  # Ensure valid
+                        for index in range(0, 3):
+                            output[index].append(result[index])  # Load result into the output list
+
+            self.enumerate.debug("get_share: output generated successfully", color=Format.color_success)
+            return output
+
+        for user, passwd in self.user_list:
+            if passwd:
+                try:
+                    shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + passwd, shell=True,
+                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
+                except Exception as e:
+                    if "non-zero" in e:
+                        if "NT_STATUS_CONNECTION_REFUSED" in shares:
+                            self.enumerate.debug("get_share: Error NT_STATUS_CONNECTION_REFUSED")
+                            continue
+
+                        # 99% of the time, errors here are subprocess calls returning non-zero
+                    else:
+                        self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
+                        return False
+                else:
+                    if "NT_STATUS_CONNECTION_REFUSED" in shares or "NT_STATUS_LOGON_FAILURE" in shares:
+                        continue
+
+                    return parse_this_share(shares)
+
+            else:
+                for password in self.default_passwords:
+                    try:
+                        shares = subprocess.run("smbclient " + "-L " + target + " -U " + user + "%" + passwd,
+                                                shell=True,
+                                                stdout=subprocess.PIPE).stdout.decode('utf-8')
+                    except Exception as e:
+                        if "non-zero" in e:
+                            if "NT_STATUS_CONNECTION_REFUSED" in shares:
+                                self.enumerate.debug("get_share: Error NT_STATUS_CONNECTION_REFUSED ")
+                                continue
+
+                            # 99% of the time, errors here are subprocess calls returning non-zero
+                        else:
+                            self.enumerate.debug("get_share: Critical Error %s" % e, color=Format.color_danger)
+                            return False
+                    else:
+                        if "NT_STATUS_CONNECTION_REFUSED" in shares or "NT_STATUS_LOGON_FAILURE" in shares:
+                            continue
+
+                        return parse_this_share(shares)
 
     def get_groups(self, target, user, password):
         '''
@@ -398,7 +436,9 @@ class Enumerate:
                 for port in nm[target_ip][protocol]:
                     nmap_results = nm[target_ip][protocol][port]
                     parsed_output.append(
-                        [str(port), nmap_results['product'], nmap_results['version'], nmap_results['state']])
+                        [str(port), nmap_results['product'] if nmap_results['product'] else "null",
+                         nmap_results['version'] if nmap_results['version'] else "null",
+                         nmap_results['state'] if nmap_results['state'] else "null"])
 
             output_list.append(parsed_output)  # Add parsed data to the output list
 
@@ -408,12 +448,15 @@ class Enumerate:
             # (required as python NMAP OS isn't working correctly)
 
             parsed_output = []
-
             # Separating OS info and appending it to the output list
             for line in output.splitlines():
                 if "OS" in line and "detection" not in line and "matches" not in line:
 
-                    if "Aggressive OS guesses" in line:
+                    if "Running:" in line:
+                        new_line = line.strip('Running:').split(',')
+                        parsed_output.append(new_line)
+
+                    elif "Aggressive OS guesses" in line:
                         new_line = line.strip('Aggressive OS guesses:').split(', ')
                         parsed_output.append(new_line)
 
@@ -434,10 +477,8 @@ class Enumerate:
                 else:
                     nm.scan(hosts=target_ip, arguments=command)
 
-                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")  # debug for printing the command
-
                 # Run "quiet" nmap OS scan and save output to a variable for parsing
-                os_output = subprocess.run("nmap" + str(self.ip_list) + "-O", shell=True,
+                os_output = subprocess.run(["nmap", "-O", target_ip], shell=True,
                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
 
             else:  # Use "loud" scan pre-sets
@@ -449,10 +490,8 @@ class Enumerate:
                 else:
                     nm.scan(hosts=target_ip, arguments=command)
 
-                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
-
                 # Run "loud" nmap OS scan and save output to a variable for parsing
-                os_output = subprocess.run("nmap" + str(self.ip_list) + "-O --osscan-guess -T5", shell=True,
+                os_output = subprocess.run(["sudo", "nmap", "-O", "--osscan-guess", "-T5", target_ip],
                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
 
             self.enumerate.debug("NMAP: OS parsing", color=Format.color_info)
@@ -470,7 +509,8 @@ class Enumerate:
         """
         :return list string:
         """
-        raw_nbt = subprocess.run(["sudo", "nmblookup", "-A", target], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+        raw_nbt = subprocess.run(["sudo", "nmblookup", "-A", target],
+                                 stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
         # Basically does the same as the real NBTSTAT but really really disgusting output
         if not raw_nbt:
             self.enumerate.debug("get_nbt_stat Error: nmblookup failed", color=Format.color_warning)
@@ -484,7 +524,8 @@ class Enumerate:
                 result = re.search("\s+(\S+)\s+<(..)>\s+-\s+?(<GROUP>)?\s+?[A-Z]\s+?(<ACTIVE>)?", line)
                 if result:  # If any matches the regex
 
-                    result = [res if res is not None else "" for res in result.groups()]  # Need to replace None type with ""
+                    # Need to replace None type with ""
+                    result = [res if res is not None else "" for res in result.groups()]
 
                     for nbt_line in self.nbt_info:
                         service, hex_code, group, descriptor = nbt_line
@@ -526,51 +567,48 @@ class Enumerate:
                 sleep(self.rpc_timeout)
 
             try:
-                command = ["rpcclient", "-U", user, target, "-c", "lsaquery"]
-                self.enumerate.debug("Running command - " + command.__str__(), Format.color_info)
-                self.enumerate.debug("Password - " + password, Format.color_info)
 
-                lsa_test_query = subprocess.run(command, input=password + "\n",
-                                                encoding="ascii", stdout=subprocess.PIPE)
+                command = ["rpcclient", "-U", user, target, "-c", "getdompwinfo"]
 
-                self.enumerate.debug("lsaquery out\n" + lsa_test_query.stdout, Format.color_info)
-                self.enumerate.debug("Return Code - " + lsa_test_query.check_returncode().__str__(), Format.color_info)
+                self.enumerate.debug("RPC Request Username - %s" % user)
+                self.enumerate.debug("RPC Request Password - %s" % password)
 
-                if lsa_test_query.check_returncode() is not None:
-                    if "NT_STATUS_CONNECTION_REFUSED" in lsa_test_query.stdout:
+                dompwpolicy_test_query = subprocess.run(command, input=password + "\n",
+                                                        encoding="ascii", stdout=subprocess.PIPE)
+
+                if dompwpolicy_test_query.check_returncode() is not None:
+                    if "NT_STATUS_CONNECTION_REFUSED" in dompwpolicy_test_query.stdout:
                         # Unable to connect
-                        self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user)
+                        self.enumerate.debug("Error: get_rpcclient: Connection refused under - %s" % user,
+                                             Format.color_warning)
 
                         self.rpc_timeout += self.rpc_timeout_increment
 
                     return
 
                 else:
-                    del lsa_test_query  # Unless lsaquery out is needed? IDK
                     command.pop()
 
                     curr_domain_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomgroups"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout)
 
-                    self.enumerate.debug("First few characters of groups - " + curr_domain_info[0:20], Format.color_info)
 
-                    curr_password_info = self.get_password_policy(
-                        subprocess.run(command + ["getdompwinfo"], input=password + "\n",
-                                       encoding="ascii", stdout=subprocess.PIPE).stdout)
-
-                    # rpcclient -U test 192.168.1.235 -c enumdomusers
+                    self.enumerate.debug("First few items - %s " %
+                                         curr_domain_info[0])
                     curr_user_info = self.extract_info_rpc(
                         subprocess.run(command + ["enumdomusers"], input=password + "\n",
                                        encoding="ascii", stdout=subprocess.PIPE).stdout,
                         startrows=0, initchars=6)
 
-                    self.enumerate.debug("First few characters of users - " + curr_user_info[0:20], Format.color_info)
+                    self.enumerate.debug("First few characters of users - %s" %
+                                         curr_user_info[0])
+
+                    curr_password_info = self.get_password_policy(dompwpolicy_test_query.stdout)
 
                 return [curr_domain_info, curr_user_info, curr_password_info]
 
-            except IOError as e:
-                self.enumerate.debug("Error: get_rpcrequest: %s" % e)
+            except Exception:
                 return
 
     def get_rpcclient(self, user_list, password_list, target):
@@ -580,8 +618,6 @@ class Enumerate:
         :param user_list:
         :param password_list:
         :param target:
-        :param ip:
-
         :return none:
         """
 
@@ -593,49 +629,63 @@ class Enumerate:
             if passwd:
                 try:
                     current = self.rpc_request(user, passwd, target)
-                except IOError as e:
-                    self.enumerate.debug("Error: get_rpcrequest: %s" % e)
-                    continue
+
+                except Exception as e:
+                    if "non-zero" in e:
+                        continue  # 99% of the time, errors here are subprocess calls returning non-zero
+                    else:
+                        self.enumerate.debug("get_rpcclient: Error %s" % e, color=Format.color_danger)
 
                 # There must be a better way to do this I cant think of without utilising self
                 # If output from rpc_request
                 if current:
                     # current = [curr_domain_info, curr_user_info, curr_password_info]
-                    if current[0] not in domain_info:
-                        domain_info += current[0]
 
-                    if current[1] not in user_info:
-                        user_info += current[1]
 
-                    if current[2] not in password_info:
-                        password_info += current[2]
+                    # There may be a quicker way to do this but it would likely require another structure
+                    for line in current[0]:
+                        if line not in domain_info:
+                            domain_info += line
 
+                    for line in current[1]:
+                        if line not in user_info:
+                            user_info += line
+
+                    if not password_info:
+                        password_info = current[2]
+                        
             else:
                 for password in password_list:
                     try:
                         current = self.rpc_request(user, password, target)
                     except IOError as e:
-                        self.enumerate.debug("Error: get_rpcrequest: %s" % e)
+
+                        self.enumerate.debug("Error: get_rpcrequest: %s" % e, Format.color_danger)
+
                         # If output from rpc_request
                         continue
 
                     if current:
                         # current = [curr_domain_info, curr_user_info, curr_password_info]
-                        if current[0] not in domain_info:
-                            domain_info += current[0]
 
-                        if current[1] not in user_info:
-                            user_info += current[1]
+                        for line in current[0]:
+                            if line not in domain_info:
+                                domain_info += line
 
-                        if current[2] not in password_info:
-                            password_info += current[2]
+                        for line in current[1]:
+                            if line not in user_info:
+                                user_info += line
+
+                        if not password_info:
+                            password_info = current[2]
+
+                        break
 
         return domain_info, user_info, password_info
 
     def get_password_policy(self, raw_command):
         """
         :param raw_command:
-        :param ip:
         :return int, bool, bool, bool, bool, bool, bool:
         """
         length = 0
@@ -676,27 +726,33 @@ class Enumerate:
 
         return output
 
-    def extract_info_rpc(self, output, startrows=1, initchars=7):
+    def extract_info_rpc(self, rpc_out, startrows=1, initchars=7):
         """
 
-        :param output:
+        :param rpc_out:
         :param startrows:
         :param initchars:
 
-        :return:
+        :return: Returns a list of lists containing user/group followed by rid as a pair
+                 e.g.[[user/group, rid]]
         """
 
-        output = output.split()
+        rpc_out = rpc_out.split("\n")
 
         if startrows > 0:
-            del output[0:startrows]
+            del rpc_out[0:startrows]
         else:
-            del output[0]
+            del rpc_out[0]
 
-        for line in output:
-            line[initchars:-1].split('] rid:[')
+        del rpc_out[-1]
 
-        self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
+        output = []
+
+        for line in rpc_out:
+            # output will look like [[user/group, rid], [user/group, rid]]
+            output += [[line[initchars:-1].split('] rid:[')]]
+
+        # self.enumerate.debug("extract_info_rpc: Output generated successfully", color=Format.color_success)
         return output
 
     def check_target_is_alive(self, target, interface="wlan0", ping_count=0, all_ips_from_dns=False, get_dns_name=False,
@@ -748,12 +804,14 @@ class Enumerate:
             if all_ips_from_dns:
                 for item in target:
                     if not re.search("\A[a-z0-9]*\.[a-z0-9]*\.[a-z0-9]*", item.lower()):
-                        self.enumerate.debug("Error: Target in list is not a valid IP or hostname (Does not accept ranges here)", color=Format.color_warning)
+                        self.enumerate.debug("Error: Target in list is not a valid IP or hostname"
+                                             "(Does not accept ranges here)", color=Format.color_warning)
                         return False
             else:
                 for item in target:
                     if not IpValidator.is_valid_ipv4_address(item):
-                        self.enumerate.debug("Error: Target in list is not a valid IP (Does not accept ranges here)", color=Format.color_warning)
+                        self.enumerate.debug("Error: Target in list is not a valid IP (Does not accept ranges here)",
+                                             color=Format.color_warning)
                         return False
 
             command += target
@@ -929,7 +987,8 @@ class Enumerate:
             if type(target) is list:
                 for current in target:
                     if not IpValidator.is_valid_ipv4_address(current, iprange=True):
-                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target, color=Format.color_warning)
+                        self.enumerate.debug("Error: Target %s in list is not a valid IP" % target,
+                                             color=Format.color_warning)
                         return False
 
                 command += target
@@ -945,9 +1004,7 @@ class Enumerate:
                 self.enumerate.debug("Error: Target is not a string or list")
                 return False
 
-        self.enumerate.debug("get_targets_via_arp command is: %s" % command)
-
-        output = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8")
+        output = subprocess.run(command, stdout=subprocess.PIPE, shell=False).stdout.decode("utf-8")
 
         self.enumerate.debug("get_targets_via_arp output captured: %s" % True if output else False)
 
@@ -962,8 +1019,7 @@ class Enumerate:
             del output[0:2]
             del output[-3:]
 
-
-            outlist = []  # was unable to change each line from a string to a list so moving each line as it becomes a list
+            outlist = []
 
             for line in output:
                 # Splits where literal tabs exist (between the IP, MAC and Adapter Name)
