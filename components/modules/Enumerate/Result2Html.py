@@ -1,7 +1,4 @@
 import yattag
-
-from collections import defaultdict
-from components.modules.Enumerate.TargetInfo import TargetInfo
 from components.framework.Debug import Debug
 from components.helpers.Format import Format
 
@@ -31,34 +28,10 @@ class Result2Html:
 
         self.result2html_dbg.debug("Starting Result2Html...", color=Format.color_info)
 
-        self.result2html_dbg.debug("TargetInfo output:")
-        for dbg_ip in ip_list:
-            info = targets[dbg_ip]
-            self.result2html_dbg.debug("IP: %s" % dbg_ip)
-            self.result2html_dbg.debug("Responds to ICMP: %s" % info.RESPONDS_ICMP)
-            self.result2html_dbg.debug("Responds to ARP: %s" % info.RESPONDS_ARP)
-            self.result2html_dbg.debug("MAC: %s" % info.MAC_ADDRESS)
-            self.result2html_dbg.debug("Adapter name: %s" % info.ADAPTER_NAME)
-            self.result2html_dbg.debug("Route to %s: %s" % (dbg_ip, info.ROUTE))
-            self.result2html_dbg.debug("OS info: %s" % info.OS_INFO)
-            self.result2html_dbg.debug("Software info: %s" % info.SOFTWARE_INFO)
-            self.result2html_dbg.debug("Workgroup info: %s" % info.WORKGROUP)
-            self.result2html_dbg.debug("Domain groups: %s" % info.DOMAIN_GROUPS)
-            self.result2html_dbg.debug("Domain users: %s" % info.DOMAIN_USERS)
-            self.result2html_dbg.debug("Local groups: %s" % info.LOCAL_GROUPS)
-            self.result2html_dbg.debug("Local users: %s" % info.LOCAL_USERS)
-            self.result2html_dbg.debug("Session info: %s" % info.SESSIONS)
-            self.result2html_dbg.debug("NBT info: %s" % info.NBT_STAT)
-            self.result2html_dbg.debug("Share info %s" % info.SHARE_INFO)
-            self.result2html_dbg.debug("Password policy: %s" % info.PASSWD_POLICY)
-            self.result2html_dbg.debug("Printer info: %s" % info.PRINTER_INFO)
-            self.result2html_dbg.debug("Port info: %s" % info.PORTS)
-
-        self.result2html_dbg.debug("Beginning html parsing", color=Format.color_info)
-
         doc, tag, text = yattag.Doc().tagtext()
 
-        self.result2html_dbg.debug("Beginning formatting")
+        self.result2html_dbg.debug("Beginning html formatting", color=Format.color_info)
+
         doc.asis('<!DOCTYPE html>')
 
         with tag('html', lang="en"):

@@ -476,9 +476,6 @@ class Enumerate:
                 else:
                     nm.scan(hosts=target_ip, arguments=command)
 
-                    # debug for printing the command
-                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
-
                 # Run "quiet" nmap OS scan and save output to a variable for parsing
                 os_output = subprocess.run(["nmap", "-O", target_ip], shell=True,
                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -491,8 +488,6 @@ class Enumerate:
                     nm.scan(hosts=target_ip, ports=self.raw_ports, arguments=command)
                 else:
                     nm.scan(hosts=target_ip, arguments=command)
-
-                    self.enumerate.debug("NMAP: command = " + " '" + nm.command_line() + "'")
 
                 # Run "loud" nmap OS scan and save output to a variable for parsing
                 os_output = subprocess.run(["sudo", "nmap", "-O", "--osscan-guess", "-T5", target_ip],
@@ -1010,8 +1005,6 @@ class Enumerate:
             else:
                 self.enumerate.debug("Error: Target is not a string or list")
                 return False
-
-        self.enumerate.debug("get_targets_via_arp command is: %s" % command)
 
         output = subprocess.run(command, stdout=subprocess.PIPE, shell=False).stdout.decode("utf-8")
 
