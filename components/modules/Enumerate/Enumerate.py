@@ -180,16 +180,14 @@ class Enumerate:
             else:
                 self.enumerate.debug("No ARP response from %s" % ip)
 
-            self.enumerate.debug("Starting Route", color=Format.color_info)
             # check route to this target
             if self.interface != "usb0":
+                self.enumerate.debug("Starting Route", color=Format.color_info)
                 current.ROUTE = self.get_route_to_target(ip, map_host_names=False, interface=self.interface)
-                self.enumerate.debug("Trace Route to %s:\n %s" % (ip, current.ROUTE))
 
             # NBT STAT
             self.enumerate.debug("Starting NBTSTAT", color=Format.color_info)
             current.NBT_STAT = self.get_nbt_stat(ip)
-            self.enumerate.debug("NBTSTAT for %s: %s" % (ip, current.NBT_STAT))
 
             # RPC CLIENT
             self.enumerate.debug("Starting RPCCLIENT", color=Format.color_info)

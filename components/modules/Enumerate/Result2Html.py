@@ -143,7 +143,7 @@ class Result2Html:
                                                             text("*")
 
                             # OS Info
-                            self.result2html_dbg.debug("Formatting OS INFO %s" % self.result2html_dbg.recursive_type(targets[IP].OS_INFO))
+                            self.result2html_dbg.debug("Formatting OS INFO")
                             if targets[IP].OS_INFO:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
@@ -166,8 +166,7 @@ class Result2Html:
                                                     text("No results")
 
                             # SOFTWARE INFO
-                            self.result2html_dbg.debug("Formatting Software INFO %s" %
-                                                       self.result2html_dbg.recursive_type(targets[IP].SOFTWARE_INFO))
+                            self.result2html_dbg.debug("Formatting Software INFO")
                             if targets[IP].SOFTWARE_INFO:
                                 with tag('table', klass="table table-condensed"):
                                     # Table headings
@@ -195,8 +194,7 @@ class Result2Html:
                                                 text("Not currently implemented :(")
 
                             # Domain Groups
-                            self.result2html_dbg.debug("Formatting Domain groups %s" %
-                                                       self.result2html_dbg.recursive_type(targets[IP].DOMAIN_GROUPS))
+                            self.result2html_dbg.debug("Formatting Domain groups ")
                             if targets[IP].DOMAIN_GROUPS:
                                 with tag("h4"):
                                     text("Domain Groups for %s" % IP)
@@ -217,8 +215,7 @@ class Result2Html:
                                                     text(item[1])
 
                             # Domain Users
-                            self.result2html_dbg.debug("Formatting Domain users %s" %
-                                                       self.result2html_dbg.recursive_type(targets[IP].DOMAIN_USERS))
+                            self.result2html_dbg.debug("Formatting Domain users")
                             if targets[IP].DOMAIN_USERS:
                                 with tag("h4"):
                                     text("Domain Users for %s" % IP)
@@ -275,11 +272,22 @@ class Result2Html:
                                     with tag('thead'):
                                         with tag('tr'):
                                             with tag('th'):
-                                                text("Share Info")
+                                                text("Sharename")
+                                            with tag('th'):
+                                                text("Type")
+                                            with tag('th'):
+                                                text("Comment")
                                     with tag('tbody'):
-                                        with tag('tr'):
-                                            with tag('td'):
-                                                text("Not currently implemented :(")
+                                        for index in range(len(targets[IP].LOCAL)):
+                                            with tag('tr'):
+                                                with tag('td'):
+                                                    text(targets[IP].LOCAL[x][0])
+                                            with tag('tr'):
+                                                with tag('td'):
+                                                    text(targets[IP].LOCAL[x][1])
+                                            with tag('tr'):
+                                                with tag('td'):
+                                                    text(targets[IP].LOCAL[x][2])
 
                             # Local INFO
                             self.result2html_dbg.debug("Formatting Local")
@@ -297,27 +305,28 @@ class Result2Html:
 
                             # PASSWD_POLICY
                             self.result2html_dbg.debug("Formatting Password Policy")
-                            with tag("h4"):
-                                text("%s Password Policy" % IP)
-                            with tag('table', klass="table table-condensed"):
-                                # Table headings
-                                with tag('thead'):
-                                    with tag('tr'):
-                                        with tag('th'):
-                                            text("Flag Name")
-                                        with tag('th'):
-                                            text("Policy Flag Desc")
-                                        with tag('th'):
-                                            text("State")
-                                with tag('tbody'):
-                                    with tag('tr'):
-                                        for x in range(len(targets[IP].PASSWD_POLICY)):
-                                            with tag('td'):
-                                                text(password_policy_items[x][1])
-                                            with tag('td'):
-                                                text(password_policy_items[x][0])
-                                            with tag('td'):
-                                                text(str(targets[IP].PASSWD_POLICY[x]))
+                            if targets[IP].PASSWD_POLICY:
+                                with tag("h4"):
+                                    text("%s Password Policy" % IP)
+                                with tag('table', klass="table table-condensed"):
+                                    # Table headings
+                                    with tag('thead'):
+                                        with tag('tr'):
+                                            with tag('th'):
+                                                text("Flag Name")
+                                            with tag('th'):
+                                                text("Policy Flag Desc")
+                                            with tag('th'):
+                                                text("State")
+                                    with tag('tbody'):
+                                        with tag('tr'):
+                                            for x in range(len(targets[IP].PASSWD_POLICY)):
+                                                with tag('td'):
+                                                    text(password_policy_items[x][1])
+                                                with tag('td'):
+                                                    text(password_policy_items[x][0])
+                                                with tag('td'):
+                                                    text(str(targets[IP].PASSWD_POLICY[x]))
 
                             # PRINTER_INFO
                             self.result2html_dbg.debug("Formatting Printer Info")
