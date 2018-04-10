@@ -4,7 +4,7 @@ from components.framework.Debug import Debug
 from components.helpers.Format import Format
 
 
-class FwComponentGadget(Debug):
+class FwComponentGadget():
     """Parent class for components requiring use of usb_gadget
 
     Args:
@@ -25,13 +25,12 @@ class FwComponentGadget(Debug):
     def __init__(self, driver_name, enabled=False, vendor_id="", product_id="", debug=False, name="debug",
                  type="component"):
         """Return a new framework component"""
-
+        self.gadget = Debug(name=name, type=type, debug=debug)
         self.driver_name = driver_name
         # If kernel module was not found then modprobe -n will return driver_name not found in modules
         if "not found" in subprocess.run(["modprobe", "-n", driver_name], stdout=subprocess.PIPE).stdout.decode(
                 'utf-8'):  # THROW EXCEPTION HERE
-            self.debug("CRITICAL: %s does not exist" % driver_name, color=Format.color_danger)
-
+            self.gadget.debug("CRITICAL: %s does not exist" % driver_name, color=Format.color_danger)
         self.driver_name = driver_name
 
         if enabled:
@@ -42,27 +41,27 @@ class FwComponentGadget(Debug):
         self.vendor_id = vendor_id
         self.product_id = product_id
 
-        # set debug state
-        super().__init__(debug=debug, name=name, type=type)
-
     def enable(self):
         """Enable a disabled framework object"""
         if not self.enabled:
             subprocess.call("modprobe %s %s %s" % (self.driver_name, self.vendor_id, self.product_id), shell=True)
-            self.debug(self.enabled)
+            self.gadget.debug(self.enabled)
             self.enabled = True
         else:
-            self.debug("Driver already enabled: %s" % self.enabled, color=Format.color_info)
+            self.gadget.debug("Driver already enabled: %s" % self.enabled, color=Format.color_info)
 
     def disable(self):
         """Disable an enabled framework object"""
-        if self.enabled:
-            subprocess.call("modprobe -r %s" % self.driver_name, shell=True)
-            self.enabled = False
-        else:
-            self.debug("Driver already disabled: %s" % self.enabled, color=Format.color_info)
+        try: # This might be called on destroy, which can throw an error.
+            if self.enabled:
+                subprocess.call("modprobe -r %s" % self.driver_name, shell=True)
+                self.enabled = False
+            else:
+                self.gadget.debug("Driver already disabled: %s" % True, color=Format.color_info)
+        except Exception:
+            self.gadget.debug("Driver already disabled: %s" % True, color=Format.color_info)
 
     def status(self):
         """Return the driver status"""
-        self.debug("Driver enabled: %s" % self.enabled, color=Format.color_info)
+        self.gadget.debug("Driver enabled: %s" % self.enabled, color=Format.color_info)
         return self.enabled
