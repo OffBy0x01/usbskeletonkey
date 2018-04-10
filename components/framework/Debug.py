@@ -1,6 +1,6 @@
 from components.helpers.Format import Format
 
-class Debug(object):
+class Debug:
     """The Debug class for all components"""
 
     def __init__(self, name="debug", type="component", debug=False):
