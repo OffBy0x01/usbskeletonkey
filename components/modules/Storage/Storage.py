@@ -5,7 +5,6 @@ from components.framework.storage import StorageAccess
 from components.helpers.ModuleManager import ModuleManager
 from components.helpers.BlinktSupport import BlinktSupport
 
-
 class Storage:
     """
     Simple module that mounts a filesystem that the user requests for a set amount of time.
