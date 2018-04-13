@@ -147,8 +147,7 @@ class Responder(Debug):
 
         try:
             # Run Responder on usb0
-            subprocess.run("exec python %s/modules/Responder/source/Responder.py -I usb0 "
-                                   "-f - w - r - d - F"% self.path, shell=True, timeout=time_to_live)
+           subprocess.run("exec python %s/modules/Responder/src/Responder.py -I usb0" % self.path, shell=True, timeout=time_to_live)
         except Exception:
             pass
 
