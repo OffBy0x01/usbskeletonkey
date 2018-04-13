@@ -6,7 +6,9 @@ from components.helpers.Format import Format
 
 
 class FwComponentNetwork(FwComponentGadget):
-    """ Class for the Network Object
+    """
+    Class for the Network Component. This class can be used to interact with ethernet over the bus, the DCHP server on
+    the Pi (That is used for Responder) and can also be used to check the current internet connect status.
 
          Args:
             state:          state of driver
