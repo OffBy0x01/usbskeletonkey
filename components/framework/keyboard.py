@@ -7,7 +7,8 @@ from components.helpers.Format import Format
 
 class Keyboard(FwComponentGadget):
     """
-       Class that handles all Keyboard functionality
+       Component that handles all Keyboard functionality over the bus via parsing of ducky script and strings sent to
+       its public methods
 
            Args:
               enabled:          boolean - enable/disable instant start
@@ -16,8 +17,9 @@ class Keyboard(FwComponentGadget):
               id_product        string - product id to be used by keyboard
 
           functions:
-              write             write string using emulated keyboard
-              run               run a specified ducky script
+              write:            write string using emulated keyboard
+              resolve_script:   will parse through an entire ducky script list passed into it
+              resolve_line:     will parse a line for ducky script functions and keywords
 
           Returns:
               Keyboard Object
