@@ -107,32 +107,21 @@ Try searching for the problem or error message on Google, if nothing comes up pl
 
 network.py
 ===========
-This framework component of Skeleton Key requires no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules that have been developed by "Team" to operate:
-
-	- Responder
+The network emulation framework component of Skeleton Key allows the device to emulate a connected network cable and force a victim to send network data to Skeleton Key for capturing. As this component is completely headless it doesn't require any user interaction to function.
 
 
 Network Features
 ---------
-- Turns the raspberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device).
-	- This "ethernet" adapter is recognised as usb0 under network devices on the pi.
-	- It can be configured to appear as a specific type of "ethernet" adapter by editing "vendor_id" and "product_id" in the source
-	code of this component.
-	- From there the pi can be used to capture network traffic from a target over usb0.
-	
-- network.py can be used in conjunction with Spiderlab's Responder to make an attempt at obtaining a target's NLTM password hash (if a windows system) by:
-	1. Adding routes for all ipv4 addresses to usb0.
-	2. Starting a DHCP server (using dhcpd) and enabling ipv4 forwarding.
-	3. Binding usb0's port 80 to port 1337 using the iptables file.
-	4. Starting dnsspoof on usb0's port 53.
-		- dnsspoof is part of the dsniff toolset and forges DNS responses over a local network.
-	5. Run Spiderlab's Responder over the usb0 interface.
+- Turn the raspberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device).
+	- This interface is recognised as usb0 on the Skeleton Key.
+	- Specific adapters can be emulated by setting the "vendor_id" and "product_id".
+	- Host will attempt to use Skeleton Key for all network communication. Note this will cause the victim to lose internet connectivity.
 
 Network Bugs
 -----
-As user interaction is pretty much non-existant with this componenent there is very little to worry about regarding bugs (that we have been able to find). Please note the following however:
+As the network component mostly uses Bash editing of configuration files on a known fixed install issues are rare, however, do note:
 
-- Due to how some target systems may be configured with regards to driver installation usb0 may fail to be recognised. As a result of this a little tinkering with the values "vendor_id" and "product_id" may have to ensue for network.py to work as intended. 
+- Due to how target systems may be configured for driver installation Skeleton Key may fail to be recognised. As a result "vendor_id" and "product_id" may need to be edited to recognised values for network.py to function. 
 
 
 
@@ -158,29 +147,24 @@ The ducky interpreter currently doesn't support F Numbers e.g. F12
 
 Responder.py
 ===========
-Responder.py is one of the modules that has been developed for Skeleton Key.
+Responder.py is an offensive module contained within Skeleton Key which acts as a front end for Spider Lab's Responder tool for capturing user credentials.
 
 Responder Features
 ---------
 - Attempts to capture the password hash of the system that Skeleton Key is connected to using Spiderlabs' Responder.
 	- Spiderlabs' Responder exploits a loophole in DNS name resolution that allows any host on a network to respond to local DNS requests if the user's required resource is unknown.
-	- It captures password hashes by fooling a target system into believing that Skeleton Key is a SMB server.
-
+	- It captures password hashes by fooling a target system into believing that Skeleton Key is the SMB server that the victim is looking for which it then attempts to authenticate with.
 
 
 Responder Usage
 ---------
-- This module requires the use of the network framework component. If any error is thrown by this component upon initialisation then Responder.py will not continue to run and will be exited.
-- The responder module is required to have a "time to live" set i.e. how long the tool will run for. This value defaults to 60 seconds and can be set via skeleton's CLI to any value equal to or greater than 60 seconds.
+- This module requires the use of the network framework component. Should network.py fail to initialise then Responder.py will not continue to run and will be exited.
+- The responder module is required to have a "time to live" set i.e. how long the tool will run for. This value defaults to 60 seconds and can be set via skeleton's CLI to any value equal to or greater than 60 seconds (Recommended to be set in excess of 600 seconds for successful operation).
 
 Responder Bugs/Issues
 ---------
-- Responder is extremely unreliable when it comes to the capturing of password hashes, with reports that it is only successful ~10/20% of the time.
-- Responder can only be used to capture password hashes on Windows systems.
-- Due to some unknown reason Responder won't run correctly unless the USB gadget "g_ether" kernel has been enabled and disabled at least once before running the tool.
-	- This has been accounted for in the source code of the module.
-- On first time use Responder usually creates "Responder.db" where password hashes are intially stored. Due to some unknown reason this file is never created automatically for Skeleton Key.
-	- This has been accounted for in the source code of the module by creating and populating the .db file before first time use.
+- Responder relies on a specific set of conditions to be met for success and as such can be unreliable (~20% success rate).
+- Responder can only be used to capture password hashes for SMB shares (Windows systems will attempt with logged in user account).
 	
 	
 Authors
