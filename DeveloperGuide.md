@@ -40,15 +40,10 @@ It has other features that can be used to check that all methods have completed 
 This class provides the bare-bones of whats needed to ensure correct module/framework execution and Debug faulty execution.
 Skeleton key will correctly handle any crashes so to test modules they can just be executed and each step of the way assigned a debug output.
 
-#### FwComponentGadget
-text
-
 #### Module Manager
-text
-
-#### Module Descriptor
-text
-
+Module manager is used by any given module to manage the assets and handling of Modules.
+Each module requires to interface with the module manager to confirm their name and what configuration to load.
+The framework also loads module manager to determine how each Module will be accessed during full runs of Skeleton-Key.
 
 ### Framework Components
 All of these are necessary to the running of Skeleton keys important features.
