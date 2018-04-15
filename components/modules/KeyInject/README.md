@@ -31,4 +31,4 @@ Authors
 -------
 [Andrew Calder](https://github.com/AR-Calder) - [Email](1503321@uad.ac.uk)
 
-[LOGO]: key.png
+[LOGO]: logo.png
