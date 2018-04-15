@@ -244,7 +244,7 @@ class Keyboard(FwComponentGadget):
         """
         # If line is blank, skip
         if current_line == '\n':
-            return
+            return True
 
         # Remove newline characters and split lines into command and arguments
         command, whitespace, args = current_line.strip('\n').partition(" ")
