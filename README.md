@@ -6,21 +6,44 @@ Skeleton Key is a physical pen-testing framework that makes use of a Raspberry P
 
 Features
 ---------
-  * Enumeration
-  * Responder
-  * Keyboard Emulation
-  * Ducky Script Interpretation
+  * Enumerate		- Enumerate a range of hosts, print results to a bootstrap-based HTML page.
+  * Responder		- Capture hashes and fingerprint a host with SpiderLabs Responder, over USB. 
+  * Storage		- Emulate a storage device of any supported size or format.
+  * KeyInject		- Utilize keystroke injection with either DuckyScript or SkeleScript.
+  * Expandable		..or add your own
 
 Setup
 -------------
-When making use of the Pi we expect a specifically crafted Raspberry Pi Zero in order to provide status lights (Although this is optional).
-The HAT we make use of by default is the [Blinkt kit][BLINKT] and we also make use of a [USB Stem kit][USBSTEM] to provide a USB stick look and feel.
+When making use of the Pi we have used a Raspberry Pi Zero equipped with a LED PHAT in order to provide status lights (Although this is optional). The HAT we make use of by default is the [Blinkt kit][BLINKT] and we also make use of a [USB Stem kit][USBSTEM] to provide that USB stick look and feel.
+
+Some of the default modules require python 3.6, using a older version of python may produce unexpected results for which we offer no support.
 
 Install USB Skeleton Key by running:
 ```commandline
-git clone usbskeletonkey
-run skeleton-key.py
+git clone https://github.com/AR-Calder/usbskeletonkey.git
+./install.sh
+sudo python3.6 skeleton-key.py
 ```
+
+In order to use Skeleton-Key to its fullest potential it is recommended that you run it on boot, but keep track of the session.
+
+This can be done with tmux in the following way:
+
+	## inside rc.local file	
+	#!/bin/sh -e
+	
+	# always good and safe to use the complete path
+	/usr/bin/tmux new-session -d -s skeletonKey
+
+	# This statement is a life-saver, if ever your code crashes
+	/usr/bin/tmux set-option -t skeletonKey set-remain-on-exit on
+
+	# Create a window where you wish to run a code
+	/usr/bin/tmux new-window -d -n 'Skeleton Key' -t skeletonKey:1 'cd /home/pi/usbskeletonkey; sudo python3 skeleton-key.py '
+	
+ 	exit 0
+	
+After first run you must manually switch from config mode to armed mode, this can be done in the config.ini which will be generated in the base directory after first run. We also recommend 
 
 Contribute
 -----------
@@ -30,6 +53,7 @@ Contribute
 Support
 --------
 If you are having any issues, please create an issue with a detailed explanation of the encountered problem.
+Try to reproduce the issue with debug mode enabled as it provides clues as to where an issue may have occurred. 
 
 License
 --------
@@ -40,7 +64,7 @@ See the [Legal Disclaimer][LEGAL] for information on this projects legal bounds
 
 skeleton-key.py
 ================
-This part of the project acts as the UI and allows the user to configure module setting before deployment on a target system.
+With config set to true, this part of the project acts as the UI and allows the user to configure module setting before deployment on a target system.
 
 Install Project
 
@@ -49,6 +73,7 @@ Install Project
     3. configure module
 4. saved ready for deployment
 
+With config set to false it acts as the "Armed Mode" controller which loads all the configuration data and runs modules accordingly.
 
 Interface Features
 ---------
@@ -107,21 +132,32 @@ Try searching for the problem or error message on Google, if nothing comes up pl
 
 network.py
 ===========
-The network emulation framework component of Skeleton Key allows the device to emulate a connected network cable and force a victim to send network data to Skeleton Key for capturing. As this component is completely headless it doesn't require any user interaction to function.
+This framework component of Skeleton Key requires no user input and runs in the background. The script is never directly called by the user and is instead used to allow the following modules that have been developed by "Team" to operate:
+
+	- Responder
 
 
 Network Features
 ---------
-- Turn the raspberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device).
-	- This interface is recognised as usb0 on the Skeleton Key.
-	- Specific adapters can be emulated by setting the "vendor_id" and "product_id".
-	- Host will attempt to use Skeleton Key for all network communication. Note this will cause the victim to lose internet connectivity.
+- Turns the raspberry pi into an "ethernet" adapter using USB OTG functionality (emulation of a network device).
+	- This "ethernet" adapter is recognised as usb0 under network devices on the pi.
+	- It can be configured to appear as a specific type of "ethernet" adapter by editing "vendor_id" and "product_id" in the source
+	code of this component.
+	- From there the pi can be used to capture network traffic from a target over usb0.
+	
+- network.py can be used in conjunction with Spiderlab's Responder to make an attempt at obtaining a target's NLTM password hash (if a windows system) by:
+	1. Adding routes for all ipv4 addresses to usb0.
+	2. Starting a DHCP server (using dhcpd) and enabling ipv4 forwarding.
+	3. Binding usb0's port 80 to port 1337 using the iptables file.
+	4. Starting dnsspoof on usb0's port 53.
+		- dnsspoof is part of the dsniff toolset and forges DNS responses over a local network.
+	5. Run Spiderlab's Responder over the usb0 interface.
 
 Network Bugs
 -----
-As the network component mostly uses Bash editing of configuration files on a known fixed install issues are rare, however, do note:
+As user interaction is pretty much non-existant with this componenent there is very little to worry about regarding bugs (that we have been able to find). Please note the following however:
 
-- Due to how target systems may be configured for driver installation Skeleton Key may fail to be recognised. As a result "vendor_id" and "product_id" may need to be edited to recognised values for network.py to function. 
+- Due to how some target systems may be configured with regards to driver installation usb0 may fail to be recognised. As a result of this a little tinkering with the values "vendor_id" and "product_id" may have to ensue for network.py to work as intended. 
 
 
 
@@ -147,24 +183,29 @@ The ducky interpreter currently doesn't support F Numbers e.g. F12
 
 Responder.py
 ===========
-Responder.py is an offensive module contained within Skeleton Key which acts as a front end for Spider Lab's Responder tool for capturing user credentials.
+Responder.py is one of the modules that has been developed for Skeleton Key.
 
 Responder Features
 ---------
 - Attempts to capture the password hash of the system that Skeleton Key is connected to using Spiderlabs' Responder.
 	- Spiderlabs' Responder exploits a loophole in DNS name resolution that allows any host on a network to respond to local DNS requests if the user's required resource is unknown.
-	- It captures password hashes by fooling a target system into believing that Skeleton Key is the SMB server that the victim is looking for which it then attempts to authenticate with.
+	- It captures password hashes by fooling a target system into believing that Skeleton Key is a SMB server.
+
 
 
 Responder Usage
 ---------
-- This module requires the use of the network framework component. Should network.py fail to initialise then Responder.py will not continue to run and will be exited.
-- The responder module is required to have a "time to live" set i.e. how long the tool will run for. This value defaults to 60 seconds and can be set via skeleton's CLI to any value equal to or greater than 60 seconds (Recommended to be set in excess of 600 seconds for successful operation).
+- This module requires the use of the network framework component. If any error is thrown by this component upon initialisation then Responder.py will not continue to run and will be exited.
+- The responder module is required to have a "time to live" set i.e. how long the tool will run for. This value defaults to 60 seconds and can be set via skeleton's CLI to any value equal to or greater than 60 seconds.
 
 Responder Bugs/Issues
 ---------
-- Responder relies on a specific set of conditions to be met for success and as such can be unreliable (~20% success rate).
-- Responder can only be used to capture password hashes for SMB shares (Windows systems will attempt with logged in user account).
+- Responder is extremely unreliable when it comes to the capturing of password hashes, with reports that it is only successful ~10/20% of the time.
+- Responder can only be used to capture password hashes on Windows systems.
+- Due to some unknown reason Responder won't run correctly unless the USB gadget "g_ether" kernel has been enabled and disabled at least once before running the tool.
+	- This has been accounted for in the source code of the module.
+- On first time use Responder usually creates "Responder.db" where password hashes are intially stored. Due to some unknown reason this file is never created automatically for Skeleton Key.
+	- This has been accounted for in the source code of the module by creating and populating the .db file before first time use.
 	
 	
 Authors
