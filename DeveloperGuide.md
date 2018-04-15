@@ -4,10 +4,8 @@
 1. Framework info
     1. Building Blocks
         * Debug
-        * FwComponentGadget
         * Module Manager
-        * Module Desc
-    2. Framework items
+    2. Framework Components
         * Keyboard
         * Networking
         * Storage
@@ -110,7 +108,7 @@ This module will, via the bus, pretend to be a keyboard with any host it connect
 Via the bus this module will feign an ethernet connection and will proceed to request password hashes for a login request for a windows device.
 Given that a Windows device is the target attached to password hashes have a chance at being captured and stored on the Skeleton Key.
 
-#### Storage Module
+#### Storage
 This module, via the bus, will become a mass storage device.
 The user can assign a disk image for this to always mount as or use the default.
 
