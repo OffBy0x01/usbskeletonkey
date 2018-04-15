@@ -8,8 +8,8 @@ from components.framework.FwComponentGadget import FwComponentGadget
 
 class StorageAccess(FwComponentGadget):
     """
-    This allows for creation of mini file systems that can be used for storing locally or via the bus
-    If this is closed early it will fuck up pretty bad and should require a restart of the device
+    This allows for creation of mini file systems or access of pre-existing filesystems that can be used for storing
+    locally or via the bus. If this is closed early it can mess up pretty bad and should require a restart of the device
             Super Class: FwComponentGadget
 
             __init__ asks for:

