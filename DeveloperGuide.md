@@ -32,7 +32,7 @@ If you are just requiring an understanding of the current framework to develop a
 
 
 ### Building Blocks
-The following should be used when considering creating framework components of any type.
+The following should be used when considering creating modules or helpers.
 
 #### Debug
 This Class mostly makes use of the interface to display the debug messages when Skeleton Key is in debug mode.
@@ -50,18 +50,52 @@ text
 text
 
 
-### Framework Items
-text
+### Framework Components
+All of these are necessary to the running of Skeleton keys important features.
+Currently it stands that the creation of new Framework Components is not supported.
+This is currently classed under future work.
 
 #### Keyboard
-text
+Component that handles all Keyboard functionality over the bus via parsing of Ducky-Script and strings sent to its public methods.
+If deemed necessary developers can also make use of its hidden methods but there does not seem to be a use case for this hence them being hidden.
+
+The Functions that Keyboard Provides are:
+- write - 
+This takes in a String then converts it to what will be typed over the bus
+- resolve_script - 
+This takes in Ducky-Script and will parse it and output the key-presses requested
+    * It can also be passed an optional script name for debugging purposes
+- resolve_line - 
+This will take a line of Ducky-Script and will parse and execute it
 
 #### Networking
-text
+This class can be used to interact with ethernet over the bus, the DCHP server on the Pi (That is used for Responder) and can also be used to check the current internet connect status.
+
+The Functions that Networking Provides are:
+- up -
+Enables the ethernet driver over the bus and turns on the DHCP server
+- down -
+Turns the bus ethernet driver off
+- kill -
+Executes down if a ping fails
+- test_internet -
+Tests for internet activity by pinging the Google 8.8.8.8 DNS
 
 #### Storage
-text
+This allows for creation of mini file systems or access of pre-existing filesystems that can be used for storing locally or via the bus.
+If this is closed early it can mess up pretty bad and should require a restart of the device.
 
+The Functions that Storage Provides are:
+- mount_local - 
+Will mount the file system locally to a chosen directory and the first available loop-back device. Read only is optional
+- mount_bus - 
+Will mount the file system on the bus. Read only is optional
+- unmount_local - 
+Will attempt to unmount locally from a directory and the loop-back device
+- unmount_bus - 
+Will attempt to unmount the bus
+- unmount - 
+Will call whichever unmount may be relevant
 
 ## Module info
 For anyone interested in developing a module, although you could have skeleton key do what you want without making use of any other section of what's available just so you can have your module execute in the load order.
@@ -72,16 +106,18 @@ As this is the highest level you can work at this provides you the wealth of fra
 Below is examples of what modules exist, what components/helpers they make use of and some extended information that may not be in the docstring.
 
 #### Enumeration
-text
+This module can be used over the bus or via the current wifi connection, it scans hosts that are predetermined in its configuration file and will display information gathered in a HTML output.
 
 #### KeyInject
-text
+This module will, via the bus, pretend to be a keyboard with any host it connects to and will send keystrokes that the user determines via the ducky-script file that is loaded.
 
 #### Responder
-text
+Via the bus this module will feign an ethernet connection and will proceed to request password hashes for a login request for a windows device.
+Given that a Windows device is the target attached to password hashes have a chance at being captured and stored on the Skeleton Key.
 
 #### Storage Module
-text
+This module, via the bus, will become a mass storage device.
+The user can assign a disk image for this to always mount as or use the default.
 
 
 ## Helpers
