@@ -6,21 +6,44 @@ Skeleton Key is a physical pen-testing framework that makes use of a Raspberry P
 
 Features
 ---------
-  * Enumeration
-  * Responder
-  * Keyboard Emulation
-  * Ducky Script Interpretation
+  * Enumerate		- Enumerate a range of hosts, print results to a bootstrap-based HTML page.
+  * Responder		- Capture hashes and fingerprint a host with SpiderLabs Responder, over USB. 
+  * Storage		- Emulate a storage device of any supported size or format.
+  * KeyInject		- Utilize keystroke injection with either DuckyScript or SkeleScript.
+  * Expandable		..or add your own
 
 Setup
 -------------
-When making use of the Pi we expect a specifically crafted Raspberry Pi Zero in order to provide status lights (Although this is optional).
-The HAT we make use of by default is the [Blinkt kit][BLINKT] and we also make use of a [USB Stem kit][USBSTEM] to provide a USB stick look and feel.
+When making use of the Pi we have used a Raspberry Pi Zero equipped with a LED PHAT in order to provide status lights (Although this is optional). The HAT we make use of by default is the [Blinkt kit][BLINKT] and we also make use of a [USB Stem kit][USBSTEM] to provide that USB stick look and feel.
+
+Some of the default modules require python 3.6, using a older version of python may produce unexpected results for which we offer no support.
 
 Install USB Skeleton Key by running:
 ```commandline
-git clone usbskeletonkey
-run skeleton-key.py
+git clone https://github.com/AR-Calder/usbskeletonkey.git
+./install.sh
+sudo python3.6 skeleton-key.py
 ```
+
+In order to use Skeleton-Key to its fullest potential it is recommended that you run it on boot, but keep track of the session.
+
+This can be done with tmux in the following way:
+
+	## inside rc.local file	
+	#!/bin/sh -e
+	
+	# always good and safe to use the complete path
+	/usr/bin/tmux new-session -d -s skeletonKey
+
+	# This statement is a life-saver, if ever your code crashes
+	/usr/bin/tmux set-option -t skeletonKey set-remain-on-exit on
+
+	# Create a window where you wish to run a code
+	/usr/bin/tmux new-window -d -n 'Skeleton Key' -t skeletonKey:1 'cd /home/pi/usbskeletonkey; sudo python3 skeleton-key.py '
+	
+ 	exit 0
+	
+After first run you must manually switch from config mode to armed mode, this can be done in the config.ini which will be generated in the base directory after first run. We also recommend 
 
 Contribute
 -----------
@@ -30,6 +53,7 @@ Contribute
 Support
 --------
 If you are having any issues, please create an issue with a detailed explanation of the encountered problem.
+Try to reproduce the issue with debug mode enabled as it provides clues as to where an issue may have occurred. 
 
 License
 --------
@@ -40,7 +64,7 @@ See the [Legal Disclaimer][LEGAL] for information on this projects legal bounds
 
 skeleton-key.py
 ================
-This part of the project acts as the UI and allows the user to configure module setting before deployment on a target system.
+With config set to true, this part of the project acts as the UI and allows the user to configure module setting before deployment on a target system.
 
 Install Project
 
@@ -49,6 +73,7 @@ Install Project
     3. configure module
 4. saved ready for deployment
 
+With config set to false it acts as the "Armed Mode" controller which loads all the configuration data and runs modules accordingly.
 
 Interface Features
 ---------
