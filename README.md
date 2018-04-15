@@ -120,14 +120,6 @@ Network Features
 	code of this component.
 	- From there the pi can be used to capture network traffic from a target over usb0.
 	
-- network.py can be used in conjunction with Spiderlab's Responder to make an attempt at obtaining a target's NLTM password hash (if a windows system) by:
-	1. Adding routes for all ipv4 addresses to usb0.
-	2. Starting a DHCP server (using dhcpd) and enabling ipv4 forwarding.
-	3. Binding usb0's port 80 to port 1337 using the iptables file.
-	4. Starting dnsspoof on usb0's port 53.
-		- dnsspoof is part of the dsniff toolset and forges DNS responses over a local network.
-	5. Run Spiderlab's Responder over the usb0 interface.
-
 Network Bugs
 -----
 As user interaction is pretty much non-existant with this componenent there is very little to worry about regarding bugs (that we have been able to find). Please note the following however:
