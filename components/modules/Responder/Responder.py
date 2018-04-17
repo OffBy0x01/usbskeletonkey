@@ -12,7 +12,7 @@ from components.helpers.ModuleManager import ModuleManager
 class Responder(Debug):
     """ Class for Responder Module
                Args:
-                   debug:               boolean - enable/disable debug features
+                   debug                boolean - enable/disable debug features
                    path                 string - represents the file path to the "Components" directory
 
                functions:
@@ -33,7 +33,7 @@ class Responder(Debug):
                   A boolean value
 
                Raises:
-                   I STILL DON'T REALLY GET THIS!
+                   None
            """
 
     # Constructor
