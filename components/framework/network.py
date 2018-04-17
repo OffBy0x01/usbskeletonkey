@@ -11,8 +11,8 @@ class FwComponentNetwork(FwComponentGadget):
     on the Pi (That is used for Responder) and can also be used to check the current internet connect status.
 
          Args:
-            enabled:          boolean - enable/disable instant start
-            debug:            boolean - enable/disable debug features
+            enabled           boolean - enable/disable instant start
+            debug             boolean - enable/disable debug features
             id_vendor         string - vendor id to be used by network
             id_product        string - product id to be used by network
 
@@ -26,7 +26,7 @@ class FwComponentNetwork(FwComponentGadget):
             A boolean value
 
         Raises:
-            I STILL DON'T REALLY GET THIS!
+            None
     """
 
     # Constructor
