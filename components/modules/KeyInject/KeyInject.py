@@ -65,7 +65,5 @@ class KeyInject:
 
         # Run previously specified scripts
         for script in self.scripts:
-            send = ""
-            send = script
-            keyboard.resolve_script(script=send)
+            keyboard.resolve_script(script=script)
         keyboard.disable()
